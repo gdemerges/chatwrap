@@ -34,6 +34,27 @@ const gradients = new Set(Object.values(THEME));
  * five mood slides would otherwise never be built here — and they hold more
  * translated prose than any other section.
  */
+/** A day loud enough to trip every clause of the « why » builder. */
+function dayContext(authors) {
+    return {
+        messages: 214,
+        volumeRatio: 3.4,
+        topAuthor: { author: authors[0], share: 0.68 },
+        participants: authors.length,
+        peakHour: 23,
+        peakHourShare: 0.45,
+        nightShare: 0.31,
+        questionShare: 0.34,
+        mediaShare: 0.12,
+        longestMessage: 940,
+        replyRatio: 2.1,
+        silenceBefore: 6,
+        silenceAfter: 4,
+        keywords: ['déménagement', 'clés'],
+        emojis: ['😡'],
+    };
+}
+
 function withSentiment(base) {
     const authors = base.ranking.map(([name]) => name);
     const months = Object.keys(base.monthly).sort();
@@ -60,8 +81,15 @@ function withSentiment(base) {
                 authors.map(a => [a, Object.fromEntries(months.map((m, i) => [m, Math.cos(i) * 0.3]))]),
             ),
             sentimentHourly: Array.from({ length: 24 }, (_, h) => (h % 3 === 0 ? null : (h - 12) / 24)),
-            bestDays: [{ date: '2024-06-15', mean: 0.7, count: 30 }, { date: '2024-07-02', mean: 0.2, count: 12 }],
-            worstDays: [{ date: '2024-02-11', mean: -0.6, count: 18 }],
+            bestDays: [
+                { date: '2024-06-15', mean: 0.7, count: 30, perAuthor: perPerson.map((p, i) => ({ author: p.author, mean: 0.6 - i * 0.3, count: 6 })), context: dayContext(authors) },
+                { date: '2024-07-02', mean: 0.2, count: 12, perAuthor: [] },
+            ],
+            worstDays: [{
+                date: '2024-02-11', mean: -0.6, count: 18,
+                perAuthor: perPerson.map((p, i) => ({ author: p.author, mean: 0.5 - i * 0.6, count: 5 })),
+                context: dayContext(authors),
+            }],
             afterAuthor: Object.fromEntries(authors.map((a, i) => [a, { mean: 0.2 - i * 0.15, count: 40 }])),
         },
     };
@@ -169,6 +197,32 @@ describe('generateSlides', () => {
         }
         expect(englishHtml).not.toContain('undefined');
         expect(englishHtml).not.toMatch(/\{[a-z]+\}/i);
+    });
+
+    it('explains a notable day instead of merely dating it', () => {
+        setLocale('fr');
+        const moments = generateSlides(moodStats, comparison)
+            .map(s => s.html)
+            .find(html => html.includes('Vos journées marquantes'));
+        expect(moments).toBeTruthy();
+        // The strongest signals win the two slots, and the subject line follows.
+        expect(moments).toMatch(/le ton le plus dur venait de/);
+        expect(moments).toContain('jours</strong> de silence');
+        expect(moments).toContain('déménagement');
+        // Weaker clauses are dropped rather than piled up — volume included,
+        // since a notable day is almost always a busy one.
+        expect(moments).not.toContain('rythme habituel');
+        expect(moments).not.toContain('photos et de vidéos');
+    });
+
+    it('says nothing about a day it has no context for', () => {
+        setLocale('fr');
+        const bare = { ...moodStats, sentiment: { ...moodStats.sentiment, bestDays: [{ date: '2024-07-02', mean: 0.2, count: 12, perAuthor: [] }], worstDays: [] } };
+        const moments = generateSlides(bare, comparison)
+            .map(s => s.html)
+            .find(html => html.includes('Vos journées marquantes'));
+        expect(moments).toBeTruthy();
+        expect(moments).not.toContain('day-why');
     });
 
     it('escapes a participant name that looks like markup', () => {

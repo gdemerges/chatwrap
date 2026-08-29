@@ -44,6 +44,32 @@ describe('anonymizeStats', () => {
         expect(strict.profiles.every(p => p.signatureWord === null)).toBe(true);
     });
 
+    it('anonymizes the people named inside a notable day, and drops its keywords', () => {
+        const withDays = {
+            ...stats,
+            sentiment: {
+                bestDays: [{
+                    date: '2024-03-02',
+                    mean: 0.4,
+                    count: 6,
+                    perAuthor: [{ author: 'Bob', mean: -0.1, count: 3 }],
+                    context: {
+                        topAuthor: { author: 'Alice Martin', share: 0.7 },
+                        keywords: ['déménagement'],
+                    },
+                }],
+                worstDays: [],
+            },
+        };
+        const anon = anonymizeStats(withDays);
+        expect(anon.sentiment.bestDays[0].context.topAuthor.author).toBe('A.');
+        expect(anon.sentiment.bestDays[0].perAuthor[0].author).toBe('B.');
+        expect(anon.sentiment.bestDays[0].context.keywords).toEqual(['déménagement']);
+
+        const strict = anonymizeStats(withDays, { words: true });
+        expect(strict.sentiment.bestDays[0].context.keywords).toEqual([]);
+    });
+
     it('keeps non-name data intact', () => {
         expect(anon.totalMessages).toBe(stats.totalMessages);
         expect(anon.startDate instanceof Date).toBe(true);

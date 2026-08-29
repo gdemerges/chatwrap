@@ -49,6 +49,11 @@ export function anonymizeStats(stats, options = {}) {
         out.topWordsPerPerson = {};
         out.uniqueWordsPerPerson = {};
         for (const profile of out.profiles || []) profile.signatureWord = null;
+        // The words a notable day turned on are vocabulary too — « déménagement »
+        // on a dated day narrows a person down as surely as a signature word.
+        for (const day of [...(out.sentiment?.bestDays || []), ...(out.sentiment?.worstDays || [])]) {
+            if (day.context) day.context.keywords = [];
+        }
     }
     return out;
 }

@@ -6,6 +6,7 @@ import {
     EMOJI_POLARITY, lexicalSarcasm,
 } from './sentiment-config.js';
 import { newAggregator, buildResult } from './sentiment-aggregates.js';
+import { buildDayContexts } from './day-context.js';
 
 const TRANSFORMERS_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.2';
 
@@ -215,7 +216,8 @@ export async function computeSentimentML(messages, lang, onProgress, options = {
     const allAuthors = Array.from(new Set([...authors, ...reactionAuthors]));
 
     if (authors.length === 0 || !useML) {
-        return buildResult(allAuthors, categorical, {}, reactionStats, agg.finalize(), { mlEnabled: false, device: null });
+        return buildResult(allAuthors, categorical, {}, reactionStats,
+            withDayContexts(agg.finalize(), messages, lang), { mlEnabled: false, device: null });
     }
 
     onProgress('Detection du materiel...');
@@ -233,7 +235,8 @@ export async function computeSentimentML(messages, lang, onProgress, options = {
         const msg = `[sentiment] modele KO sur ${device}: ${err && err.message ? err.message : err}`;
         console.error(msg, err);
         onProgress(msg);
-        return buildResult(allAuthors, categorical, {}, reactionStats, agg.finalize(), { mlEnabled: false, device, error: String(err) });
+        return buildResult(allAuthors, categorical, {}, reactionStats,
+            withDayContexts(agg.finalize(), messages, lang), { mlEnabled: false, device, error: String(err) });
     }
 
     let ironyClassifier = null;
@@ -302,6 +305,27 @@ export async function computeSentimentML(messages, lang, onProgress, options = {
         };
     }
 
-    return buildResult(allAuthors, categorical, polarity, reactionStats, agg.finalize(),
+    return buildResult(allAuthors, categorical, polarity, reactionStats,
+        withDayContexts(agg.finalize(), messages, lang),
         { mlEnabled: true, device, ironyModel: !!ironyClassifier });
+}
+
+/**
+ * Attach the « why » to the days the deck will show.
+ *
+ * A date and a temperature explain nothing on their own, so each notable day
+ * is profiled against the rest of the conversation — volume, who held the
+ * floor, the hour it peaked, the silence around it, the words it turned on.
+ * Only the shown days are profiled: the cost is one extra pass, never a
+ * per-day index of the whole archive.
+ */
+function withDayContexts(aggregates, messages, lang) {
+    const days = [...(aggregates.bestDays ?? []), ...(aggregates.worstDays ?? [])];
+    if (days.length === 0) return aggregates;
+    const contexts = buildDayContexts(messages, lang, days.map(d => d.date));
+    for (const day of days) {
+        const ctx = contexts[day.date];
+        if (ctx) day.context = ctx;
+    }
+    return aggregates;
 }

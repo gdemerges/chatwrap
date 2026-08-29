@@ -1,4 +1,4 @@
-import { MIN_DAY_SAMPLES, MIN_AFTER_SAMPLES, MIN_STABLE_SAMPLES } from './sentiment-config.js';
+import { MIN_DAY_SAMPLES, MIN_DAY_PER_AUTHOR, MIN_AFTER_SAMPLES, MIN_STABLE_SAMPLES } from './sentiment-config.js';
 
 /**
  * Mutable accumulators for temporal & directed sentiment signals.
@@ -9,6 +9,7 @@ export function newAggregator() {
     const monthlyPPAgg = {};
     const hourlyAgg    = {};
     const dailyAgg     = {};
+    const dailyPPAgg   = {};
     const afterAgg     = {};
 
     function addEvent(author, dt, pol, prevAuthor) {
@@ -27,6 +28,10 @@ export function newAggregator() {
             hourlyAgg[h].count++;
             (dailyAgg[dKey] ??= { sum: 0, count: 0 }).sum += pol;
             dailyAgg[dKey].count++;
+            // Who carried the day's tone — the difference between « the 12th
+            // was tense » and « the 12th was tense, and it was mostly Léa ».
+            ((dailyPPAgg[dKey] ??= {})[author] ??= { sum: 0, count: 0 }).sum += pol;
+            dailyPPAgg[dKey][author].count++;
         }
         if (prevAuthor) {
             (afterAgg[prevAuthor] ??= { sum: 0, count: 0 }).sum += pol;
@@ -50,7 +55,15 @@ export function newAggregator() {
         });
         const dayEntries = Object.entries(dailyAgg)
             .filter(([, v]) => v.count >= MIN_DAY_SAMPLES)
-            .map(([k, v]) => ({ date: k, mean: v.sum / v.count, count: v.count }));
+            .map(([k, v]) => ({
+                date: k,
+                mean: v.sum / v.count,
+                count: v.count,
+                perAuthor: Object.entries(dailyPPAgg[k] ?? {})
+                    .filter(([, a]) => a.count >= MIN_DAY_PER_AUTHOR)
+                    .map(([author, a]) => ({ author, mean: a.sum / a.count, count: a.count }))
+                    .sort((a, b) => a.mean - b.mean),
+            }));
         const bestDays  = [...dayEntries].sort((a, b) => b.mean - a.mean).slice(0, 3);
         const worstDays = [...dayEntries].sort((a, b) => a.mean - b.mean).slice(0, 3);
         const afterAuthor = Object.fromEntries(

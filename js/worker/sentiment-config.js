@@ -12,6 +12,7 @@ export const BATCH_CPU = 8;
 export const STRONG = 0.4;
 export const IRONY_FLIP_WEIGHT = 0.7;
 export const MIN_DAY_SAMPLES = 3;
+export const MIN_DAY_PER_AUTHOR = 2;
 export const MIN_AFTER_SAMPLES = 5;
 export const MIN_STABLE_SAMPLES = 30;
 

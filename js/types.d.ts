@@ -125,9 +125,36 @@ export interface SentimentResult {
     monthly: Record<string, number>;
     monthlyPerPerson: Record<string, Record<string, number>>;
     sentimentHourly: Array<number | null>;
-    bestDays: Array<{ date: string; mean: number; count: number }>;
-    worstDays: Array<{ date: string; mean: number; count: number }>;
+    bestDays: NotableDay[];
+    worstDays: NotableDay[];
     afterAuthor: Record<string, { mean: number; count: number }>;
+}
+
+export interface DayContext {
+    messages: number;
+    volumeRatio: number | null;
+    topAuthor: { author: string; share: number } | null;
+    participants: number;
+    peakHour: number;
+    peakHourShare: number;
+    nightShare: number;
+    questionShare: number;
+    mediaShare: number;
+    longestMessage: number;
+    replyRatio: number | null;
+    silenceBefore: number;
+    silenceAfter: number;
+    keywords: string[];
+    emojis: string[];
+}
+
+export interface NotableDay {
+    date: string;
+    mean: number;
+    count: number;
+    perAuthor: Array<{ author: string; mean: number; count: number }>;
+    /** Absent when the day held too little material to profile. */
+    context?: DayContext;
 }
 
 export interface Stats {

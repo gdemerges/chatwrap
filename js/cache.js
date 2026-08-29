@@ -8,7 +8,10 @@ const DB_NAME = 'wa-wrapped';
 const STORE = 'stats';
 // v3: cache keys moved into the worker and now encode the date range and
 // the AI-sentiment toggle — old keys are meaningless, drop them.
-const DB_VERSION = 3;
+// v4: notable days now carry the context that explains them; entries computed
+// before that hold a sentiment payload without it and would silently serve a
+// dateless verdict forever.
+const DB_VERSION = 4;
 const TTL_DAYS = 14;
 
 /** Opens (and migrates) the database. */

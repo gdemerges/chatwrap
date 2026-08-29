@@ -4,6 +4,7 @@ import { t } from '../i18n.js';
 import { CHART_COLORS } from './_constants.js';
 import { monthLabels } from './_helpers.js';
 import { makeChart } from './_charts.js';
+import { dayWhy } from './_day-why.js';
 
 export function ambianceSlide(stats, gradient) {
     const st = stats.sentiment;
@@ -164,32 +165,39 @@ export function moodHourlySlide(stats, gradient) {
 export function momentsSlide(stats, gradient) {
     const st = stats.sentiment;
     if (!st || !st.mlEnabled) return null;
-    const hasBest  = st.bestDays?.length > 0;
-    const hasWorst = st.worstDays?.length > 0;
-    if (!hasBest && !hasWorst) return null;
-    const fmtDay = d => fmtDayMonth(d);
+    const best  = (st.bestDays || []).slice(0, 3);
+    const worst = (st.worstDays || []).filter(d => !best.some(b => b.date === d.date)).slice(0, 2);
+    if (best.length === 0 && worst.length === 0) return null;
+
     const moodIcon  = v => v > 0.5 ? '🌟' : v > 0.15 ? '☀️' : v < -0.5 ? '⛈️' : '🌧️';
     const moodLabel = v => t(v > 0.5 ? 'slide.moments.great'
         : v > 0.15 ? 'slide.moments.good'
         : v < -0.5 ? 'slide.moments.hard'
         : 'slide.moments.tense');
-    const bestItems = (st.bestDays || []).slice(0, 3).map(d =>
-        `<div class="fun-fact"><div class="fun-fact-icon">${moodIcon(d.mean)}</div><div class="fun-fact-text"><strong>${fmtDay(d.date)}</strong> — ${moodLabel(d.mean)}</div></div>`
-    ).join('');
-    const worstItems = (st.worstDays || [])
-        .filter(d => !(st.bestDays || []).some(b => b.date === d.date))
-        .slice(0, 2).map(d =>
-            `<div class="fun-fact"><div class="fun-fact-icon">${moodIcon(d.mean)}</div><div class="fun-fact-text"><strong>${fmtDay(d.date)}</strong> — ${moodLabel(d.mean)}</div></div>`
-        ).join('');
-    if (!bestItems && !worstItems) return null;
+
+    /** A day, and — where the context allows — why it turned out that way. */
+    const day = (d, tone) => {
+        const why = dayWhy(d, tone);
+        return `<div class="fun-fact">
+            <div class="fun-fact-icon">${moodIcon(d.mean)}</div>
+            <div class="fun-fact-text">
+                <strong>${fmtDayMonth(d.date)}</strong> — ${moodLabel(d.mean)}
+                ${why.length > 0 ? `<ul class="day-why">${why.map(w => `<li>${w}</li>`).join('')}</ul>` : ''}
+            </div>
+        </div>`;
+    };
+
+    const bestItems  = best.map(d => day(d, 'best')).join('');
+    const worstItems = worst.map(d => day(d, 'worst')).join('');
     return {
         gradient,
         html: `
             <div class="slide-inner">
                 <span class="slide-tag">${t('slide.moments.tag')}</span>
                 <h2 class="slide-title">${t('slide.moments.title')}</h2>
-                ${bestItems  ? `<p style="color:var(--text-muted);font-size:0.8rem;margin-bottom:0.4rem;">${t('slide.moments.bestTitle')}</p>${bestItems}` : ''}
-                ${worstItems ? `<p style="color:var(--text-muted);font-size:0.8rem;margin:0.75rem 0 0.4rem;">${t('slide.moments.worstTitle')}</p>${worstItems}` : ''}
+                <p class="slide-subtitle">${t('slide.moments.subtitle')}</p>
+                ${bestItems  ? `<p class="day-group">${t('slide.moments.bestTitle')}</p>${bestItems}` : ''}
+                ${worstItems ? `<p class="day-group">${t('slide.moments.worstTitle')}</p>${worstItems}` : ''}
             </div>
         `,
     };
