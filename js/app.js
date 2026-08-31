@@ -14,6 +14,8 @@ import { showToast, showError, announce } from './ui/toast.js';
 import { readHash, clearHash } from './ui/hash.js';
 import { ensureJSZip, ensureLZString, preload } from './vendor.js';
 import { buildDemoBlob } from './demo.js';
+import { pinConversation, getPinned, clearPinned, isSameConversation } from './compare.js';
+import { compareYears } from './stats.js';
 import { escapeHtml } from './utils.js';
 import { TIP_JAR_URL } from './config.js';
 import { track, trackPageview, isEnabled as analyticsEnabled, isOptedOut, setOptOut } from './analytics.js';
@@ -36,16 +38,19 @@ const screens = {
 const fileInput = $('#file-input');
 const dropZone = $('#drop-zone');
 const loadingStatus = $('#loading-status');
+const loadingFile = $('#loading-file');
 const aiToggle = $('#ai-toggle');
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 const AI_KEY = 'ww-use-ai';
 const SESSION_KEY = 'ww-stats';
 
-/** @type {{ stats: any, comparison: any, slides: any[] } | null} */
+/** @type {{ stats: any, comparison: any, versus: any, slides: any[] } | null} */
 let session = null;
 let period = { year: null, range: null };
 let periodOptions = null; // { years, yearCounts, bounds }
+/** Name of the file the current deck came from — shown, never uploaded. */
+let sourceName = null;
 
 const deck = new Deck({
     container: $('#slides-container'),
@@ -55,6 +60,10 @@ const deck = new Deck({
         const hint = $('#swipe-hint');
         if (hint) hint.style.display = 'none';
     },
+    // Slides are filled in as they come into reach, so the recap slide's
+    // markup does not exist right after `mount` any more. Its buttons are
+    // wired the moment it does.
+    onSlideReady: (_i, el) => wireRecapActions(el),
 });
 
 // ========== Service worker ==========
@@ -103,11 +112,42 @@ function showScreen(name) {
 
 // ========== Worker ==========
 let worker = null;
+/** Rejects the call in flight, so `cancelAnalysis` can unblock the caller. */
+let abortInFlight = null;
 
 function getWorker() {
     if (!worker) worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
     return worker;
 }
+
+/** Marks the one error the callers are expected to swallow silently. */
+const CANCELLED = 'cancelled';
+
+/**
+ * Stop whatever the worker is doing and go back to the upload screen.
+ *
+ * There is no cooperative way out of a long parse or a 50 MB model download,
+ * so the worker is killed outright; the next analysis builds a fresh one. That
+ * also drops the retained parse, which is why `periodOptions` is cleared —
+ * there is no file loaded any more to re-slice.
+ */
+function cancelAnalysis() {
+    if (worker) {
+        worker.terminate();
+        worker = null;
+    }
+    periodOptions = null;
+    sourceName = null;
+    period = { year: null, range: null };
+    fileInput.value = '';
+    const reject = abortInFlight;
+    abortInFlight = null;
+    reject?.(Object.assign(new Error(t('loading.cancelled')), { code: CANCELLED }));
+    showToast(t('loading.cancelled'));
+    showScreen('upload');
+}
+
+$('#loading-cancel').addEventListener('click', cancelAnalysis);
 
 /**
  * One request/response round-trip. Progress messages are streamed to the
@@ -116,13 +156,17 @@ function getWorker() {
 function callWorker(message, transfer = []) {
     return new Promise((resolve, reject) => {
         const w = getWorker();
+        abortInFlight = reject;
         const onMessage = (e) => {
             if (e.data.kind === 'progress') {
-                loadingStatus.textContent = e.data.text;
+                // The worker names the step; the wording is chosen here, in the
+                // language the visitor picked.
+                loadingStatus.textContent = t(`loading.${e.data.code}`, e.data.params || {});
                 return;
             }
             w.removeEventListener('message', onMessage);
             w.removeEventListener('error', onError);
+            abortInFlight = null;
             if (e.data.kind === 'error') {
                 // The worker names the failure; the page words it.
                 const err = new Error(e.data.code ? t(`error.${e.data.code}`) : e.data.message);
@@ -135,6 +179,7 @@ function callWorker(message, transfer = []) {
         const onError = (e) => {
             w.removeEventListener('message', onMessage);
             w.removeEventListener('error', onError);
+            abortInFlight = null;
             reject(new Error(e.message || t('error.computeFailed')));
         };
         w.addEventListener('message', onMessage);
@@ -182,7 +227,23 @@ window.addEventListener('drop', (e) => {
     if (!dropZone.contains(e.target)) handleFile(e.dataTransfer.files[0]);
 });
 
+/**
+ * Pasting the export works too.
+ *
+ * On iOS and on Windows the natural gesture after "share to Files" is a paste,
+ * and the drop zone answered only to a drag. Ignored while a deck is on
+ * screen, so Ctrl+V into the share sheet is not intercepted.
+ */
+window.addEventListener('paste', (e) => {
+    if (!screens.upload.classList.contains('active')) return;
+    const file = e.clipboardData?.files?.[0];
+    if (!file) return;
+    e.preventDefault();
+    handleFile(file);
+});
+
 $('#demo-btn').addEventListener('click', () => runDemo());
+$('#demo-peek').addEventListener('click', () => runDemo());
 $('#error-demo').addEventListener('click', () => runDemo());
 $('#error-retry').addEventListener('click', () => {
     showScreen('upload');
@@ -192,7 +253,7 @@ $('#error-retry').addEventListener('click', () => {
 
 function runDemo() {
     showToast(t('upload.demoNotice'));
-    handleBlob(buildDemoBlob(), { demo: true });
+    handleBlob(buildDemoBlob(), { demo: true, name: t('upload.demoName') });
 }
 
 async function handleFile(file) {
@@ -206,17 +267,53 @@ async function handleFile(file) {
     }
 
     showScreen('loading');
+    setSourceName(file.name);
     try {
         const blob = file.name.toLowerCase().endsWith('.zip') ? await unzip(file) : file;
-        await handleBlob(blob);
+        await handleBlob(blob, { name: file.name });
     } catch (err) {
+        if (err.code === CANCELLED) return;
         console.error(err);
         showFatal(err.message, err.diagnostics);
     }
 }
 
-async function handleBlob(blob, { demo = false } = {}) {
+/**
+ * Show which file is being read, and which one the deck came from.
+ *
+ * The name never leaves the page — it is not in the share payload and not in
+ * any analytics event. It is here because after the import screen there was
+ * nothing left saying *which* conversation you were looking at, which is
+ * confusing the moment you analyse a second one.
+ */
+function setSourceName(name) {
+    sourceName = name || null;
+    if (loadingFile) {
+        loadingFile.textContent = sourceName || '';
+        loadingFile.hidden = !sourceName;
+    }
+    updateSourceLabel();
+}
+
+function updateSourceLabel() {
+    const el = $('#deck-source');
+    if (!el) return;
+    if (!sourceName) {
+        el.hidden = true;
+        el.textContent = '';
+        return;
+    }
+    const scope = period.range
+        ? `${period.range.from.slice(0, 10)} → ${period.range.to.slice(0, 10)}`
+        : (period.year == null ? t('toolbar.periodAll') : String(period.year));
+    el.hidden = false;
+    el.textContent = `${sourceName} · ${scope}`;
+    el.title = el.textContent;
+}
+
+async function handleBlob(blob, { demo = false, name = null } = {}) {
     showScreen('loading');
+    if (name) setSourceName(name);
     announce(t('loading.announce'));
     // Likely needed within seconds; warmed here so the first chart slide and
     // the first share don't pay for the round-trip.
@@ -227,17 +324,18 @@ async function handleBlob(blob, { demo = false } = {}) {
         if (info.kind !== 'years') throw new Error(t('error.workerInvalid'));
 
         periodOptions = { years: info.years, yearCounts: info.yearCounts, bounds: info.bounds };
-        period = { year: info.years.length === 1 ? info.years[0] : null, range: null };
-
-        if (info.years.length > 1 && !demo) {
-            showScreen('upload');
-            const chosen = await pickPeriod({ ...periodOptions, current: period });
-            if (chosen === undefined) { showScreen('upload'); return; } // cancelled
-            period = chosen;
-        }
+        // A multi-year chat used to stop here and demand a choice before it
+        // would show anything — a modal in front of a result nobody had seen
+        // yet. It opens on the most recent year instead, and says so; the
+        // period button changes it, and now has something to change *from*.
+        period = { year: info.years[0], range: null };
 
         await computeAndShow();
+        if (info.years.length > 1 && !demo) {
+            showToast(t('toolbar.periodDefaulted', { year: info.years[0] }));
+        }
     } catch (err) {
+        if (err.code === CANCELLED) return;
         console.error(err);
         showFatal(err.message, err.diagnostics);
     }
@@ -279,18 +377,43 @@ async function unzip(file) {
 
 // ========== Presentation ==========
 function present(stats, comparison) {
-    const slides = generateSlides(stats, comparison);
-    session = { stats, comparison, slides };
+    const versus = buildVersus(stats);
+    const slides = generateSlides(stats, comparison, versus);
+    session = { stats, comparison, versus, slides };
     deck.mount(slides);
-    wireRecapActions();
     updatePeriodButton();
+    updateSourceLabel();
+    updatePinButton();
     showScreen('wrapped');
     announce(t('deck.analysed', { n: fmt(stats.totalMessages) }));
 }
 
-/** The last slide offers the same actions as the toolbar, at thumb height. */
-function wireRecapActions() {
-    const host = deck.refs.container.querySelector('.recap-actions');
+/**
+ * Compare this conversation to the pinned one, if there is a different one.
+ *
+ * `compareYears` does the maths; all this decides is whether there is anything
+ * to compare. Re-analysing the same conversation — a different period of the
+ * same file, or the same file exported twice — is not a comparison, so it is
+ * dropped rather than shown as a row of zeros.
+ */
+function buildVersus(stats) {
+    const pinned = getPinned();
+    if (!pinned || isSameConversation(stats, pinned)) return null;
+    const versus = compareYears(stats, pinned.digest);
+    if (!versus) return null;
+    return {
+        versus,
+        pinnedName: pinned.name || t('compare.pinnedFallback'),
+        currentName: sourceName || t('compare.currentFallback'),
+    };
+}
+
+/**
+ * The last slide offers the same actions as the toolbar, at thumb height.
+ * @param {HTMLElement} slideEl the slide that just received its markup
+ */
+function wireRecapActions(slideEl) {
+    const host = slideEl.querySelector('.recap-actions');
     if (!host) return;
     host.innerHTML = '';
 
@@ -325,6 +448,11 @@ function updatePeriodButton() {
         : (period.year == null ? t('toolbar.periodAll') : String(period.year));
 }
 
+/** A deck restored from a link or from sessionStorage has no source file. */
+function forgetSource() {
+    setSourceName(null);
+}
+
 // ========== Toolbar ==========
 $('#nav-prev').addEventListener('click', () => { deck.stopStory(); deck.prev(); });
 $('#nav-next').addEventListener('click', () => { deck.stopStory(); deck.next(); });
@@ -352,11 +480,54 @@ $('#period-btn').addEventListener('click', async () => {
     try {
         await computeAndShow();
     } catch (err) {
+        if (err.code === CANCELLED) return;
         console.error(err);
         showError(err.message);
         showScreen('wrapped');
     }
 });
+
+$('#pin-btn').addEventListener('click', togglePin);
+
+/**
+ * Pin the conversation on screen, or drop the pin if it is already this one.
+ *
+ * Only a digest is stored — see `js/compare.js` — and it stays on the device.
+ */
+function togglePin() {
+    if (!session) return;
+    const pinned = getPinned();
+
+    if (pinned && isSameConversation(session.stats, pinned)) {
+        clearPinned();
+        showToast(t('compare.unpinned'));
+    } else if (pinConversation(session.stats, sourceName || t('compare.currentFallback'))) {
+        showToast(t('compare.pinned'));
+    } else {
+        showError(t('compare.pinFailed'));
+        return;
+    }
+    track('pin_conversation');
+    updatePinButton();
+}
+
+/**
+ * The button says what pressing it will do, and the deck says what it already
+ * did — a pinned conversation shows up as a slide, not as a badge.
+ */
+function updatePinButton() {
+    const btn = $('#pin-btn');
+    if (!btn) return;
+    btn.hidden = !session;
+    if (!session) return;
+
+    const pinned = getPinned();
+    const isThisOne = pinned && isSameConversation(session.stats, pinned);
+    btn.setAttribute('aria-pressed', String(Boolean(isThisOne)));
+    btn.querySelector('.toolbar-label').textContent = t(isThisOne ? 'compare.unpin' : 'compare.pin');
+    btn.setAttribute('aria-label', t(isThisOne ? 'compare.unpinAria' : 'compare.pinAria'));
+    btn.title = pinned && !isThisOne ? t('compare.against', { name: pinned.name }) : '';
+}
 
 $('#share-btn').addEventListener('click', openShare);
 
@@ -382,6 +553,8 @@ function resetAll() {
     session = null;
     period = { year: null, range: null };
     periodOptions = null;
+    updatePinButton();
+    forgetSource();
     fileInput.value = '';
     showScreen('upload');
 }
@@ -474,6 +647,7 @@ async function restore() {
 
 initLangPicker();
 syncStoryButton(false);
+updatePinButton();
 renderPrivacyNote();
 renderTipJar();
 trackPageview();
@@ -509,6 +683,8 @@ onLocaleChange(() => {
     const picker = $('#lang-select');
     if (picker) picker.value = getLocale();
     renderPrivacyNote();
+    updateSourceLabel();
+    updatePinButton();
     const tip = document.querySelector('.tip-link');
     if (tip) tip.textContent = t('upload.tipJar');
     syncStoryButton();
@@ -516,9 +692,9 @@ onLocaleChange(() => {
 
     if (!session) return;
     deck.stopStory();
-    session.slides = generateSlides(session.stats, session.comparison);
+    session.versus = buildVersus(session.stats);
+    session.slides = generateSlides(session.stats, session.comparison, session.versus);
     deck.mount(session.slides);
-    wireRecapActions();
 });
 
 /**

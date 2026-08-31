@@ -54,9 +54,14 @@ describe('app boot', () => {
             .toBe('Déposer un fichier WhatsApp exporté');
     });
 
-    it('fills the language picker from the registered locales', () => {
+    it('fills the language picker from the registered locales', async () => {
+        // Read from `LOCALES` rather than a hard-coded pair: the point of the
+        // picker is that registering a dictionary is enough to make it appear,
+        // and a literal list here would fail every time that happens.
+        const { LOCALES } = await import('../js/i18n.js');
         const options = [...document.querySelectorAll('#lang-select option')];
-        expect(options.map(o => o.value).sort()).toEqual(['en', 'fr']);
+        expect(options.map(o => o.value).sort()).toEqual(Object.keys(LOCALES).sort());
+        expect(options.length).toBeGreaterThan(1);
         expect(document.querySelector('#lang-select').value).toBe('fr');
     });
 
@@ -74,6 +79,24 @@ describe('app boot', () => {
         expect(document.querySelector('#period-btn').hidden).toBe(true);
     });
 
+    it('keeps the pin button hidden until there is something to pin', () => {
+        expect(document.querySelector('#pin-btn').hidden).toBe(true);
+    });
+
+    it('offers a way out of a long analysis', () => {
+        // The loading screen used to be a dead end: no cancel, and the AI
+        // option can sit there downloading ~50 MB.
+        expect(document.querySelector('#loading-cancel')).not.toBeNull();
+        expect(document.querySelector('#loading-cancel').textContent).toBe('Annuler');
+    });
+
+    it('shows what a deck looks like before asking for a file', () => {
+        const peek = document.querySelector('#demo-peek');
+        expect(peek).not.toBeNull();
+        expect(peek.getAttribute('aria-label')).toBe('Voir un exemple de rétrospective');
+        expect(peek.querySelectorAll('.peek-card')).toHaveLength(3);
+    });
+
     it('states the privacy position, and says nothing about a counter that is off', () => {
         const note = document.querySelector('.privacy-note').textContent;
         expect(note).toContain('restent sur ton appareil');
@@ -85,13 +108,21 @@ describe('app boot', () => {
         expect(getLocale()).toBe('fr');
     });
 
-    it('would have picked English for an English browser', async () => {
-        const { initLocale, getLocale, setLocale } = await import('../js/i18n.js');
-        Object.defineProperty(window.navigator, 'languages', { value: ['de-DE', 'en-GB'], configurable: true });
+    it('walks the browser language list until it finds one it speaks', async () => {
+        const { initLocale, getLocale, setLocale, LOCALES } = await import('../js/i18n.js');
         window.localStorage.removeItem('ww-locale');
-        // German is not translated yet, so the second choice wins.
+
+        // Japanese has no dictionary, so the second choice wins. Deliberately
+        // *not* a language listed in LOCALES — this test is about the fallback
+        // walk, and picking a translated first entry would test nothing.
+        expect(Object.keys(LOCALES)).not.toContain('ja');
+        Object.defineProperty(window.navigator, 'languages', { value: ['ja-JP', 'en-GB'], configurable: true });
         expect(initLocale()).toBe('en');
         expect(getLocale()).toBe('en');
+
+        // And a first choice it does speak is taken as is.
+        Object.defineProperty(window.navigator, 'languages', { value: ['de-DE', 'en-GB'], configurable: true });
+        expect(initLocale()).toBe('de');
 
         Object.defineProperty(window.navigator, 'languages', { value: ['fr-FR'], configurable: true });
         expect(initLocale()).toBe('fr');

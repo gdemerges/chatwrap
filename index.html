@@ -55,6 +55,26 @@
             </div>
             <p class="upload-subtitle" data-i18n="upload.subtitle">Les stats cachées de tes conversations WhatsApp</p>
 
+            <!-- What the deck looks like, before committing a file to it. The
+                 figures are illustrative; the button loads the labelled sample. -->
+            <button type="button" class="demo-peek" id="demo-peek" data-i18n-attr="aria-label:upload.peekAria" aria-label="Voir un exemple de rétrospective">
+                <span class="peek-card peek-1" aria-hidden="true">
+                    <span class="peek-num">12 480</span>
+                    <span class="peek-lab" data-i18n="units.messages">messages</span>
+                </span>
+                <span class="peek-card peek-2" aria-hidden="true">
+                    <span class="peek-bars">
+                        <i style="height:38%"></i><i style="height:62%"></i><i style="height:45%"></i>
+                        <i style="height:88%"></i><i style="height:70%"></i><i style="height:54%"></i>
+                    </span>
+                    <span class="peek-lab" data-i18n="slide.monthly.tag">Activité</span>
+                </span>
+                <span class="peek-card peek-3" aria-hidden="true">
+                    <span class="peek-emoji">😂</span>
+                    <span class="peek-lab" data-i18n="slide.emojis.tag">Emojis</span>
+                </span>
+            </button>
+
             <div class="drop-zone" id="drop-zone" tabindex="0" role="button" data-i18n-attr="aria-label:upload.dropLabel" aria-label="Déposer un fichier WhatsApp exporté">
                 <div class="drop-icon" aria-hidden="true">+</div>
                 <p data-i18n="upload.dropHint">Glisse ton fichier .txt ou .zip ici</p>
@@ -97,6 +117,8 @@
             <div class="loading-spinner" aria-hidden="true"></div>
             <p class="loading-text" data-i18n="loading.title">Analyse en cours...</p>
             <p class="loading-sub" id="loading-status" data-i18n="loading.reading">Lecture du fichier</p>
+            <p class="loading-file" id="loading-file" hidden></p>
+            <button type="button" class="ghost-btn loading-cancel" id="loading-cancel" data-i18n="loading.cancel">Annuler</button>
         </div>
     </div>
 
@@ -119,6 +141,7 @@
         <div class="story-progress" id="story-progress" role="tablist" data-i18n-attr="aria-label:deck.progress" aria-label="Navigation entre les slides"></div>
         <div class="slides-container" id="slides-container"></div>
         <div class="slide-counter" id="slide-counter" aria-hidden="true"></div>
+        <p class="deck-source" id="deck-source" hidden></p>
         <button class="nav-arrow nav-prev" type="button" id="nav-prev" data-i18n-attr="aria-label:deck.prev" aria-label="Slide précédente">&larr;</button>
         <button class="nav-arrow nav-next" type="button" id="nav-next" data-i18n-attr="aria-label:deck.next" aria-label="Slide suivante">&rarr;</button>
         <div class="swipe-hint" id="swipe-hint" aria-hidden="true" data-i18n="deck.swipeHint">Swipe ou utilise les flèches &rarr;</div>
@@ -132,6 +155,9 @@
             </button>
             <button class="toolbar-btn" type="button" id="period-btn" hidden data-i18n-attr="aria-label:toolbar.periodAria" aria-label="Changer la période analysée">
                 <span aria-hidden="true">📅</span><span class="toolbar-label" id="period-label">Période</span>
+            </button>
+            <button class="toolbar-btn" type="button" id="pin-btn" hidden aria-pressed="false" aria-label="Épingler cette conversation">
+                <span aria-hidden="true">📌</span><span class="toolbar-label">Épingler</span>
             </button>
             <button class="toolbar-btn toolbar-btn-primary" type="button" id="share-btn" data-i18n-attr="aria-label:toolbar.share" aria-label="Partager">
                 <span aria-hidden="true">↗</span><span class="toolbar-label" data-i18n="toolbar.share">Partager</span>

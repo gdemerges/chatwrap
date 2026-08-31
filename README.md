@@ -20,7 +20,7 @@ dans ton navigateur, sans aucun envoi de données.
 - **Période libre** : une année, tout l'historique, ou une plage de dates au choix
 - **Dashboard** : vue tableau détaillée, filtre par participant, export CSV / JSON
 - **Analyse de sentiment** : par emojis et vocabulaire par défaut, par IA locale en option
-- **Interface multilingue** : français et anglais, détectés depuis le navigateur, changeables à tout moment
+- **Interface multilingue** : français, anglais, espagnol, allemand, portugais, italien et néerlandais — détectés depuis le navigateur, changeables à tout moment
 - **100% client-side** : aucune donnée n'est envoyée à un serveur
 - **Multi-format** : exports iOS et Android, en français, anglais, espagnol, allemand, portugais, italien et néerlandais
 
@@ -115,8 +115,9 @@ export const ANALYTICS = {
 `dashboard.html`, sinon toutes les requêtes sont bloquées et le compteur n'enregistre rien.
 
 Ce qui est envoyé, et rien d'autre : le nom de l'événement (`pageview`, `analysis`, `poster`,
-`share_link`, `share_image`, `export`, `dashboard`, `parse_error`) et quelques propriétés
-techniques (format du poster, lien anonymisé ou non). **Aucune valeur issue d'une conversation** —
+`share_link`, `share_image`, `export`, `export_data`, `pin_conversation`, `dashboard`,
+`parse_error`) et quelques
+propriétés techniques (format du poster, format de l'export de données, lien anonymisé ou non). **Aucune valeur issue d'une conversation** —
 ni le nombre de messages, ni le nombre de participants. L'URL est réduite à son chemin : le
 fragment `#share=…` contient les statistiques et ne doit jamais atteindre un endpoint.
 
@@ -157,6 +158,8 @@ site/
     ├── export-image.js    # rendu canvas des images partageables
     ├── anonymize.js       # remplacement des prénoms par des initiales
     ├── i18n.js            # langue de l'interface, t(), traduction du HTML statique
+    ├── compare.js         # épingle une conversation pour comparer la suivante
+    ├── export-data.js     # export des stats en JSON / CSV
     ├── format.js          # nombres, dates, heures et jours selon la langue
     ├── demo.js            # conversation d'exemple générée
     ├── vendor.js          # chargement paresseux des scripts CDN
@@ -176,7 +179,8 @@ site/
 
 ### De l'interface
 
-Français et anglais. La langue est choisie au premier chargement dans l'ordre suivant :
+Français, anglais, espagnol, allemand, portugais, italien et néerlandais — les sept que le
+parseur sait déjà lire. La langue est choisie au premier chargement dans l'ordre suivant :
 préférence enregistrée, puis `navigator.languages`, puis français. Le sélecteur en bas à
 droite la change à chaud — le deck est reconstruit sur la slide en cours, sans recalcul.
 
@@ -199,3 +203,11 @@ espagnol, allemand, portugais, italien et néerlandais** — voir `js/lang/chat-
 
 L'ordre jour/mois est déduit du fichier entier, pas du séparateur : un export européen avec
 année sur deux chiffres (`12/03/24`) n'est plus lu comme du mois-en-premier.
+
+### De la conversation analysée
+
+La langue du chat est déduite des mots eux-mêmes (`detectLanguage`, `js/lang/stopwords.js`)
+et pilote les mots vides retirés du nuage de vocabulaire. Les mêmes sept langues sont
+couvertes : avant, tout était scoré contre le français, et le top mots d'une conversation
+espagnole était `que, de, la, y`. Les mots sont découpés avec `\p{L}` plutôt qu'avec une
+plage de lettres françaises — `años` se coupait en `a` + `os`, `straße` en `stra` + `e`.

@@ -18,6 +18,11 @@
 
 import { fr } from './lang/ui/fr.js';
 import { en } from './lang/ui/en.js';
+import { es } from './lang/ui/es.js';
+import { de } from './lang/ui/de.js';
+import { pt } from './lang/ui/pt.js';
+import { it } from './lang/ui/it.js';
+import { nl } from './lang/ui/nl.js';
 
 const STORAGE_KEY = 'ww-locale';
 
@@ -27,6 +32,11 @@ export const FALLBACK = 'fr';
 export const LOCALES = {
     fr: { code: 'fr', label: 'Français', dict: fr },
     en: { code: 'en', label: 'English', dict: en },
+    es: { code: 'es', label: 'Español', dict: es },
+    de: { code: 'de', label: 'Deutsch', dict: de },
+    pt: { code: 'pt', label: 'Português', dict: pt },
+    it: { code: 'it', label: 'Italiano', dict: it },
+    nl: { code: 'nl', label: 'Nederlands', dict: nl },
 };
 
 /** @type {string} */

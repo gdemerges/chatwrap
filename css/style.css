@@ -31,6 +31,22 @@
     --font-display: 'Space Grotesk', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     --font-body: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
+    /* Fluid type scale.
+       Sizes used to be fixed rem overridden at 600px, so the deck jumped
+       between two states and read cramped everywhere in between — an iPhone SE
+       and a 27" monitor got the same 4.5rem headline number until the
+       breakpoint fired. Each step interpolates on viewport width instead, with
+       both ends pinned so nothing runs away on a very wide or very narrow
+       screen. */
+    --text-xs:    clamp(0.7rem, 0.66rem + 0.18vw, 0.78rem);
+    --text-sm:    clamp(0.82rem, 0.78rem + 0.2vw, 0.9rem);
+    --text-base:  clamp(0.9rem, 0.85rem + 0.25vw, 1rem);
+    --text-lg:    clamp(1rem, 0.92rem + 0.4vw, 1.2rem);
+    --text-stat:  clamp(1.35rem, 1.05rem + 1.5vw, 1.8rem);
+    --text-title: clamp(1.45rem, 1.05rem + 2vw, 2rem);
+    --text-hero:  clamp(2.6rem, 1.4rem + 6vw, 4.5rem);
+    --text-logo:  clamp(2rem, 1.5rem + 2.5vw, 2.5rem);
+
     --bg-dark: #0a0a0a;
     --bg-card: #151515;
     --accent-green: #25D366;
@@ -127,7 +143,7 @@ html, body {
 
 .logo-title {
     font-family: var(--font-display);
-    font-size: 2.5rem;
+    font-size: var(--text-logo);
     font-weight: 900;
     line-height: 1.1;
     letter-spacing: -1px;
@@ -143,8 +159,97 @@ html, body {
 
 .upload-subtitle {
     color: var(--text-secondary);
-    font-size: 1.05rem;
+    font-size: var(--text-lg);
     margin-bottom: 2rem;
+}
+
+/* ---- What you get, before you hand over a file ----
+   The landing screen described the product but never showed it: the only way
+   to find out what a deck looked like was to upload a conversation, which is
+   exactly the step people hesitate on. Three miniature cards, in the deck's own
+   gradients, standing in for the real thing — and the whole block loads the
+   labelled sample. */
+.demo-peek {
+    display: flex;
+    justify-content: center;
+    gap: 0.6rem;
+    width: 100%;
+    margin: 0 0 1.75rem;
+    padding: 0;
+    background: none;
+    border: 0;
+    cursor: pointer;
+    perspective: 800px;
+}
+
+.peek-card {
+    flex: 0 1 6.5rem;
+    aspect-ratio: 9 / 14;
+    min-width: 0;
+    border-radius: 12px;
+    border: 1px solid var(--surface-border);
+    padding: 0.6rem 0.4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    overflow: hidden;
+    color: var(--text-primary);
+    transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.peek-1 { background: var(--gradient-1); transform: rotate(-5deg) translateY(4px); }
+.peek-2 { background: var(--gradient-4); transform: translateY(-4px); }
+.peek-3 { background: var(--gradient-5); transform: rotate(5deg) translateY(4px); }
+
+.demo-peek:hover .peek-1,
+.demo-peek:focus-visible .peek-1 { transform: rotate(-8deg) translateY(0); }
+.demo-peek:hover .peek-2,
+.demo-peek:focus-visible .peek-2 { transform: translateY(-9px) scale(1.03); }
+.demo-peek:hover .peek-3,
+.demo-peek:focus-visible .peek-3 { transform: rotate(8deg) translateY(0); }
+
+.peek-num {
+    font-family: var(--font-display);
+    font-size: clamp(0.85rem, 0.6rem + 1.1vw, 1.15rem);
+    font-weight: 900;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.peek-lab {
+    font-size: 0.55rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.peek-emoji { font-size: 1.6rem; line-height: 1; }
+
+.peek-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 2.4rem;
+}
+
+.peek-bars i {
+    width: 5px;
+    border-radius: 2px 2px 0 0;
+    background: currentColor;
+    opacity: 0.75;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .peek-card { transition: none; }
+}
+
+@media (max-width: 380px) {
+    /* Three cards do not fit; the middle one carries the idea on its own. */
+    .peek-1, .peek-3 { display: none; }
+    .peek-2 { flex-basis: 7.5rem; transform: none; }
 }
 
 .how-to {
@@ -288,6 +393,24 @@ html, body {
     font-size: 0.9rem;
 }
 
+/* The file being read, so a long analysis says *what* it is analysing. */
+.loading-file {
+    margin-top: 0.35rem;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    max-width: min(28rem, 80vw);
+    margin-inline: auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Deliberately quiet, and deliberately always there: reading a large export or
+   downloading the sentiment model can take a while, and there was no way out. */
+.loading-cancel {
+    margin-top: 1.75rem;
+}
+
 /* ============ WRAPPED SLIDES ============ */
 
 #wrapped-screen {
@@ -356,7 +479,7 @@ html, body {
 .slide-title {
     font-family: var(--font-display);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 2rem;
+    font-size: var(--text-title);
     font-weight: 900;
     line-height: 1.15;
     margin-bottom: 0.75rem;
@@ -365,7 +488,7 @@ html, body {
 
 .slide-subtitle {
     color: var(--text-secondary);
-    font-size: 1rem;
+    font-size: var(--text-base);
     margin-bottom: 1.5rem;
     line-height: 1.5;
 }
@@ -374,7 +497,7 @@ html, body {
 .big-number {
     font-family: var(--font-display);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 4.5rem;
+    font-size: var(--text-hero);
     font-weight: 900;
     line-height: 1;
     margin-bottom: 0.25rem;
@@ -385,7 +508,7 @@ html, body {
 }
 
 .big-label {
-    font-size: 1rem;
+    font-size: var(--text-base);
     color: var(--text-secondary);
     margin-bottom: 1.5rem;
 }
@@ -409,13 +532,13 @@ html, body {
 .stat-card .stat-value {
     font-family: var(--font-display);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-size: 1.8rem;
+    font-size: var(--text-stat);
     font-weight: 900;
     line-height: 1.2;
 }
 
 .stat-card .stat-label {
-    font-size: 0.78rem;
+    font-size: var(--text-xs);
     color: var(--text-muted);
     margin-top: 0.2rem;
 }
@@ -612,7 +735,7 @@ html, body {
 }
 
 .fun-fact-text {
-    font-size: 0.9rem;
+    font-size: var(--text-sm);
     color: var(--text-secondary);
     line-height: 1.4;
 }
@@ -791,29 +914,15 @@ html, body {
         padding: 4.5rem 1rem 5.75rem;
     }
 
-    .slide-title {
-        font-size: 1.5rem;
-    }
-
-    .big-number {
-        font-size: 3rem;
-    }
-
+    /* No font-size overrides here any more: `--text-*` interpolate across the
+       whole range, so the breakpoint only has to handle layout. */
     .stat-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 0.5rem;
     }
 
-    .stat-card .stat-value {
-        font-size: 1.4rem;
-    }
-
     .nav-arrow {
         display: none;
-    }
-
-    .logo-title {
-        font-size: 2rem;
     }
 
     .heatmap-grid {
@@ -963,17 +1072,24 @@ body.dragging-file::after {
     --scrim: rgba(15, 23, 42, 0.45);
     --panel-bg: #ffffff;
     --panel-border: rgba(15, 23, 42, 0.12);
-    --gradient-1:  linear-gradient(135deg, #dfe3ff 0%, #e7e2ff 55%, #efe6fb 100%);
-    --gradient-2:  linear-gradient(135deg, #fbe3f6 0%, #f6cdec 55%, #efd8f8 100%);
-    --gradient-3:  linear-gradient(135deg, #f8e0f0 0%, #f0cde8 55%, #e6d6f8 100%);
-    --gradient-4:  linear-gradient(135deg, #dcecfb 0%, #c9e0f7 55%, #dbe7fb 100%);
-    --gradient-5:  linear-gradient(135deg, #ffe3e8 0%, #ffd0d6 55%, #ffdfe6 100%);
-    --gradient-6:  linear-gradient(135deg, #d6f4f2 0%, #b9ebe8 55%, #cdeff3 100%);
-    --gradient-7:  linear-gradient(135deg, #daf4e4 0%, #bde9d1 55%, #d2f1de 100%);
-    --gradient-8:  linear-gradient(135deg, #ffe6d8 0%, #ffd3bd 55%, #ffe0d0 100%);
-    --gradient-9:  linear-gradient(135deg, #e6e0fb 0%, #d7cbf7 55%, #e3daf9 100%);
-    --gradient-10: linear-gradient(135deg, #e2eaf4 0%, #cfdcec 55%, #dde6f2 100%);
-    --gradient-11: linear-gradient(135deg, #e3e0fd 0%, #cec9fa 55%, #ded9fc 100%);
+    /* Light-mode gradients carry the same section meaning as the dark ones, so
+       they need the same amount of separation. The first pass washed all
+       eleven out to near-white: intro (#dfe3ff), story (#e6e0fb) and outro
+       (#e3e0fd) were the same pale lilac, and the colour stopped saying which
+       chapter you were in — the whole point of `THEME`. Chroma is carried by
+       the middle stop, so that is where it is pushed; the ends stay light
+       enough to keep #0f172a text far above 7:1. */
+    --gradient-1:  linear-gradient(135deg, #d5dbfc 0%, #aab6f5 55%, #c7cffa 100%); /* intro — periwinkle */
+    --gradient-2:  linear-gradient(135deg, #fbdaf3 0%, #f2a9de 55%, #f7c9ec 100%); /* people — magenta */
+    --gradient-3:  linear-gradient(135deg, #f2d9f9 0%, #dbabee 55%, #e9c6f5 100%); /* words — plum */
+    --gradient-4:  linear-gradient(135deg, #d3e9fb 0%, #a3d0f6 55%, #c2e0fa 100%); /* time — ocean */
+    --gradient-5:  linear-gradient(135deg, #ffdedb 0%, #ffb4a8 55%, #ffcbc0 100%); /* emojis — sunset */
+    --gradient-6:  linear-gradient(135deg, #cdf2ef 0%, #93e0da 55%, #b8ebe7 100%); /* media — teal */
+    --gradient-7:  linear-gradient(135deg, #d4f3de 0%, #9fe2b7 55%, #c1edcf 100%); /* mood — forest */
+    --gradient-8:  linear-gradient(135deg, #ffe4ca 0%, #ffc596 55%, #ffd6b1 100%); /* relations — ember */
+    --gradient-9:  linear-gradient(135deg, #e9daf9 0%, #ccb0f2 55%, #ddc8f6 100%); /* story — lavender */
+    --gradient-10: linear-gradient(135deg, #dde7f2 0%, #bacbdd 55%, #cedbe8 100%); /* fun — steel */
+    --gradient-11: linear-gradient(135deg, #d9cffb 0%, #b2a1f4 55%, #cbc0f8 100%); /* outro — violet */
 }
 
 :root[data-theme="light"] .ranking-bar,
@@ -1262,6 +1378,38 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
+/* Which conversation, and which slice of it — the counter says where you are
+   in the deck, this says what the deck is *of*. Sits under it, same register. */
+.deck-source {
+    position: fixed;
+    top: 3.1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    max-width: min(22rem, calc(100vw - 8rem));
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+    background: var(--surface);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid var(--surface-border);
+    padding: 0.2rem 0.7rem;
+    border-radius: 50px;
+    pointer-events: none;
+}
+
+/* Auto-play is a full-screen read: the chrome gets out of the way. */
+body.story-playing .deck-source {
+    opacity: 0;
+    transition: opacity 200ms ease;
+}
+
+:root[data-theme="light"] .deck-source,
 :root[data-theme="light"] .slide-counter {
     background: rgba(255, 255, 255, 0.7);
     border-color: rgba(15, 23, 42, 0.1);
@@ -1846,7 +1994,7 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
 .error-icon { font-size: 3rem; margin-bottom: 0.75rem; }
 .error-title {
     font-family: var(--font-display);
-    font-size: 1.6rem;
+    font-size: clamp(1.25rem, 0.95rem + 1.5vw, 1.6rem);
     font-weight: 700;
     margin-bottom: 0.6rem;
 }

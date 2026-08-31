@@ -13,7 +13,7 @@ import { parse } from '../js/parser.js';
 import { compute, compareYears } from '../js/stats.js';
 import { generateSlides } from '../js/slides/index.js';
 import { buildDemoBlob } from '../js/demo.js';
-import { setLocale } from '../js/i18n.js';
+import { setLocale, LOCALES } from '../js/i18n.js';
 import { THEME } from '../js/slides/_constants.js';
 
 const messages = parse(await buildDemoBlob().text());
@@ -113,7 +113,10 @@ describe('generateSlides', () => {
     });
 
     it('never emits an unresolved translation key or a stray "undefined"', () => {
-        for (const locale of ['fr', 'en']) {
+        // Every registered language, not just the two originals: a missing key
+        // in one of the five later dictionaries would otherwise reach the deck
+        // as a literal `slide.something.title`.
+        for (const locale of Object.keys(LOCALES)) {
             setLocale(locale);
             const html = generateSlides(stats, comparison).map(s => s.html).join('');
             expect(html).not.toMatch(/\bslide\.[a-z]+\.[a-zA-Z]+\b/);
@@ -122,6 +125,50 @@ describe('generateSlides', () => {
             expect(html).not.toContain('NaN');
             expect(html).not.toMatch(/\{[a-z]+\}/i);   // an un-interpolated parameter
         }
+    });
+
+    /**
+     * Comparing two conversations reuses `compareYears` wholesale — the maths
+     * never cared that the two sides came from the same file. What is new is
+     * the slide, and that it stays out of the way when there is nothing pinned.
+     */
+    describe('the versus slide', () => {
+        const versus = {
+            versus: compareYears(stats2025, stats2024),
+            pinnedName: 'ancien-export.txt',
+            currentName: 'nouveau-export.txt',
+        };
+
+        it('is absent unless a second conversation is given', () => {
+            const before = generateSlides(stats, comparison).length;
+            expect(generateSlides(stats, comparison, null).length).toBe(before);
+            expect(generateSlides(stats, comparison, versus).length).toBe(before + 1);
+        });
+
+        it('names both conversations in its column headings', () => {
+            const slide = generateSlides(stats, comparison, versus)
+                .find(s => s.html.includes('ancien-export.txt'));
+            expect(slide).toBeDefined();
+            expect(slide.html).toContain('nouveau-export.txt');
+            expect(gradients.has(slide.gradient)).toBe(true);
+        });
+
+        it('escapes the file names, which the user chose', () => {
+            const slide = generateSlides(stats, comparison, {
+                ...versus,
+                pinnedName: '<img src=x onerror=alert(1)>',
+            }).find(s => s.html.includes('onerror'));
+            expect(slide.html).not.toContain('<img');
+            expect(slide.html).toContain('&lt;img');
+        });
+
+        it('is translated like every other slide', () => {
+            for (const locale of Object.keys(LOCALES)) {
+                setLocale(locale);
+                const html = generateSlides(stats, comparison, versus).map(s => s.html).join('');
+                expect(html).not.toMatch(/\bslide\.versus\.[a-zA-Z]+\b/);
+            }
+        });
     });
 
     it('leaves no French in the English deck', () => {

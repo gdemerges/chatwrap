@@ -12,6 +12,7 @@ import { openDialog } from './dialog.js';
 import { buildShareURL } from '../payload.js';
 import { anonymizeStats } from '../anonymize.js';
 import { shareCard, buildPosterCard } from '../export-image.js';
+import { exportData } from '../export-data.js';
 import { resolvePreset } from '../export-presets.js';
 import { ensureLZString } from '../vendor.js';
 import { showToast, showError } from './toast.js';
@@ -20,6 +21,7 @@ import { track } from '../analytics.js';
 
 const ANON_KEY = 'ww-anonymize-share';
 const POSTER_KEY = 'ww-poster-format';
+const DATA_KEY = 'ww-data-format';
 
 /**
  * @param {{ stats: any, comparison: any, card: any|null, recapCard: any|null }} ctx
@@ -27,6 +29,7 @@ const POSTER_KEY = 'ww-poster-format';
 export function openShareSheet({ stats, comparison, card, recapCard }) {
     const anonDefault = localStorage.getItem(ANON_KEY) !== 'false';
     const posterFormat = localStorage.getItem(POSTER_KEY) || 'a3';
+    const dataFormat = localStorage.getItem(DATA_KEY) || 'csv';
     const posterMeta = resolvePreset(posterFormat);
 
     const html = `
@@ -63,6 +66,23 @@ export function openShareSheet({ stats, comparison, card, recapCard }) {
                     <span class="share-action-icon" aria-hidden="true">🔗</span>
                     <span><strong>${t('share.link')}</strong><small>${t('share.linkHint')}</small></span>
                 </button>
+                ${stats ? `<div class="share-action share-action-compound">
+                    <span class="share-action-icon" aria-hidden="true">📄</span>
+                    <span class="share-action-body">
+                        <strong>${t('share.data')}</strong>
+                        <small>${t('share.dataHint')}</small>
+                    </span>
+                    <span class="share-action-controls">
+                        <label class="share-action-select">
+                            <span class="sr-only">${t('share.dataFormat')}</span>
+                            <select id="data-format">
+                                <option value="csv" ${dataFormat === 'csv' ? 'selected' : ''}>CSV</option>
+                                <option value="json" ${dataFormat === 'json' ? 'selected' : ''}>JSON</option>
+                            </select>
+                        </label>
+                        <button class="share-action-go" data-action="data" aria-label="${t('share.dataGoAria')}">${t('share.dataGo')}</button>
+                    </span>
+                </div>` : ''}
             </div>
 
             <label class="switch-row">
@@ -86,6 +106,11 @@ export function openShareSheet({ stats, comparison, card, recapCard }) {
                 localStorage.setItem(ANON_KEY, String(anonBox.checked));
             });
 
+            const dataSelect = root.querySelector('#data-format');
+            dataSelect?.addEventListener('change', () => {
+                localStorage.setItem(DATA_KEY, dataSelect.value);
+            });
+
             const formatSelect = root.querySelector('#poster-format');
             formatSelect?.addEventListener('change', () => {
                 localStorage.setItem(POSTER_KEY, formatSelect.value);
@@ -101,6 +126,15 @@ export function openShareSheet({ stats, comparison, card, recapCard }) {
                     try {
                         if (action === 'link') {
                             await copyLink(stats, comparison, anonBox.checked);
+                        } else if (action === 'data') {
+                            const format = dataSelect?.value || 'csv';
+                            // Same anonymisation switch as the link: the two
+                            // are the only exports that carry names.
+                            const name = exportData({
+                                stats, comparison, format, anonymize: anonBox.checked,
+                            });
+                            track('export_data', { format, anonymized: anonBox.checked });
+                            showToast(t('share.dataSaved', { name }));
                         } else if (action === 'poster') {
                             const format = formatSelect?.value || 'a3';
                             showToast(t('share.posterWorking'));

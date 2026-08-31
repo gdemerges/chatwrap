@@ -16,7 +16,7 @@
  * ML model weights (huggingface.co) are left alone: hundreds of megabytes,
  * already cached internally by transformers.js.
  */
-const CACHE_NAME = 'ww-shell-v8';
+const CACHE_NAME = 'ww-shell-v9';
 
 const SHELL_ASSETS = [
     'index.html',
@@ -42,11 +42,13 @@ const SHELL_ASSETS = [
     'js/i18n.js',
     'js/vendor.js',
     'js/anonymize.js',
+    'js/compare.js',
     'js/analytics.js',
     'js/config.js',
     'js/demo.js',
     'js/export-image.js',
     'js/export-presets.js',
+    'js/export-data.js',
     'js/ui/toast.js',
     'js/ui/dialog.js',
     'js/ui/period.js',
@@ -70,6 +72,7 @@ const SHELL_ASSETS = [
     'js/slides/chapters.js',
     'js/slides/network.js',
     'js/slides/profiles.js',
+    'js/slides/versus.js',
     'js/slides/_day-why.js',
     'js/lang/stopwords.js',
     'js/lang/chat-locales.js',
@@ -96,12 +99,24 @@ const CDN_ASSETS = [
 self.addEventListener('install', (event) => {
     event.waitUntil((async () => {
         const cache = await caches.open(CACHE_NAME);
-        // Shell assets must all land; a CDN hiccup shouldn't fail the install.
-        await cache.addAll(SHELL_ASSETS);
-        await Promise.allSettled(CDN_ASSETS.map((url) => cache.add(url)));
+        // Each asset is cached on its own rather than through `addAll`, which
+        // is all-or-nothing: one renamed file, one flaky response, and the
+        // whole install rejected — leaving the visitor with no service worker
+        // at all, silently. A partial shell still serves most of the app
+        // offline, and whatever is missing is filled in on the next online
+        // visit by `staleWhileRevalidate`. What failed is named in the console
+        // rather than swallowed.
+        const failures = await cacheAll(cache, [...SHELL_ASSETS, ...CDN_ASSETS]);
+        if (failures.length) console.warn('[sw] not precached:', failures);
         await self.skipWaiting();
     })());
 });
+
+/** @returns {Promise<string[]>} the assets that could not be cached. */
+async function cacheAll(cache, urls) {
+    const results = await Promise.allSettled(urls.map((url) => cache.add(url)));
+    return urls.filter((_, i) => results[i].status === 'rejected');
+}
 
 self.addEventListener('activate', (event) => {
     event.waitUntil((async () => {
@@ -124,7 +139,12 @@ self.addEventListener('fetch', (event) => {
 
 async function staleWhileRevalidate(request) {
     const cache = await caches.open(CACHE_NAME);
-    const cached = await cache.match(request);
+    // `ignoreSearch`: the shell is precached at bare paths (`css/style.css`)
+    // while the HTML asks for cache-busted ones (`css/style.css?v=3`). Without
+    // this, every such asset missed the precache on the very first offline
+    // load — the one case the precache exists for. No same-origin asset here
+    // varies by query string, so ignoring it cannot serve the wrong file.
+    const cached = await cache.match(request, { ignoreSearch: true });
 
     const network = fetch(request)
         .then((response) => {

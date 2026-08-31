@@ -152,3 +152,41 @@ describe('translation keys used in the source', () => {
         expect(missing).toEqual([]);
     });
 });
+
+/**
+ * The worker must not word anything: it posts a key, the page translates it.
+ * A code added on one side and forgotten on the other used to surface as a
+ * raw `loading.somethingNew` on the loading screen.
+ */
+describe('worker progress codes', () => {
+    const sources = [
+        'js/worker.js',
+        'js/worker/sentiment-ml.js',
+        'js/worker/sentiment-aggregates.js',
+        'js/worker/day-context.js',
+    ];
+
+    const emitted = [...new Set(sources.flatMap((path) => {
+        const src = readFileSync(path, 'utf8');
+        return [...src.matchAll(/\b(?:progress|onProgress)\(\s*'([a-zA-Z]+)'/g)].map(m => m[1]);
+    }))];
+
+    it('emits at least the steps the loading screen knows about', () => {
+        expect(emitted.length).toBeGreaterThan(3);
+    });
+
+    it.each(emitted)('has a `loading.%s` entry in every dictionary', (code) => {
+        for (const locale of Object.keys(LOCALES)) {
+            setLocale(locale);
+            expect(t(`loading.${code}`)).not.toBe(`loading.${code}`);
+        }
+    });
+
+    it('never posts a whole sentence', () => {
+        for (const path of sources) {
+            const src = readFileSync(path, 'utf8');
+            const sentences = [...src.matchAll(/\b(?:progress|onProgress)\(\s*[`'"]([^`'"]*\s[^`'"]*)[`'"]/g)];
+            expect(sentences.map(m => `${path}: ${m[1]}`)).toEqual([]);
+        }
+    });
+});

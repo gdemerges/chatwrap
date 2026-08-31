@@ -39,12 +39,14 @@ Vitest pour les tests, ESLint pour le lint.
 | `js/export-image.js` | Rendu canvas des images partageables (story et poster) |
 | `js/export-presets.js` | Formats de sortie, calcul dpi→pixels, carte du poster |
 | `js/anonymize.js` | Remplacement des prénoms par des initiales |
+| `js/export-data.js` | Export des stats en JSON / CSV (partage **et** dashboard) |
+| `js/compare.js` | Épingle une conversation pour comparer la suivante (digest en localStorage) |
 | `js/vendor.js` | Chargement paresseux des scripts CDN (SRI épinglé) |
 | `js/config.js` | Cagnotte et mesure d'audience — vide par défaut |
 | `js/analytics.js` | Compteur d'usage anonyme, inerte tant que non configuré |
 | `js/ui/` | Dialogues, toasts, feuille de partage, gestion du hash |
 | `js/dashboard.js` | Vue tableau de bord |
-| `js/lang/ui/` | Dictionnaires d'interface — `fr.js` fait référence |
+| `js/lang/ui/` | Dictionnaires d'interface (7 langues) — `fr.js` fait référence |
 | `js/lang/chat-locales.js` | Libellés que WhatsApp écrit dans le fichier (médias, notices…) |
 | `js/lang/` | Données de langue (stopwords, sentiment) |
 | `tests/` | Tests Vitest — voir les fixtures pour les formats de chat supportés |
@@ -70,15 +72,24 @@ Vitest pour les tests, ESLint pour le lint.
 - **Le partage par lien** doit rester anonymisable : toute nouvelle statistique portant un nom
   de personne doit survivre au parcours générique de `anonymize.js` (clé *ou* valeur).
 - **Aucun texte visible en dur.** Toute chaîne affichée passe par `t('clé')`, et la clé naît
-  dans `js/lang/ui/fr.js` avant d'être traduite. Le HTML statique s'annote `data-i18n`,
+  dans `js/lang/ui/fr.js` avant d'être traduite dans les six autres. Le HTML statique s'annote `data-i18n`,
   `data-i18n-html` (quand la phrase contient un `<strong>`) ou `data-i18n-attr`. Les tests
   échouent sur une clé manquante, une clé en trop, ou un `{paramètre}` perdu en traduction.
-- **Rien de localisé ne descend dans le worker.** `stats.js` ne produit que des données —
-  `peakDayIndex`, pas « Mardi ». Une erreur qui doit être lue par un humain traverse la
-  frontière sous forme de `code` (`err.code = 'tooFewMessages'`), que la page traduit.
+- **Rien de localisé ne monte *ni* ne descend dans le worker.** `stats.js` ne produit que des
+  données — `peakDayIndex`, pas « Mardi ». Une erreur qui doit être lue par un humain traverse
+  la frontière sous forme de `code` (`err.code = 'tooFewMessages'`), que la page traduit. La
+  **progression** suit la même règle : le worker poste `{ code, params }` (clé sous `loading.`),
+  jamais une phrase. Un test échoue si un `progress()` contient une espace.
 - **Le parseur ne suppose jamais la langue** : les libellés WhatsApp se déclarent dans
   `js/lang/chat-locales.js`, et `MEDIA_BY_TYPE` sert à la fois à reconnaître un média et à le
   ranger dans sa catégorie.
+- **Les statistiques de mots non plus.** La langue du chat vient de `detectLanguage`
+  (`js/lang/stopwords.js`), qui couvre les mêmes sept langues, et les mots se découpent avec
+  `WORD_CHARS_RE` (`\p{L}`) — jamais une plage de lettres écrite à la main, qui coupait
+  `años` en `a` + `os`.
+- **Le deck se remplit au fur et à mesure.** `mount` crée les éléments vides ; `fill` y écrit
+  le HTML quand la slide arrive à portée (n ± 1). Ce qui doit toucher le balisage d'une slide
+  passe par `onSlideReady`, pas par un `querySelector` après `mount`.
 
 ## Formats de chat supportés
 Détails dans `js/parser.js`. L'ordre jour/mois est **déduit du fichier** (`inferDateOrder`),

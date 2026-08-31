@@ -10,7 +10,7 @@ import { rehydrateDates, sanitizeShared } from './payload.js';
 import { ensureLZString } from './vendor.js';
 import { openShareSheet } from './ui/share.js';
 import { showToast, showError } from './ui/toast.js';
-import { downloadBlob } from './export-image.js';
+import { exportData } from './export-data.js';
 import { readHash } from './ui/hash.js';
 import { track, trackPageview } from './analytics.js';
 
@@ -77,6 +77,8 @@ onLocaleChange(() => {
 // ---------- Load ----------
 /** @type {{ stats: any, comparison: any } | null} */
 let current = null;
+/** Empty string = everyone. Survives a language switch and a re-render. */
+let selectedPerson = '';
 
 initLangPicker();
 trackPageview();
@@ -117,6 +119,9 @@ async function loadPayload() {
 function render(stats, comparison) {
     const sections = [];
     sections.push(heroCard(stats));
+    // Pinned above everything else, because when a person is selected they are
+    // what the page is about.
+    if (selectedPerson) sections.push(personCard(stats, selectedPerson));
     if (comparison) sections.push(comparisonCard(comparison));
     sections.push(overviewCard(stats));
     sections.push(rankingCard(stats));
@@ -140,6 +145,71 @@ function render(stats, comparison) {
 
     content.innerHTML = sections.filter(Boolean).join('');
     populatePersonFilter(stats);
+    applyPersonFilter(selectedPerson);
+}
+
+/**
+ * Everything the stats know about one person, gathered in one card.
+ *
+ * The participant selector used to do nothing but hide table rows: you could
+ * narrow the page down to someone, but their numbers stayed scattered across
+ * nine cards and you still had to read them one by one. All of this is already
+ * computed — `perPerson`, `profiles`, `interactions`, the per-person word and
+ * emoji rankings — it had simply never been put side by side.
+ *
+ * @param {any} s
+ * @param {string} name
+ */
+function personCard(s, name) {
+    const p = s.perPerson?.[name];
+    if (!p) return '';
+
+    const profile = (s.profiles || []).find(x => x.name === name) || {};
+    const closest = s.interactions?.closest?.[name] || null;
+    const shareOfAll = s.totalMessages ? Math.round((p.count / s.totalMessages) * 100) : 0;
+    const avgLen = p.textCount ? Math.round(p.textChars / p.textCount) : 0;
+
+    const tile = (value, label) =>
+        `<div class="dash-person-tile"><div class="dash-person-value">${value}</div><div class="dash-person-label">${label}</div></div>`;
+
+    const tiles = [
+        tile(fmt(p.count), t('dash.messages')),
+        tile(`${shareOfAll}%`, t('units.share')),
+        tile(fmt(avgLen), t('units.charsPerMsg')),
+        tile(fmt(p.emojis || 0), t('units.emojis')),
+        tile(fmt(p.media || 0), t('units.media')),
+        tile(fmt(p.links || 0), t('dash.links')),
+        tile(profile.peakHour == null ? t('common.none') : fmtHour(profile.peakHour), t('dash.peakHour')),
+        tile(p.avgResponseMin == null ? t('common.none') : fmtClock(p.avgResponseMin), t('dash.responseTime')),
+        tile(fmt(profile.initiations || 0), t('dash.initiations')),
+        tile(fmt(p.nightMsgs || 0), t('dash.nightMessages')),
+        tile(fmt(p.morningMsgs || 0), t('dash.morningMessages')),
+        tile(fmt(p.deleted || 0), t('dash.deleted')),
+    ].join('');
+
+    const chips = (entries, empty) => {
+        const list = (entries || []).slice(0, 8);
+        if (!list.length) return `<p class="dash-person-empty">${empty}</p>`;
+        return `<div class="dash-chips">${list.map(([label, n]) =>
+            `<span class="dash-chip">${escapeHtml(String(label))}<b>${fmt(n)}</b></span>`).join('')}</div>`;
+    };
+
+    const closestLine = closest
+        ? `<p class="dash-person-line">${t('dash.answersMostly')} <strong>${escapeHtml(closest.author)}</strong> — ${fmt(closest.count)}</p>`
+        : '';
+
+    return `
+    <section class="dash-card dash-person col-12" data-person="${escapeHtml(name)}">
+        <h2>${escapeHtml(name)} <span class="dash-meta">${t('dash.personCardMeta')}</span></h2>
+        <div class="dash-person-grid">${tiles}</div>
+        ${closestLine}
+        <h4 class="dash-subheading">${t('dash.topWords')}</h4>
+        ${chips(s.topWordsPerPerson?.[name], t('dash.noUniqueWords'))}
+        <h4 class="dash-subheading">${t('dash.signature')}</h4>
+        ${chips(s.uniqueWordsPerPerson?.[name], t('dash.noUniqueWords'))}
+        <h4 class="dash-subheading">${t('dash.topEmojis')}</h4>
+        ${chips(profile.topEmoji ? [profile.topEmoji] : [], t('common.none'))}
+    </section>`;
 }
 
 // ---------- New cards ----------
@@ -526,6 +596,10 @@ function populatePersonFilter(stats) {
     select.innerHTML = `<option value="">${t('common.everyone')}</option>` +
         names.map(n => `<option value="${escapeHtml(n)}">${escapeHtml(n)}</option>`).join('');
     select.disabled = names.length === 0;
+    // A shared payload can be anonymised between two renders; drop a selection
+    // that no longer names anyone.
+    if (selectedPerson && !names.includes(selectedPerson)) selectedPerson = '';
+    select.value = selectedPerson;
 }
 
 function applyPersonFilter(name) {
@@ -539,7 +613,12 @@ function applyPersonFilter(name) {
 }
 
 function wireToolbar() {
-    $('#dash-person')?.addEventListener('change', (e) => applyPersonFilter(e.target.value));
+    $('#dash-person')?.addEventListener('change', (e) => {
+        selectedPerson = e.target.value;
+        // A full re-render rather than just hiding rows: the person card has to
+        // be built for whoever is now selected.
+        if (current) render(current.stats, current.comparison);
+    });
 
     $('#dash-share')?.addEventListener('click', () => {
         if (!current) return;
@@ -551,48 +630,30 @@ function wireToolbar() {
         });
     });
 
-    $('#dash-export-json')?.addEventListener('click', () => exportJSON());
-    $('#dash-export-csv')?.addEventListener('click', () => exportCSV());
-}
-
-function exportJSON() {
-    if (!current) return;
-    const blob = new Blob([JSON.stringify(current.stats, null, 2)], { type: 'application/json' });
-    downloadBlob(blob, 'chatwrap-stats.json');
-    track('export', { format: 'json' });
-    showToast(t('dash.jsonDone'));
+    $('#dash-export-json')?.addEventListener('click', () => runExport('json'));
+    $('#dash-export-csv')?.addEventListener('click', () => runExport('csv'));
 }
 
 /**
- * One CSV per participant — the shape people actually paste into a
- * spreadsheet. Everything else (word clouds, heatmaps) is in the JSON.
+ * Both exports go through `js/export-data.js`, which the share sheet uses too.
+ *
+ * The dashboard used to build its own CSV: one table, headers written in
+ * French in an app that speaks seven languages, and — the reason this moved —
+ * a `csvCell` that quoted commas but did nothing about a leading `=`, `+` or
+ * `@`. Participant names come from the chat, so that cell was a formula
+ * waiting to run the next time someone opened the file in Excel.
  */
-function exportCSV() {
+function runExport(format) {
     if (!current) return;
-    const s = current.stats;
-    const emojiMap = Object.fromEntries(s.emojis?.perPerson || []);
-    const initiator = Object.fromEntries(s.initiator || []);
-    const header = [
-        'participant', 'messages', 'part_pct', 'longueur_moyenne', 'caracteres',
-        'medias', 'liens', 'emojis', 'reponse_moyenne_min', 'heure_pic',
-        'jours_lances', 'messages_nuit', 'messages_matin',
-    ];
-    const rows = (s.ranking || []).map(([name, p]) => [
-        name, p.count, p.percent, p.avgLen, p.totalChars,
-        p.media, p.links, emojiMap[name] ?? p.emojis ?? 0,
-        p.avgResponseMin ?? '', p.peakHour ?? '',
-        initiator[name] ?? 0, p.nightMsgs, p.morningMsgs,
-    ]);
-
-    const csv = [header, ...rows].map(r => r.map(csvCell).join(',')).join('\r\n');
-    // BOM so Excel opens UTF-8 accents correctly.
-    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
-    downloadBlob(blob, 'chatwrap-participants.csv');
-    track('export', { format: 'csv' });
-    showToast(t('dash.csvDone'));
-}
-
-function csvCell(value) {
-    const str = String(value ?? '');
-    return /[",\r\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+    exportData({
+        stats: current.stats,
+        comparison: current.comparison,
+        format,
+        // The dashboard shows real names on screen already; a file saved from
+        // here matches what is on screen. The share sheet is where the
+        // anonymisation switch lives.
+        anonymize: false,
+    });
+    track('export', { format });
+    showToast(t(format === 'csv' ? 'dash.csvDone' : 'dash.jsonDone'));
 }

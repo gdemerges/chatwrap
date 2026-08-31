@@ -12,6 +12,7 @@ import { duoBoardSlide, duoWordsSlide } from './duo.js';
 import { chaptersSlide } from './chapters.js';
 import { interactionsSlide } from './network.js';
 import { profilesSlide } from './profiles.js';
+import { versusSlide } from './versus.js';
 
 /**
  * Build the deck, in narrative order: what this conversation is → its phases →
@@ -20,13 +21,18 @@ import { profilesSlide } from './profiles.js';
  *
  * @param {import('../types.d.ts').Stats} stats
  * @param {import('../types.d.ts').YearComparison | null} [comparison]
+ * @param {{ versus: any, pinnedName: string, currentName: string } | null} [versus]
+ *   A second conversation to compare against — see `js/compare.js`. It sits
+ *   right after the year comparison because it answers the same question with
+ *   a different baseline.
  * @returns {import('../types.d.ts').Slide[]}
  */
-export function generateSlides(stats, comparison = null) {
+export function generateSlides(stats, comparison = null, versus = null) {
     const builders = [
         () => overviewSlide(stats, THEME.intro),
         () => chaptersSlide(stats, THEME.story),
         () => comparisonSlide(comparison, THEME.story),
+        () => (versus ? versusSlide(versus.versus, versus.pinnedName, versus.currentName, THEME.story) : null),
 
         () => topMessagersSlide(stats, THEME.people),
         () => duoBoardSlide(stats, THEME.people),

@@ -265,10 +265,61 @@ html:has(.dashboard-body) body {
     color: var(--text-primary);
 }
 
-.dash-chip .count {
+.dash-chip .count,
+.dash-chip b {
     color: var(--text-muted);
     font-size: 0.75rem;
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
+}
+
+/* ---- One person, gathered ----
+   The participant selector used to only hide rows; this card is what it now
+   selects *into*. Marked out with an accent edge so it reads as the subject of
+   the page rather than as one more section. */
+.dash-person {
+    border-left: 3px solid var(--accent-purple);
+}
+
+.dash-person-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+    gap: 0.6rem;
+}
+
+.dash-person-tile {
+    background: var(--surface-border);
+    border-radius: 12px;
+    padding: 0.7rem 0.5rem;
+    text-align: center;
+    min-width: 0;
+}
+
+.dash-person-value {
+    font-size: clamp(1.05rem, 0.9rem + 0.7vw, 1.35rem);
+    font-weight: 800;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+
+.dash-person-label {
+    margin-top: 0.15rem;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    line-height: 1.3;
+}
+
+.dash-person-line {
+    margin-top: 0.9rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.dash-person-empty {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
 }
 
 /* ---- Chart wrappers ---- */
