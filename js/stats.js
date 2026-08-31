@@ -3,12 +3,14 @@
  * Single-pass where possible.
  */
 
-import { localDayKey, localMonthKey } from './utils.js';
-import { stopwordsFor, detectLanguage } from './lang/stopwords.js';
+import { localDayKey, localMonthKey, ensureChronological } from './utils.js';
+import { stopwordsFor, detectLanguage, WORD_CHARS_RE } from './lang/stopwords.js';
 import { MEDIA_BY_TYPE } from './lang/chat-locales.js';
 
 const EMOJI_RE = /\p{Extended_Pictographic}\uFE0F?(?:\u200D\p{Extended_Pictographic}\uFE0F?)*/gu;
-const WORD_RE = /[a-zàâäéèêëïîôùûüÿçœæ']+/gi;
+// Word shape, stopwords and language detection all live in lang/stopwords.js:
+// a French-only character range used to cut every other alphabet in half.
+const WORD_RE = WORD_CHARS_RE;
 const URL_RE = /https?:\/\/\S+/g;
 const URL_TEST_RE = /https?:\/\/\S+/;
 const HTML_STRIP_RE = /<[^>]+>/g;
@@ -29,8 +31,9 @@ export function compute(messages) {
         throw coded(new Error('Aucun message à analyser'), 'noMessages');
     }
 
-    // Ensure chronological order
-    messages = [...messages].sort((a, b) => a.datetime.getTime() - b.datetime.getTime());
+    // Ensure chronological order — without copying when it already is, which
+    // is every real export.
+    messages = ensureChronological(messages);
 
     const stats = initAccumulators();
 

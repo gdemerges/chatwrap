@@ -14,10 +14,10 @@
  */
 
 import { localDayKey } from '../utils.js';
-import { stopwordsFor } from '../lang/stopwords.js';
+import { stopwordsFor, WORD_CHARS_RE } from '../lang/stopwords.js';
 
 const EMOJI_RE = /\p{Extended_Pictographic}\uFE0F?(?:\u200D\p{Extended_Pictographic}\uFE0F?)*/gu;
-const WORD_RE = /[a-zàâäéèêëïîôùûüÿçœæ']+/gi;
+const WORD_RE = WORD_CHARS_RE;
 const URL_RE = /https?:\/\/\S+/g;
 
 /** Gaps longer than this are a new conversation, not a slow reply. */
