@@ -208,6 +208,65 @@ describe('Deck — reduced motion', () => {
     });
 });
 
+describe('Deck — lazy fill', () => {
+    it('writes only the slides in reach, not the whole deck', () => {
+        const { deck } = makeDeck(10);
+        expect([...deck.filled].sort((a, b) => a - b)).toEqual([0, 1]);
+        expect(deck.elements[9].innerHTML).toBe('');
+    });
+
+    it('fills a slide as it comes into reach, and keeps the ones behind', () => {
+        const { deck } = makeDeck(10);
+        deck.goTo(5, { immediate: true });
+        expect([...deck.filled].sort((a, b) => a - b)).toEqual([0, 1, 4, 5, 6]);
+        expect(deck.elements[5].querySelector('h2').textContent).toBe('Slide 5');
+    });
+
+    it('never writes a slide twice', () => {
+        const { deck, slides } = makeDeck(4);
+        deck.goTo(1, { immediate: true });
+        deck.goTo(0, { immediate: true });
+        deck.goTo(1, { immediate: true });
+        expect(deck.elements[1].querySelectorAll('h2')).toHaveLength(1);
+        expect(slides).toHaveLength(4);
+    });
+
+    it('announces each slide to the host as it is filled', () => {
+        document.body.innerHTML = `
+            <div id="container"></div><div id="counter"></div>
+            <div id="progress"></div><div id="a11y-live"></div>`;
+        const ready = vi.fn();
+        const deck = new Deck({
+            container: document.querySelector('#container'),
+            counter: document.querySelector('#counter'),
+            progress: document.querySelector('#progress'),
+            onSlideReady: ready,
+        });
+        deck.mount(Array.from({ length: 5 }, (_, i) => ({
+            gradient: 'slide-gradient-1',
+            html: `<div class="slide-inner"><h2>Slide ${i}</h2></div>`,
+        })));
+        expect(ready.mock.calls.map(c => c[0]).sort((a, b) => a - b)).toEqual([0, 1]);
+        expect(ready.mock.calls[0][1]).toBe(deck.elements[0]);
+
+        deck.goTo(3, { immediate: true });
+        expect(ready.mock.calls.map(c => c[0]).sort((a, b) => a - b)).toEqual([0, 1, 2, 3, 4]);
+    });
+
+    it('measures dwell time on the real text, filling the slide if needed', () => {
+        const { deck } = makeDeck(6);
+        expect(deck.filled.has(4)).toBe(false);
+        expect(deck.storyDuration(4)).toBeGreaterThan(0);
+        expect(deck.filled.has(4)).toBe(true);
+    });
+
+    it('forgets what it filled when cleared', () => {
+        const { deck } = makeDeck(4);
+        deck.clear();
+        expect(deck.filled.size).toBe(0);
+    });
+});
+
 describe('Deck — story mode', () => {
     it('advances on its own and stops at the last slide', () => {
         const { deck } = makeDeck(3);
@@ -246,6 +305,48 @@ describe('Deck — story mode', () => {
         const { deck } = makeDeck(1);
         deck.elements[0].querySelector('h2').textContent = 'x'.repeat(100_000);
         expect(deck.storyDuration(0)).toBeLessThanOrEqual(9000);
+    });
+
+    /** Auto-play in a hidden tab burned through the deck with nobody watching. */
+    describe('pausing with the tab', () => {
+        const hide = (hidden) => {
+            Object.defineProperty(document, 'hidden', { value: hidden, configurable: true });
+            document.dispatchEvent(new Event('visibilitychange'));
+        };
+        afterEach(() => hide(false));
+
+        it('pauses while the tab is hidden and resumes where it stopped', () => {
+            const { deck } = makeDeck(6);
+            deck.startStory();
+            vi.advanceTimersByTime(5_000);
+            const reached = deck.index;
+            expect(reached).toBeGreaterThan(0);
+
+            hide(true);
+            expect(deck.storyPlaying).toBe(false);
+            vi.advanceTimersByTime(120_000);
+            expect(deck.index).toBe(reached);
+
+            hide(false);
+            expect(deck.storyPlaying).toBe(true);
+            expect(deck.index).toBe(reached);
+        });
+
+        it('leaves a deliberately stopped deck stopped', () => {
+            const { deck } = makeDeck(4);
+            deck.startStory();
+            deck.toggleStory();
+            hide(true);
+            hide(false);
+            expect(deck.storyPlaying).toBe(false);
+        });
+
+        it('does not start playing a deck that was never playing', () => {
+            const { deck } = makeDeck(4);
+            hide(true);
+            hide(false);
+            expect(deck.storyPlaying).toBe(false);
+        });
     });
 });
 

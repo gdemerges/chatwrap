@@ -47,7 +47,7 @@ async function loadSentiment(device, onProgress) {
         dtype: device === 'webgpu' ? 'fp32' : 'q8',
         progress_callback: (info) => {
             if (info.status === 'progress' && typeof info.progress === 'number') {
-                onProgress(`Chargement du modele de sentiment... ${Math.round(info.progress)}%`);
+                onProgress('sentimentModel', { pct: Math.round(info.progress) });
             }
         },
     });
@@ -64,7 +64,7 @@ async function loadIrony(device, onProgress) {
             dtype: device === 'webgpu' ? 'fp32' : 'q8',
             progress_callback: (info) => {
                 if (info.status === 'progress' && typeof info.progress === 'number') {
-                    onProgress(`Chargement du modele d'ironie... ${Math.round(info.progress)}%`);
+                    onProgress('ironyModel', { pct: Math.round(info.progress) });
                 }
             },
         });
@@ -160,7 +160,7 @@ async function classifyBatched(classifier, texts, batchSize, topK, mapFn, onProg
 /**
  * @param {any[]} messages
  * @param {string} lang
- * @param {(text: string) => void} onProgress
+ * @param {(code: string, params?: Record<string, string|number>) => void} onProgress
  * @param {{ useML?: boolean }} [options] `useML: false` keeps everything local:
  *   reaction polarity and the compliment/insult lexicon still run, but the
  *   ~50 MB of transformer weights are never fetched. Opt-in by design — on a
@@ -220,7 +220,7 @@ export async function computeSentimentML(messages, lang, onProgress, options = {
             withDayContexts(agg.finalize(), messages, lang), { mlEnabled: false, device: null });
     }
 
-    onProgress('Detection du materiel...');
+    onProgress('detectingDevice');
     const device = await detectDevice();
 
     const samplePerAuthor = device === 'webgpu' ? SAMPLE_PER_AUTHOR_GPU : SAMPLE_PER_AUTHOR_CPU;
@@ -232,9 +232,9 @@ export async function computeSentimentML(messages, lang, onProgress, options = {
     try {
         sentClassifier = await loadSentiment(device, onProgress);
     } catch (err) {
-        const msg = `[sentiment] modele KO sur ${device}: ${err && err.message ? err.message : err}`;
-        console.error(msg, err);
-        onProgress(msg);
+        console.error(`[sentiment] model failed on ${device}:`, err);
+        // The user sees a plain sentence; the console keeps the detail.
+        onProgress('sentimentFallback');
         return buildResult(allAuthors, categorical, {}, reactionStats,
             withDayContexts(agg.finalize(), messages, lang), { mlEnabled: false, device, error: String(err) });
     }
@@ -254,7 +254,7 @@ export async function computeSentimentML(messages, lang, onProgress, options = {
     let done = 0;
     const tick = (n) => {
         done += n;
-        onProgress(`Analyse des sentiments... ${Math.round(done / totalSteps * 100)}%`);
+        onProgress('sentimentPct', { pct: Math.round(done / totalSteps * 100) });
     };
 
     const polarity = {};

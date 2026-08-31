@@ -11,7 +11,7 @@
  *   → { kind: 'load', blob }              ← { kind: 'years', years, yearCounts }
  *   → { kind: 'stats', year, range, ai }  ← { kind: 'stats', stats, comparison }
  *   → { kind: 'reset' }                   (drops the retained parse)
- *   ←  { kind: 'progress', text }
+ *   ←  { kind: 'progress', code, params? }   (code, never a sentence)
  *   ←  { kind: 'error', message, diagnostics? }
  */
 
@@ -19,6 +19,7 @@ import { createStreamParser } from './parser.js';
 import { compute, compareYears } from './stats.js';
 import { computeSentimentML } from './worker/sentiment-ml.js';
 import { createHasher, getCached, setCached } from './cache.js';
+import { ensureChronological, sliceByTime } from './utils.js';
 
 /** @type {import('./types.d.ts').Message[] | null} */
 let messages = null;
@@ -29,7 +30,17 @@ const post = (msg) => self.postMessage(msg);
 
 /** Tag an error with a stable code the UI can translate. @see js/parser.js */
 const coded = (err, code) => Object.assign(err, { code });
-const progress = (text) => post({ kind: 'progress', text });
+/**
+ * Progress crosses the worker boundary as a key, never as a sentence.
+ *
+ * It used to post ready-made French ("Lecture du fichier... 42%"), which the
+ * page then printed verbatim — so an English visitor watched their file load
+ * in French. Same rule as errors: the worker names the step, the page words it.
+ *
+ * @param {string} code  key under `loading.` in the UI dictionaries
+ * @param {Record<string, string|number>} [params]
+ */
+const progress = (code, params) => post({ kind: 'progress', code, params });
 
 self.onmessage = async (e) => {
     const msg = e.data || {};
@@ -61,7 +72,7 @@ self.onmessage = async (e) => {
  * finally report a real percentage instead of "Lecture du fichier...".
  */
 async function handleLoad({ blob }) {
-    progress('Lecture du fichier... 0%');
+    progress('readingPct', { pct: 0 });
 
     const parser = createStreamParser();
     const hasher = createHasher();
@@ -69,14 +80,16 @@ async function handleLoad({ blob }) {
     for await (const { chunk, done } of readChunks(blob)) {
         hasher.push(chunk);
         parser.push(chunk);
-        progress(`Lecture du fichier... ${done}%`);
+        progress('readingPct', { pct: done });
     }
 
-    progress('Analyse des messages...');
+    progress('parsing');
     fileHash = await hasher.digest();
     // A parse failure already carries a diagnostic snapshot, so the UI can say
     // *why* the file was rejected instead of just flashing "format non reconnu".
-    messages = parser.end();
+    // Sorted once, here, and never again: every selection below is a binary
+    // search on this order, and `compute` recognises it and skips its own sort.
+    messages = ensureChronological(parser.end());
 
     if (messages.length === 0) {
         const err = new Error('Aucun message exploitable dans ce fichier.');
@@ -112,12 +125,12 @@ async function handleStats({ year = null, range = null, ai = false }) {
     const cacheKey = `${fileHash}|y=${year}|r=${range ? range.from + '_' + range.to : ''}|ai=${ai ? 1 : 0}`;
     const cached = await getCached(cacheKey);
     if (cached) {
-        progress('Restauration depuis le cache...');
+        progress('restoring');
         post({ kind: 'stats', stats: cached.stats, comparison: cached.comparison, cached: true });
         return;
     }
 
-    progress('Calcul des stats...');
+    progress('computing');
     const stats = compute(selection);
     const comparison = buildComparison(messages, stats, year, range);
 
@@ -160,17 +173,22 @@ async function* readChunks(blob) {
     if (rest) yield { chunk: rest, done: 100 };
 }
 
-/** Filter by explicit date range if given, else by year, else everything. */
+/**
+ * Filter by explicit date range if given, else by year, else everything.
+ *
+ * `messages` is chronological, so both ends are a binary search rather than a
+ * full scan. The year bounds are built with the local-time constructor to match
+ * `getFullYear()`, which is what the year list itself was built from.
+ */
 function selectMessages(all, year, range) {
     if (range) {
         const from = new Date(range.from).getTime();
-        const to = new Date(range.to).getTime();
-        return all.filter(m => {
-            const t = m.datetime.getTime();
-            return t >= from && t <= to;
-        });
+        // The range is inclusive at both ends; `sliceByTime` is half-open.
+        return sliceByTime(all, from, new Date(range.to).getTime() + 1);
     }
-    if (year != null) return all.filter(m => m.datetime.getFullYear() === year);
+    if (year != null) {
+        return sliceByTime(all, new Date(year, 0, 1).getTime(), new Date(year + 1, 0, 1).getTime());
+    }
     return all;
 }
 
@@ -182,14 +200,10 @@ function buildComparison(all, stats, year, range) {
     let previous;
     if (range) {
         const from = new Date(range.from).getTime();
-        const to = new Date(range.to).getTime();
-        const span = to - from;
-        previous = all.filter(m => {
-            const t = m.datetime.getTime();
-            return t >= from - span - 1 && t < from;
-        });
+        const span = new Date(range.to).getTime() - from;
+        previous = sliceByTime(all, from - span - 1, from);
     } else if (year != null) {
-        previous = all.filter(m => m.datetime.getFullYear() === year - 1);
+        previous = sliceByTime(all, new Date(year - 1, 0, 1).getTime(), new Date(year, 0, 1).getTime());
     } else {
         return null;
     }

@@ -31,7 +31,8 @@ function setActive(el, active) {
 export class Deck {
     /**
      * @param {{ container: HTMLElement, counter: HTMLElement,
-     *           progress: HTMLElement, onSlideChange?: (i: number) => void }} refs
+     *           progress: HTMLElement, onSlideChange?: (i: number) => void,
+     *           onSlideReady?: (i: number, el: HTMLElement) => void }} refs
      */
     constructor(refs) {
         this.refs = refs;
@@ -40,9 +41,33 @@ export class Deck {
         this.index = 0;
         this.animating = false;
         this.chartsReady = new Set();
+        this.filled = new Set();
         this.storyTimer = null;
         this.storyPlaying = false;
+        this.storyPausedByHide = false;
         this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+        this.bindVisibility();
+    }
+
+    /**
+     * Auto-play used to keep running in a hidden tab: switch away for two
+     * minutes and you came back to the last slide, having watched none of it.
+     * The deck pauses when the tab goes away and picks up where it left off —
+     * but only if *it* was the one that paused, so a deliberate stop stays
+     * stopped.
+     */
+    bindVisibility() {
+        if (typeof document === 'undefined' || !document.addEventListener) return;
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (!this.storyPlaying) return;
+                this.storyPausedByHide = true;
+                this.stopStory();
+            } else if (this.storyPausedByHide) {
+                this.storyPausedByHide = false;
+                if (this.length) this.startStory({ fromCurrent: true });
+            }
+        });
     }
 
     get current() { return this.slides[this.index] || null; }
@@ -61,11 +86,15 @@ export class Deck {
         container.innerHTML = '';
         progress.innerHTML = '';
 
+        this.filled.clear();
+
         const frag = document.createDocumentFragment();
         slides.forEach((slide, i) => {
             const el = document.createElement('div');
             el.className = `slide ${slide.gradient}${i === 0 ? ' active' : ''}`;
-            el.innerHTML = slide.html;
+            // Body deliberately left empty here — see `fill`. Parsing thirty
+            // slides' worth of HTML up front was the single longest task
+            // between "analysis done" and the first slide on a phone.
             el.dataset.index = String(i);
             el.id = `slide-${i}`;
             // tabpanel rather than a bare group: the progress bar above is a
@@ -78,7 +107,6 @@ export class Deck {
             el.setAttribute('aria-label', t('deck.slideLabel', { n: i + 1, total: slides.length }));
             el.tabIndex = -1;
             setActive(el, i === 0);
-            if (slide.chart) el._chartInit = slide.chart;
             frag.appendChild(el);
             this.elements.push(el);
 
@@ -106,9 +134,36 @@ export class Deck {
         const requested = readHash().slide;
         const start = requested != null && requested < slides.length ? requested : 0;
 
+        this.fillAround(0);
         this.updateChrome(0);
         this.initChart(0);
         if (start > 0) this.goTo(start, { immediate: true });
+    }
+
+    /**
+     * Put a slide's HTML into its element, once.
+     *
+     * Every slide element exists from `mount` — the progress bar, the aria
+     * wiring and the tab order all depend on that — but its content is written
+     * only when it comes into reach. `onSlideReady` fires here rather than
+     * after `mount`, so anything that has to reach into a slide's markup (the
+     * recap slide's buttons) still gets its chance whenever the slide arrives.
+     */
+    fill(index) {
+        const el = this.elements[index];
+        const slide = this.slides[index];
+        if (!el || !slide || this.filled.has(index)) return;
+        this.filled.add(index);
+        el.innerHTML = slide.html;
+        if (slide.chart) el._chartInit = slide.chart;
+        this.refs.onSlideReady?.(index, el);
+    }
+
+    /** The slide and its two neighbours — what a swipe can reach before paint. */
+    fillAround(index) {
+        this.fill(index);
+        this.fill(index - 1);
+        this.fill(index + 1);
     }
 
     /** Restore the deck to an empty state (new analysis). */
@@ -119,11 +174,13 @@ export class Deck {
         this.elements = [];
         this.index = 0;
         this.chartsReady.clear();
+        this.filled.clear();
         this.refs.container.innerHTML = '';
         this.refs.progress.innerHTML = '';
     }
 
     async initChart(index) {
+        this.fill(index);
         const el = this.elements[index];
         if (!el || !el._chartInit || this.chartsReady.has(index)) return;
         this.chartsReady.add(index); // claim the slot before awaiting, so a fast
@@ -151,6 +208,8 @@ export class Deck {
     goTo(index, { immediate = false, focus = false } = {}) {
         if (index < 0 || index >= this.length || index === this.index) return;
         if (this.animating && !immediate) return;
+
+        this.fillAround(index);
 
         const forward = index > this.index;
         const from = this.elements[this.index];
@@ -234,19 +293,26 @@ export class Deck {
 
     /** Dwell time scaled by how much there is to read on the slide. */
     storyDuration(index) {
+        this.fill(index);
         const el = this.elements[index];
         const chars = el ? (el.textContent || '').trim().length : 0;
         return Math.min(STORY_MAX_MS, STORY_BASE_MS + chars * 12);
     }
 
     toggleStory() {
+        this.storyPausedByHide = false;
         this.storyPlaying ? this.stopStory() : this.startStory();
         return this.storyPlaying;
     }
 
-    startStory() {
+    /**
+     * @param {{ fromCurrent?: boolean }} [options] `fromCurrent` keeps the
+     *   current slide even if it is the last one — used when resuming after
+     *   the tab came back, where restarting from slide 1 would be a surprise.
+     */
+    startStory({ fromCurrent = false } = {}) {
         if (this.length === 0) return;
-        if (this.index === this.length - 1) this.goTo(0, { immediate: true });
+        if (!fromCurrent && this.index === this.length - 1) this.goTo(0, { immediate: true });
         this.storyPlaying = true;
         document.body.classList.add('story-playing');
         announce(t('deck.storyStarted'));
