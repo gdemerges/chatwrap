@@ -1,0 +1,7 @@
+[15/03/2024, 14:30:00] Mesajlar ve aramalar uçtan uca şifrelenir.
+[15/03/2024, 14:30:10] Elif: Herkese günaydın
+[15/03/2024, 14:31:10] Mert: Nasılsın?
+[16/03/2024, 09:05:00] Elif: görsel dahil edilmedi
+[16/03/2024, 09:06:00] Mert: belge dahil edilmedi
+[17/03/2024, 21:15:00] Elif: Bu mesaj silindi
+[17/03/2024, 21:16:00] Mert: Yarın görüşürüz <Bu mesaj düzenlendi>

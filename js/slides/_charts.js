@@ -14,6 +14,8 @@
  * re-tinted in place when the theme changes.
  */
 
+import { prefersReducedMotion } from '../ui/motion.js';
+
 const VAR_RE = /^var\(\s*(--[\w-]+)\s*\)$/;
 
 /** @type {Set<{ chart: any, raw: any }>} */
@@ -46,9 +48,23 @@ function resolveTokens(value) {
  * @param {any} config Chart.js config; may contain `var(--token)` color strings.
  */
 export function makeChart(ctx, config) {
-    const chart = new window.Chart(ctx, resolveTokens(config));
+    const chart = new window.Chart(ctx, stillIfAsked(resolveTokens(config)));
     registry.add({ chart, raw: config });
     return chart;
+}
+
+/**
+ * Draw the chart in its final state instead of growing into it.
+ *
+ * A canvas is the one surface `prefers-reduced-motion` cannot reach from CSS,
+ * so every chart kept its default one-second grow-in — bars rising and lines
+ * drawing themselves — for users who had asked the whole page to hold still.
+ * Chart.js takes `false` for both the initial animation and the per-property
+ * ones; setting only `animation` leaves the latter running.
+ */
+function stillIfAsked(config) {
+    if (!prefersReducedMotion()) return config;
+    return { ...config, options: { ...config.options, animation: false, animations: false } };
 }
 
 /** Destroy every live chart. Call before wiping the slide container. */
@@ -68,7 +84,9 @@ export function retintCharts() {
     for (const entry of registry) {
         const { chart, raw } = entry;
         if (!raw.options) continue;
-        Object.assign(chart.options, resolveTokens(raw.options));
+        // Re-applying the raw options would hand the animation flags back,
+        // so a theme flip re-armed the grow-in that `makeChart` had removed.
+        Object.assign(chart.options, stillIfAsked({ options: resolveTokens(raw.options) }).options);
         try { chart.update('none'); } catch { /* detached */ }
     }
 }

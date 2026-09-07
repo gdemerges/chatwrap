@@ -5,12 +5,18 @@
  * scored words against a French alphabet and a French stopword list. A Spanish
  * chat therefore parsed perfectly and then produced a top-words slide reading
  * `que, de, la, y` — correct arithmetic on the wrong tokens. This walks a chat
- * from raw export to built slides in each of the five newly covered languages.
+ * from raw export to built slides in each of the languages added since.
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { parse } from '../js/parser.js';
 import { compute } from '../js/stats.js';
 import { detectLanguage } from '../js/lang/stopwords.js';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+const here = dirname(fileURLToPath(import.meta.url));
+const fixture = (name) => readFileSync(resolve(here, 'fixtures', name), 'utf-8');
 
 /** A short export in the Android shape, whose words are the point. */
 function chat(lines) {
@@ -74,6 +80,29 @@ const CASES = {
         expected: 'vergadering',
         alsoWhole: ['opnieuw'],
     },
+    id: {
+        lines: many([
+            'jadwal pertemuan besok sepertinya berubah lagi',
+            'aku belum tahu apakah pertemuan itu jadi',
+            'pertemuan kemarin kelamaan banget sih',
+            'kita atur ulang pertemuan minggu depan ya',
+        ]),
+        expected: 'pertemuan',
+        alsoWhole: ['jadwal', 'kemarin'],
+    },
+    tr: {
+        lines: many([
+            'yarınki toplantı galiba yine değişti',
+            'toplantı olacak mı bilmiyorum henüz',
+            'dünkü toplantı gerçekten çok uzundu',
+            'toplantı için yeni bir gün ayarlayalım',
+        ]),
+        // Turkish agglutinates, so the bare stem is what recurs across the
+        // four lines — `yarınki` and `dünkü` carry their suffixes and stay
+        // distinct tokens, which is the correct behaviour for `\p{L}`.
+        expected: 'toplantı',
+        alsoWhole: ['yarınki', 'dünkü', 'ayarlayalım'],
+    },
 };
 
 describe('a chat in each supported language', () => {
@@ -103,10 +132,33 @@ describe('a chat in each supported language', () => {
             });
 
             it('strips that language\'s own stopwords', () => {
-                for (const stop of ['de', 'la', 'die', 'che', 'que', 'niet', 'non']) {
+                for (const stop of ['de', 'la', 'die', 'che', 'que', 'niet', 'non',
+                    'yang', 'kalau', 'çünkü', 'için']) {
                     expect(words.has(stop)).toBe(false);
                 }
             });
+        });
+    }
+});
+
+describe('media placeholders land in a bucket, not just in the total', () => {
+    // The whole point of `MEDIA_BY_TYPE`: a language whose placeholders are
+    // missing still counts the attachment, so `mediaTotal` looks right while
+    // the breakdown underneath it is empty. Only the per-type counts catch it.
+    const cases = {
+        'android_id.txt': { images: 1, stickers: 1 },
+        'ios_tr.txt': { images: 1, documents: 1 },
+    };
+    for (const [file, expected] of Object.entries(cases)) {
+        it(`buckets every placeholder in ${file}`, () => {
+            const stats = compute(parse(fixture(file)), { minMessages: 1 });
+            for (const [type, n] of Object.entries(expected)) {
+                expect({ type, n: stats.mediaTypes[type] }).toEqual({ type, n });
+            }
+            const bucketed = Object.entries(stats.mediaTypes)
+                .filter(([type]) => type !== 'links')
+                .reduce((sum, [, n]) => sum + n, 0);
+            expect(bucketed).toBe(2);
         });
     }
 });

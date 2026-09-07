@@ -178,6 +178,25 @@ describe('parser — languages beyond FR/EN', () => {
         expect(messages.filter(m => m.isMedia).length).toBe(2);
     });
 
+    it('parses Android ID exports, with dots as the time separator', () => {
+        const messages = parse(fixture('android_id.txt'));
+        // The encryption notice is author-less and must not survive.
+        expect(messages.length).toBe(6);
+        expect(messages[0].author).toBe('Sari');
+        expect(messages.filter(m => m.isMedia).length).toBe(2);
+        expect(messages.filter(m => m.isDeleted).length).toBe(1);
+        expect(messages.filter(m => m.isEdited).length).toBe(1);
+    });
+
+    it('parses iOS TR exports', () => {
+        const messages = parse(fixture('ios_tr.txt'));
+        expect(messages.length).toBe(6);
+        expect(messages[0].author).toBe('Elif');
+        expect(messages.filter(m => m.isMedia).length).toBe(2);
+        expect(messages.filter(m => m.isDeleted).length).toBe(1);
+        expect(messages.filter(m => m.isEdited).length).toBe(1);
+    });
+
     it('tolerates en and em dashes as the Android separator', () => {
         const text = [
             '15/03/2024, 14:30 – Alice: one',

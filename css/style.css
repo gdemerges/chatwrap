@@ -1336,6 +1336,17 @@ body.dragging-file::after {
         animation: none;
         border-top-color: transparent;
     }
+    /* The hint has no other way of going away: `fadeInOut ... forwards` is
+       what shows it *and* what hides it again. Collapsed to 0.01ms like
+       everything else, it was painted and retired within the same frame, so
+       the one line explaining how to move through the deck never appeared for
+       the people most likely to be navigating it by keyboard. It is a timed
+       message rather than a moving element — the fade is what shortens, not
+       the three seconds it stays legible. */
+    .swipe-hint {
+        animation-duration: 3s !important;
+        animation-timing-function: steps(1, end) !important;
+    }
 }
 
 /* ============ SMOOTHER THEME TRANSITION ============ */

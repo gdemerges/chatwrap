@@ -1,8 +1,8 @@
 /**
  * Stopwords by language, plus WhatsApp-specific noise tokens always excluded.
  *
- * Coverage follows `js/lang/chat-locales.js`: FR, EN, ES, DE, PT, IT, NL. The
- * parser has always read those seven; the word statistics used to score them
+ * Coverage follows `js/lang/chat-locales.js`: FR, EN, ES, DE, PT, IT, NL, ID,
+ * TR. The parser has always read those; the word statistics used to score them
  * all against French, so a Spanish chat's top words were `que, de, la, y`.
  */
 
@@ -105,6 +105,38 @@ export const STOPWORDS_NL = new Set([
     'ja', 'nee', 'goed', 'oke', 'even', 'hier', 'daar', 'nu',
 ]);
 
+export const STOPWORDS_ID = new Set([
+    'yang', 'dan', 'di', 'ke', 'dari', 'untuk', 'dengan', 'pada', 'dalam',
+    'ini', 'itu', 'ada', 'adalah', 'akan', 'sudah', 'belum', 'masih', 'juga',
+    'saya', 'aku', 'gue', 'gua', 'kamu', 'kau', 'anda', 'dia', 'ia', 'kita',
+    'kami', 'kalian', 'mereka', 'nya', 'ku', 'mu',
+    'tidak', 'nggak', 'ngga', 'gak', 'ga', 'enggak', 'bukan', 'jangan',
+    'iya', 'ya', 'yah', 'oke', 'ok', 'sih', 'dong', 'deh', 'kok', 'lah',
+    'kan', 'nih', 'tuh', 'aja', 'saja', 'banget', 'bgt', 'sangat', 'sekali',
+    'lagi', 'lebih', 'paling', 'terus', 'trus', 'udah', 'sudah', 'baru',
+    'bisa', 'boleh', 'harus', 'mau', 'ingin', 'pengen', 'jadi', 'kalau',
+    'kalo', 'karena', 'tapi', 'atau', 'kalaupun', 'supaya', 'agar',
+    'apa', 'siapa', 'kapan', 'mana', 'kenapa', 'gimana', 'bagaimana',
+    'berapa', 'begitu', 'gitu', 'gini', 'sama', 'oleh', 'hanya', 'punya',
+    'wkwk', 'wkwkwk', 'haha', 'hehe', 'hmm',
+]);
+
+export const STOPWORDS_TR = new Set([
+    've', 'ile', 'ama', 'fakat', 'ancak', 'çünkü', 'cunku', 'ya', 'veya',
+    'de', 'da', 'ki', 'mi', 'mı', 'mu', 'mü', 'ne', 'için', 'icin', 'gibi',
+    'kadar', 'sonra', 'önce', 'once', 'daha', 'çok', 'cok', 'az', 'her',
+    'hep', 'hiç', 'hic', 'bir', 'biraz', 'bütün', 'butun', 'tüm', 'tum',
+    'ben', 'sen', 'o', 'biz', 'siz', 'onlar', 'bana', 'sana', 'ona',
+    'bize', 'size', 'benim', 'senin', 'onun', 'bizim', 'sizin',
+    'bu', 'şu', 'su', 'şey', 'sey', 'kim', 'nasıl', 'nasil', 'nerede',
+    'neden', 'niye', 'hangi', 'kaç', 'kac', 'zaman',
+    'var', 'yok', 'değil', 'degil', 'olarak', 'olan', 'oldu', 'olur',
+    'olmak', 'yani', 'ise', 'eğer', 'eger', 'ancak', 'sadece', 'yine',
+    'evet', 'hayır', 'hayir', 'tamam', 'peki', 'işte', 'iste', 'şimdi',
+    'simdi', 'bugün', 'bugun', 'çünkü', 'böyle', 'boyle', 'öyle', 'oyle',
+    'hahaha', 'haha', 'hehe',
+]);
+
 /** Noise tokens emitted by WhatsApp media/system lines, always excluded. */
 export const STOPWORDS_WHATSAPP = new Set([
     'image', 'absente', 'gif', 'retire', 'retiré', 'sticker', 'omis',
@@ -117,6 +149,8 @@ export const STOPWORDS_WHATSAPP = new Set([
     'imagem', 'omitido', 'oculto', 'mensagem', 'apagada',
     'immagine', 'omesso', 'omessa', 'messaggio', 'eliminato',
     'afbeelding', 'weggelaten', 'bericht', 'verwijderd',
+    'gambar', 'disertakan', 'stiker', 'pesan', 'dihapus', 'diedit',
+    'görsel', 'gorsel', 'dahil', 'edilmedi', 'medya', 'mesaj', 'silindi',
 ]);
 
 /** @type {Record<string, Set<string>>} */
@@ -128,6 +162,8 @@ const BY_LANG = {
     pt: STOPWORDS_PT,
     it: STOPWORDS_IT,
     nl: STOPWORDS_NL,
+    id: STOPWORDS_ID,
+    tr: STOPWORDS_TR,
 };
 
 /** Languages the word statistics can score, in detection order. */
@@ -176,9 +212,9 @@ export function detectLanguage(sampleText) {
  * Stopwords to strip for a chat detected as `lang`.
  *
  * English is always mixed in on top of the detected language: a chat in any of
- * these seven borrows English words constantly, and `ok`/`lol`/`the` are noise
- * everywhere. The other five are *not* mixed in — doing that for all seven
- * would strip real words (`si`, `come`, `van`, `die`, `no`) from the very
+ * these nine borrows English words constantly, and `ok`/`lol`/`the` are noise
+ * everywhere. The others are *not* mixed in — doing that for all nine would
+ * strip real words (`si`, `come`, `van`, `die`, `no`, `da`, `ya`) from the very
  * language being analysed.
  */
 export function stopwordsFor(lang) {

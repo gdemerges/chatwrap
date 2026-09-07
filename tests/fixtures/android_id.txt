@@ -1,0 +1,7 @@
+15/03/2024, 14.30 - Pesan dan panggilan dienkripsi secara end-to-end.
+15/03/2024, 14.30 - Sari: Selamat pagi semuanya
+15/03/2024, 14.31 - Budi: Apa kabar?
+16/03/2024, 09.05 - Sari: gambar tidak disertakan
+16/03/2024, 09.06 - Budi: stiker tidak disertakan
+17/03/2024, 21.15 - Sari: Pesan ini telah dihapus
+17/03/2024, 21.16 - Budi: Sampai besok ya <Pesan ini diedit>

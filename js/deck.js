@@ -9,6 +9,7 @@ import { ensureChart } from './vendor.js';
 import { destroyAllCharts, retintCharts } from './slides/_charts.js';
 import { announce } from './ui/toast.js';
 import { readHash, writeSlide } from './ui/hash.js';
+import { prefersReducedMotion, onMotionPreferenceChange } from './ui/motion.js';
 import { t } from './i18n.js';
 
 const TRANSITION_MS = 500;
@@ -45,7 +46,11 @@ export class Deck {
         this.storyTimer = null;
         this.storyPlaying = false;
         this.storyPausedByHide = false;
-        this.reducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+        // Read live rather than sampled once: the setting is a toggle in the
+        // OS, and someone who reaches for it mid-deck is asking for the
+        // movement to stop now, not on the next reload.
+        this.reducedMotion = prefersReducedMotion();
+        onMotionPreferenceChange((reduced) => { this.reducedMotion = reduced; });
         this.bindVisibility();
     }
 

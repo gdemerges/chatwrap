@@ -7,7 +7,7 @@
  * the poll header — is localised. Those strings live here rather than in
  * `parser.js` so adding a language is a data change, not a code change.
  *
- * Coverage: FR, EN, ES, DE, PT, IT, NL.
+ * Coverage: FR, EN, ES, DE, PT, IT, NL, ID, TR.
  *
  * Matching is done with `includes` on a lower-cased line, so entries are
  * written lower-case and without leading/trailing punctuation. Keep them
@@ -57,6 +57,16 @@ export const SYSTEM_KEYWORDS = [
     'berichten en oproepen', 'heeft de groep gemaakt', 'heeft toegevoegd',
     'heeft de groep verlaten', 'de beveiligingscode', 'is lid geworden via',
     'heeft het onderwerp gewijzigd', 'heeft een bericht vastgezet',
+    // ID
+    'pesan dan panggilan', 'membuat grup', 'menambahkan anda',
+    'keluar dari grup', 'mengubah subjek', 'bergabung menggunakan',
+    'kode keamanan', 'mengganti nomor', 'menyematkan sebuah pesan',
+    'telah dikeluarkan',
+    // TR
+    'mesajlar ve aramalar', 'grubu oluşturdu', 'sizi ekledi', 'kişisini ekledi',
+    'gruptan ayrıldı', 'konuyu değiştirdi', 'davet bağlantısını kullanarak katıldı',
+    'güvenlik kodu', 'telefon numarasını değiştirdi', 'bir mesajı sabitledi',
+    'gruptan çıkarıldı',
 ];
 
 /**
@@ -75,31 +85,38 @@ export const MEDIA_BY_TYPE = {
     images: [
         'image absente', 'image omitted', 'imagen omitida', 'bild weggelassen',
         'imagem ocultada', 'immagine omessa', 'afbeelding weggelaten',
+        'gambar tidak disertakan', 'görsel dahil edilmedi',
     ],
     gifs: [
         'gif retiré', 'gif omitted', 'gif omitido', 'gif weggelassen',
         'gif omessa', 'gif weggelaten',
+        'gif tidak disertakan', 'gif dahil edilmedi',
     ],
     stickers: [
         'sticker omis', 'sticker omitted', 'sticker omitido', 'sticker weggelassen',
         'figurinha omitida', 'adesivo omesso', 'sticker weggelaten',
+        'stiker tidak disertakan', 'çıkartma dahil edilmedi',
     ],
     videos: [
         'vidéo absente', 'video omitted', 'video omitido', 'video weggelassen',
         'vídeo omitido', 'video omesso', 'video weggelaten',
+        'video tidak disertakan', 'video dahil edilmedi',
     ],
     audio: [
         'audio omis', 'audio omitted', 'audio omitido', 'audio weggelassen',
         'áudio ocultado', 'audio omesso', 'audio weggelaten',
+        'audio tidak disertakan', 'ses dahil edilmedi',
     ],
     documents: [
         'document omis', 'document omitted', 'documento omitido',
         'dokument weggelassen', 'documento omesso', 'document weggelaten',
         'contact card omitted', 'fichier joint',
+        'dokumen tidak disertakan', 'belge dahil edilmedi',
     ],
     other: [
         '<médias omis>', 'media omitted', 'multimedia omitido',
         '<mídia oculta>', '<media omessi>', '<media weggelaten>',
+        '<media tidak disertakan>', '<medya dahil edilmedi>',
     ],
 };
 
@@ -112,6 +129,7 @@ export const EDITED_PATTERNS = [
     '<se editó este mensaje>', '<diese nachricht wurde bearbeitet>',
     '<esta mensagem foi editada>', '<questo messaggio è stato modificato>',
     '<dit bericht is bewerkt>',
+    '<pesan ini diedit>', '<bu mesaj düzenlendi>',
 ];
 
 /**
@@ -136,6 +154,10 @@ export const DELETED_PATTERNS = [
     'questo messaggio è stato eliminato', 'hai eliminato questo messaggio',
     // NL
     'dit bericht is verwijderd', 'je hebt dit bericht verwijderd',
+    // ID
+    'pesan ini telah dihapus', 'anda menghapus pesan ini',
+    // TR
+    'bu mesaj silindi', 'bu mesajı sildiniz',
 ];
 
 /**
@@ -146,6 +168,7 @@ export const DELETED_PATTERNS = [
 export const POLL_PREFIXES = [
     'sondage :', 'sondage:', 'poll:', 'encuesta:', 'umfrage:',
     'enquete:', 'enquete :', 'sondaggio:', 'peiling:',
+    'jajak pendapat:', 'anket:',
 ];
 
 /**
@@ -164,6 +187,8 @@ export const REACTION_RE = new RegExp(
         'reagiu',                       // PT
         'ha reagito',                   // IT
         'reageerde',                    // NL
+        'bereaksi', 'menyukai',         // ID
+        'tepki verdi', 'beğendi',       // TR
     ].join('|')
     + ')\\s+((?:\\p{Extended_Pictographic}\\uFE0F?(?:\\u200D\\p{Extended_Pictographic}\\uFE0F?)*)+)',
     'iu',

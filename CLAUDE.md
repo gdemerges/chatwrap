@@ -31,7 +31,7 @@ Vitest pour les tests, ESLint pour le lint.
 | `js/app.js` | Orchestration : import de fichier, worker, écrans |
 | `js/deck.js` | Navigation entre slides, mode lecture automatique |
 | `js/worker.js` | Web Worker : lit le fichier **en flux**, parse, calcule, met en cache |
-| `js/parser.js` | Parsing des exports WhatsApp (iOS / Android, 7 langues) |
+| `js/parser.js` | Parsing des exports WhatsApp (iOS / Android, 9 langues) |
 | `js/i18n.js` | Langue de l'interface : `t()`, `setLocale`, traduction du HTML statique |
 | `js/format.js` | Nombres, dates, heures, jours — tout ce qui dépend de la langue |
 | `js/stats.js` | Calcul de toutes les statistiques |
@@ -46,7 +46,7 @@ Vitest pour les tests, ESLint pour le lint.
 | `js/analytics.js` | Compteur d'usage anonyme, inerte tant que non configuré |
 | `js/ui/` | Dialogues, toasts, feuille de partage, gestion du hash |
 | `js/dashboard.js` | Vue tableau de bord |
-| `js/lang/ui/` | Dictionnaires d'interface (7 langues) — `fr.js` fait référence |
+| `js/lang/ui/` | Dictionnaires d'interface (9 langues) — `fr.js` fait référence |
 | `js/lang/chat-locales.js` | Libellés que WhatsApp écrit dans le fichier (médias, notices…) |
 | `js/lang/` | Données de langue (stopwords, sentiment) |
 | `tests/` | Tests Vitest — voir les fixtures pour les formats de chat supportés |
@@ -72,7 +72,7 @@ Vitest pour les tests, ESLint pour le lint.
 - **Le partage par lien** doit rester anonymisable : toute nouvelle statistique portant un nom
   de personne doit survivre au parcours générique de `anonymize.js` (clé *ou* valeur).
 - **Aucun texte visible en dur.** Toute chaîne affichée passe par `t('clé')`, et la clé naît
-  dans `js/lang/ui/fr.js` avant d'être traduite dans les six autres. Le HTML statique s'annote `data-i18n`,
+  dans `js/lang/ui/fr.js` avant d'être traduite dans les huit autres. Le HTML statique s'annote `data-i18n`,
   `data-i18n-html` (quand la phrase contient un `<strong>`) ou `data-i18n-attr`. Les tests
   échouent sur une clé manquante, une clé en trop, ou un `{paramètre}` perdu en traduction.
 - **Rien de localisé ne monte *ni* ne descend dans le worker.** `stats.js` ne produit que des
@@ -84,7 +84,7 @@ Vitest pour les tests, ESLint pour le lint.
   `js/lang/chat-locales.js`, et `MEDIA_BY_TYPE` sert à la fois à reconnaître un média et à le
   ranger dans sa catégorie.
 - **Les statistiques de mots non plus.** La langue du chat vient de `detectLanguage`
-  (`js/lang/stopwords.js`), qui couvre les mêmes sept langues, et les mots se découpent avec
+  (`js/lang/stopwords.js`), qui couvre les mêmes neuf langues, et les mots se découpent avec
   `WORD_CHARS_RE` (`\p{L}`) — jamais une plage de lettres écrite à la main, qui coupait
   `años` en `a` + `os`.
 - **Le deck se remplit au fur et à mesure.** `mount` crée les éléments vides ; `fill` y écrit

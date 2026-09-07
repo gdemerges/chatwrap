@@ -20,9 +20,9 @@ dans ton navigateur, sans aucun envoi de données.
 - **Période libre** : une année, tout l'historique, ou une plage de dates au choix
 - **Dashboard** : vue tableau détaillée, filtre par participant, export CSV / JSON
 - **Analyse de sentiment** : par emojis et vocabulaire par défaut, par IA locale en option
-- **Interface multilingue** : français, anglais, espagnol, allemand, portugais, italien et néerlandais — détectés depuis le navigateur, changeables à tout moment
+- **Interface multilingue** : français, anglais, espagnol, allemand, portugais, italien, néerlandais, indonésien et turc — détectés depuis le navigateur, changeables à tout moment
 - **100% client-side** : aucune donnée n'est envoyée à un serveur
-- **Multi-format** : exports iOS et Android, en français, anglais, espagnol, allemand, portugais, italien et néerlandais
+- **Multi-format** : exports iOS et Android, en français, anglais, espagnol, allemand, portugais, italien, néerlandais, indonésien et turc
 
 ## Utilisation
 
@@ -207,7 +207,7 @@ année sur deux chiffres (`12/03/24`) n'est plus lu comme du mois-en-premier.
 ### De la conversation analysée
 
 La langue du chat est déduite des mots eux-mêmes (`detectLanguage`, `js/lang/stopwords.js`)
-et pilote les mots vides retirés du nuage de vocabulaire. Les mêmes sept langues sont
+et pilote les mots vides retirés du nuage de vocabulaire. Les mêmes neuf langues sont
 couvertes : avant, tout était scoré contre le français, et le top mots d'une conversation
 espagnole était `que, de, la, y`. Les mots sont découpés avec `\p{L}` plutôt qu'avec une
 plage de lettres françaises — `años` se coupait en `a` + `os`, `straße` en `stra` + `e`.

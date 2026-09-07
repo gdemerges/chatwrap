@@ -638,7 +638,7 @@ function wireToolbar() {
  * Both exports go through `js/export-data.js`, which the share sheet uses too.
  *
  * The dashboard used to build its own CSV: one table, headers written in
- * French in an app that speaks seven languages, and — the reason this moved —
+ * French in an app that speaks nine languages, and — the reason this moved —
  * a `csvCell` that quoted commas but did nothing about a leading `=`, `+` or
  * `@`. Participant names come from the chat, so that cell was a formula
  * waiting to run the next time someone opened the file in Excel.

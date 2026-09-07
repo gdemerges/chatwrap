@@ -1,7 +1,7 @@
 /**
  * Interface multilingue.
  *
- * Le parseur lit des exports en sept langues depuis toujours ; l'interface,
+ * Le parseur lit des exports en neuf langues depuis toujours ; l'interface,
  * elle, était en français en dur. Quelqu'un pouvait donc charger un export
  * anglais, obtenir des statistiques parfaitement calculées, et ne rien
  * comprendre à ce qu'il lisait.
@@ -23,6 +23,8 @@ import { de } from './lang/ui/de.js';
 import { pt } from './lang/ui/pt.js';
 import { it } from './lang/ui/it.js';
 import { nl } from './lang/ui/nl.js';
+import { id } from './lang/ui/id.js';
+import { tr } from './lang/ui/tr.js';
 
 const STORAGE_KEY = 'ww-locale';
 
@@ -37,6 +39,8 @@ export const LOCALES = {
     pt: { code: 'pt', label: 'Português', dict: pt },
     it: { code: 'it', label: 'Italiano', dict: it },
     nl: { code: 'nl', label: 'Nederlands', dict: nl },
+    id: { code: 'id', label: 'Bahasa Indonesia', dict: id },
+    tr: { code: 'tr', label: 'Türkçe', dict: tr },
 };
 
 /** @type {string} */
