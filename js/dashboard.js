@@ -5,7 +5,8 @@
 
 import { escapeHtml } from './utils.js';
 import { fmt, fmtDate, fmtClock, fmtHour, fmtTime, dayNames, peakDayName, monthMedium } from './format.js';
-import { t, initLocale, setLocale, getLocale, onLocaleChange, applyStaticI18n, LOCALES } from './i18n.js';
+import { t, initLocale, onLocaleChange, applyStaticI18n } from './i18n.js';
+import { registerServiceWorker, initTheme, initLangPicker, syncChromeLocale } from './ui/chrome.js';
 import { rehydrateDates, sanitizeShared } from './payload.js';
 import { ensureLZString } from './vendor.js';
 import { openShareSheet } from './ui/share.js';
@@ -22,55 +23,20 @@ const $ = (sel) => document.querySelector(sel);
 const content = $('#dash-content');
 
 // ---------- Service worker ----------
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch((err) => console.warn('[sw] registration failed:', err));
-    });
-}
-
-// ---------- Theme ----------
+registerServiceWorker();
 initTheme();
-function initTheme() {
-    const saved = localStorage.getItem('theme') || 'dark';
-    document.documentElement.dataset.theme = saved;
-    const btn = $('#theme-toggle');
-    if (!btn) return;
-    applyLabel(btn, saved);
-    btn.addEventListener('click', () => {
-        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-        document.documentElement.dataset.theme = next;
-        localStorage.setItem('theme', next);
-        applyLabel(btn, next);
-    });
-}
-function applyLabel(btn, theme) {
-    btn.setAttribute('aria-label', t(theme === 'dark' ? 'theme.toLight' : 'theme.toDark'));
-    btn.setAttribute('title', t(theme === 'dark' ? 'theme.light' : 'theme.dark'));
-}
 
 /**
- * The language picker, and the full re-render behind it.
+ * A language change means rebuilding every card.
  *
- * Every card is a string of HTML built from the stats, so switching language
- * means rebuilding all of them — cheaper than threading a locale through two
- * dozen template functions, and it keeps the active participant filter honest
- * because `render` re-runs the filter wiring too.
+ * Each one is a string of HTML built from the stats, so re-rendering the lot
+ * is cheaper than threading a locale through two dozen template functions —
+ * and it keeps the active participant filter honest, because `render` re-runs
+ * the filter wiring too.
  */
-function initLangPicker() {
-    const select = $('#lang-select');
-    if (!select) return;
-    select.innerHTML = Object.values(LOCALES)
-        .map(l => `<option value="${l.code}">${escapeHtml(l.label)}</option>`).join('');
-    select.value = getLocale();
-    select.addEventListener('change', () => setLocale(select.value));
-}
-
 onLocaleChange(() => {
     applyStaticI18n();
-    const btn = $('#theme-toggle');
-    if (btn) applyLabel(btn, document.documentElement.dataset.theme);
-    const picker = $('#lang-select');
-    if (picker) picker.value = getLocale();
+    syncChromeLocale();
     if (current) render(current.stats, current.comparison);
 });
 

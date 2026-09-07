@@ -4,3 +4,6 @@ coverage/
 .DS_Store
 *.log
 .vitest/
+/test-results/
+/playwright-report/
+/blob-report/

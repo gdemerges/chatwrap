@@ -71,6 +71,23 @@ L'A3 est volontairement à 250 dpi plutôt que 300 : à 300 dpi, l'image dépass
 canvas qu'iOS accepte d'allouer — et iOS échoue *silencieusement*, en rendant une image
 vide. À distance de bras sur un mur, l'écart est invisible.
 
+## Tests
+
+```bash
+npm test          # Vitest — 393 tests unitaires et d'intégration, sous jsdom
+npm run test:e2e  # Playwright — le parcours réel dans Chromium
+npm run lint
+npm run typecheck
+```
+
+jsdom n'a ni Web Worker ni canvas, donc les trois pièces qui portent le produit
+— le worker, Chart.js, et l'export d'image — ne sont exercées que par la suite
+Playwright. Elle vérifie notamment qu'un poster A4 rendu est **opaque presque
+partout** : un canvas trop grand renvoie une image vide sur iOS, sans erreur, et
+un poster blanc ressemble à un poster réussi tant que personne n'ouvre le PNG.
+
+Première utilisation : `npx playwright install chromium`.
+
 ## Vie privée
 
 Rien ne quitte l'appareil : le fichier est lu **en flux**, parsé et analysé dans un Web
@@ -166,7 +183,11 @@ site/
     ├── lang/              # dictionnaires : ui/ (interface), chat-locales (exports)
     ├── slides/            # une slide par fichier
     └── ui/                # dialogues, toasts, partage, URL
+                           #   chrome.js : thème + langue, partagés par les deux pages
+                           #   motion.js : prefers-reduced-motion, hors de portée du CSS
 ```
+
+`tests/` (Vitest) et `e2e/` (Playwright) vivent à la racine du dépôt et ne sont pas déployés.
 
 ## Stack technique
 
@@ -179,8 +200,8 @@ site/
 
 ### De l'interface
 
-Français, anglais, espagnol, allemand, portugais, italien et néerlandais — les sept que le
-parseur sait déjà lire. La langue est choisie au premier chargement dans l'ordre suivant :
+Français, anglais, espagnol, allemand, portugais, italien, néerlandais, indonésien et turc —
+les neuf que le parseur sait déjà lire. La langue est choisie au premier chargement dans l'ordre suivant :
 préférence enregistrée, puis `navigator.languages`, puis français. Le sélecteur en bas à
 droite la change à chaud — le deck est reconstruit sur la slide en cours, sans recalcul.
 
@@ -196,10 +217,11 @@ paramètres `{nom}` ont dérivé du français.
 | Android | `12/03/2024, 14:30 - Alice: Bonjour` |
 | Android US | `03/12/24, 2:30 PM - Alice: Hello` |
 | Android DE | `12.03.2024, 14.30 - Anna: Hallo` |
+| Android ID | `12/03/2024, 14.30 - Sari: Selamat pagi` |
 
 Les libellés que WhatsApp écrit lui-même (« image absente », « ce message a été supprimé »,
-l'en-tête d'un sondage, la notice de chiffrement) sont reconnus en **français, anglais,
-espagnol, allemand, portugais, italien et néerlandais** — voir `js/lang/chat-locales.js`.
+l'en-tête d'un sondage, la notice de chiffrement) sont reconnus en **français, anglais, espagnol, allemand, portugais, italien, néerlandais, indonésien et turc** — voir
+`js/lang/chat-locales.js`.
 
 L'ordre jour/mois est déduit du fichier entier, pas du séparateur : un export européen avec
 année sur deux chiffres (`12/03/24`) n'est plus lu comme du mois-en-premier.

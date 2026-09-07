@@ -20,7 +20,8 @@ import { escapeHtml } from './utils.js';
 import { TIP_JAR_URL } from './config.js';
 import { track, trackPageview, isEnabled as analyticsEnabled, isOptedOut, setOptOut } from './analytics.js';
 import { fmt } from './format.js';
-import { t, initLocale, setLocale, getLocale, onLocaleChange, applyStaticI18n, LOCALES } from './i18n.js';
+import { t, initLocale, onLocaleChange, applyStaticI18n } from './i18n.js';
+import { registerServiceWorker, initTheme, initLangPicker, syncChromeLocale } from './ui/chrome.js';
 
 // Settled before anything is painted: a slide bakes its text in when it is
 // built, so the language has to be known before the first build.
@@ -66,35 +67,11 @@ const deck = new Deck({
     onSlideReady: (_i, el) => wireRecapActions(el),
 });
 
-// ========== Service worker ==========
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch((err) => console.warn('[sw] registration failed:', err));
-    });
-}
-
-// ========== Theme ==========
-initTheme();
-function initTheme() {
-    const saved = localStorage.getItem('theme') || 'dark';
-    document.documentElement.dataset.theme = saved;
-    const btn = $('#theme-toggle');
-    if (!btn) return;
-    labelThemeBtn(btn, saved);
-    btn.addEventListener('click', () => {
-        const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
-        document.documentElement.dataset.theme = next;
-        localStorage.setItem('theme', next);
-        labelThemeBtn(btn, next);
-        // Charts are painted on canvas and cannot follow a CSS variable.
-        deck.retint();
-    });
-}
-
-function labelThemeBtn(btn, theme) {
-    btn.setAttribute('aria-label', t(theme === 'dark' ? 'theme.toLight' : 'theme.toDark'));
-    btn.setAttribute('title', t(theme === 'dark' ? 'theme.light' : 'theme.dark'));
-}
+// ========== Page chrome ==========
+registerServiceWorker();
+// Charts are painted on canvas and cannot follow a CSS variable, so the deck
+// has to repaint them itself after a theme flip.
+initTheme({ onThemeChange: () => deck.retint() });
 
 // ========== AI toggle ==========
 if (aiToggle) {
@@ -654,21 +631,6 @@ trackPageview();
 restore();
 
 /**
- * The language picker.
- *
- * Options are built from `LOCALES` rather than written in the HTML, so a new
- * dictionary shows up in the menu the moment it is registered.
- */
-function initLangPicker() {
-    const select = $('#lang-select');
-    if (!select) return;
-    select.innerHTML = Object.values(LOCALES)
-        .map(l => `<option value="${l.code}">${escapeHtml(l.label)}</option>`).join('');
-    select.value = getLocale();
-    select.addEventListener('change', () => setLocale(select.value));
-}
-
-/**
  * Repaint everything the language touches.
  *
  * The static HTML is re-translated in place, but a deck cannot be: each slide
@@ -678,10 +640,7 @@ function initLangPicker() {
  */
 onLocaleChange(() => {
     applyStaticI18n();
-    const themeBtn = $('#theme-toggle');
-    if (themeBtn) labelThemeBtn(themeBtn, document.documentElement.dataset.theme);
-    const picker = $('#lang-select');
-    if (picker) picker.value = getLocale();
+    syncChromeLocale();
     renderPrivacyNote();
     updateSourceLabel();
     updatePinButton();

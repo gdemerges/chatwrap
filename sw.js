@@ -49,6 +49,7 @@ const SHELL_ASSETS = [
     'js/export-image.js',
     'js/export-presets.js',
     'js/export-data.js',
+    'js/ui/chrome.js',
     'js/ui/motion.js',
     'js/ui/toast.js',
     'js/ui/dialog.js',

@@ -20,6 +20,9 @@ Vitest pour les tests, ESLint pour le lint.
 - Modules ES natifs : `import`/`export`, jamais `require`
 - Lancer les tests : `npm test` — les faire passer avant tout commit
   (Vitest ; les tests d'interface tournent sous jsdom via `@vitest-environment jsdom`)
+- Lancer les tests de bout en bout : `npm run test:e2e` (Playwright, Chromium).
+  jsdom n'a **ni Web Worker ni canvas** : le worker, Chart.js et l'export d'image
+  ne sont exercés pour de vrai que là. `npx playwright install chromium` une fois.
 - Lancer le lint : `npm run lint`, et les types : `npm run typecheck`
 - Serveur local : `python -m http.server 8000` (aucun outil de build)
 - `index.html#demo` charge une conversation fictive — pratique pour tester sans export réel
@@ -45,11 +48,13 @@ Vitest pour les tests, ESLint pour le lint.
 | `js/config.js` | Cagnotte et mesure d'audience — vide par défaut |
 | `js/analytics.js` | Compteur d'usage anonyme, inerte tant que non configuré |
 | `js/ui/` | Dialogues, toasts, feuille de partage, gestion du hash |
+| `js/ui/chrome.js` | Mobilier commun aux deux pages : service worker, thème, sélecteur de langue |
 | `js/dashboard.js` | Vue tableau de bord |
 | `js/lang/ui/` | Dictionnaires d'interface (9 langues) — `fr.js` fait référence |
 | `js/lang/chat-locales.js` | Libellés que WhatsApp écrit dans le fichier (médias, notices…) |
 | `js/lang/` | Données de langue (stopwords, sentiment) |
 | `tests/` | Tests Vitest — voir les fixtures pour les formats de chat supportés |
+| `e2e/` | Tests Playwright — worker, Chart.js et canvas dans un vrai navigateur |
 
 ## Conventions à respecter
 
