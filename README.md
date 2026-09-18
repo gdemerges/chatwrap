@@ -1,217 +1,216 @@
 # Chatwrap
 
-Chatwrap analyse tes conversations WhatsApp et en fait une rétrospective animée — directement
-dans ton navigateur, sans aucun envoi de données.
+Chatwrap turns your WhatsApp conversations into an animated recap — right in your browser,
+with nothing ever sent anywhere.
 
-> Chatwrap est un projet indépendant, sans lien avec WhatsApp ni avec Meta. Le nom WhatsApp
-> n'est mentionné que pour décrire les fichiers d'export que l'outil sait lire.
+> Chatwrap is an independent project with no affiliation to WhatsApp or Meta. WhatsApp is
+> only mentioned to describe the export files the tool can read.
 
-## Fonctionnalités
+## Features
 
-- **Analyse complète** : messages, médias, emojis, mots, temps de réponse, liens partagés…
-- **Récit en chapitres** : détection automatique des périodes où le rythme de la conversation a changé
-- **Profils** : une carte d'identité par participant (heure fétiche, emoji signature, mot exclusif, site favori)
-- **Graphe d'interactions** : qui répond à qui, en diagramme d'accords
-- **~30 slides animées** : classements, graphiques, heatmaps, anecdotes
-- **Lecture automatique** : mode story avec barre de progression, comme sur Instagram
-- **Export image** : chaque slide s'enregistre en PNG 1080×1920, prêt à publier
-- **Poster imprimable** : le récapitulatif en A3 ou A4 haute résolution, prêt pour l'imprimeur
-- **Anonymisation** : les prénoms peuvent être remplacés par des initiales avant tout partage
-- **Période libre** : une année, tout l'historique, ou une plage de dates au choix
-- **Dashboard** : vue tableau détaillée, filtre par participant, export CSV / JSON
-- **Analyse de sentiment** : par emojis et vocabulaire par défaut, par IA locale en option
-- **Interface multilingue** : français, anglais, espagnol, allemand, portugais, italien, néerlandais, indonésien et turc — détectés depuis le navigateur, changeables à tout moment
-- **100% client-side** : aucune donnée n'est envoyée à un serveur
-- **Multi-format** : exports iOS et Android, en français, anglais, espagnol, allemand, portugais, italien, néerlandais, indonésien et turc
+- **Full analysis**: messages, media, emojis, words, response times, shared links…
+- **Chapter-based story**: automatically detects periods where the conversation's rhythm changed
+- **Profiles**: an identity card per participant (favorite hour, signature emoji, exclusive word, favorite site)
+- **Interaction graph**: who replies to whom, as a chord diagram
+- **~30 animated slides**: rankings, charts, heatmaps, fun facts
+- **Auto-play**: story mode with a progress bar, like Instagram
+- **Image export**: every slide saves as a 1080×1920 PNG, ready to post
+- **Printable poster**: the recap in high-resolution A3 or A4, ready for the printer
+- **Anonymization**: first names can be replaced with initials before sharing
+- **Flexible period**: a single year, the full history, or any date range you pick
+- **Dashboard**: a detailed table view, filterable by participant, with CSV / JSON export
+- **Sentiment analysis**: by emojis and vocabulary by default, or via local AI as an option
+- **Multilingual interface**: French, English, Spanish, German, Portuguese, Italian, Dutch, Indonesian and Turkish — detected from the browser, switchable at any time
+- **100% client-side**: no data is ever sent to a server
+- **Multi-format**: iOS and Android exports, in French, English, Spanish, German, Portuguese, Italian, Dutch, Indonesian and Turkish
 
-## Utilisation
+## Usage
 
-### 1. Exporter ta conversation WhatsApp
+### 1. Export your WhatsApp conversation
 
-Dans WhatsApp :
-- Ouvre la conversation ou le groupe
-- Appuie sur les **trois points** (Android) ou le nom du contact (iOS)
-- **Exporter la discussion** → **Sans les médias**
+In WhatsApp:
+- Open the conversation or group
+- Tap the **three dots** (Android) or the contact's name (iOS)
+- **Export chat** → **Without media**
 
-### 2. Charger le fichier
+### 2. Load the file
 
-Glisse le fichier `.txt` ou `.zip` dans la zone d'upload, puis choisis la période à analyser.
+Drag the `.txt` or `.zip` file into the upload area, then pick the period to analyze.
 
-Pas de fichier sous la main ? Le bouton **« Voir un exemple »** (ou l'URL `index.html#demo`)
-génère une conversation fictive pour explorer le site.
+Don't have a file handy? The **"See an example"** button (or the `index.html#demo` URL)
+generates a fictional conversation to explore the site with.
 
-### 3. Explorer les résultats
+### 3. Explore the results
 
-| Action | Comment |
+| Action | How |
 |---|---|
-| Slide suivante / précédente | flèches à l'écran, **← →**, swipe, molette |
-| Première / dernière slide | **Début** / **Fin** |
-| Lecture automatique | **Espace**, ou le bouton *Lecture auto* |
-| Aller à une slide | clic sur la barre de progression en haut |
-| Partager | bouton *Partager* : image de la slide, image du récap, poster, ou lien |
-| Changer de langue | le sélecteur en bas à droite, à côté du thème |
+| Next / previous slide | on-screen arrows, **← →**, swipe, scroll wheel |
+| First / last slide | **Start** / **End** |
+| Auto-play | **Space**, or the *Auto-play* button |
+| Jump to a slide | click on the progress bar at the top |
+| Share | *Share* button: slide image, recap image, poster, or link |
+| Change language | the selector at the bottom right, next to the theme |
 
-### 4. Imprimer le poster
+### 4. Print the poster
 
-Le bouton *Partager → Poster à imprimer* génère un PNG destiné à l'impression :
+The *Share → Printable poster* button generates a PNG meant for printing:
 
-| Format | Dimensions | Résolution |
+| Format | Dimensions | Resolution |
 |---|---|---|
 | A3 | 2923 × 4134 px | 250 dpi |
 | A4 | 2480 × 3508 px | 300 dpi |
 
-Le fichier se dépose tel quel chez n'importe quel imprimeur. Deux détails utiles :
+The file can be dropped as-is at any print shop. Two useful details:
 
-- **Marges** : le contenu reste à ~17 mm des bords, donc au-delà de toute zone de rognage
-  courante. Le fond est un dégradé plein cadre : pas besoin d'ajouter du fond perdu.
-- **Colorimétrie** : le PNG est en sRGB (un canvas ne produit pas de CMJN). Les imprimeurs
-  convertissent, mais les violets saturés peuvent légèrement s'assombrir.
+- **Margins**: content stays ~17 mm from the edges, clear of any common trim zone. The
+  background is a full-bleed gradient, so there's no need to add bleed.
+- **Color**: the PNG is in sRGB (a canvas can't produce CMYK). Print shops convert it, but
+  saturated purples may darken slightly.
 
-L'A3 est volontairement à 250 dpi plutôt que 300 : à 300 dpi, l'image dépasse la taille de
-canvas qu'iOS accepte d'allouer — et iOS échoue *silencieusement*, en rendant une image
-vide. À distance de bras sur un mur, l'écart est invisible.
+A3 is intentionally rendered at 250 dpi instead of 300: at 300 dpi the image exceeds the
+canvas size iOS is willing to allocate — and iOS fails *silently*, rendering a blank image.
+At arm's length on a wall, the difference is invisible.
 
 ## Tests
 
 ```bash
-npm test          # Vitest — 393 tests unitaires et d'intégration, sous jsdom
-npm run test:e2e  # Playwright — le parcours réel dans Chromium
+npm test          # Vitest — 393 unit and integration tests, under jsdom
+npm run test:e2e  # Playwright — the real user journey in Chromium
 npm run lint
 npm run typecheck
 ```
 
-jsdom n'a ni Web Worker ni canvas, donc les trois pièces qui portent le produit
-— le worker, Chart.js, et l'export d'image — ne sont exercées que par la suite
-Playwright. Elle vérifie notamment qu'un poster A4 rendu est **opaque presque
-partout** : un canvas trop grand renvoie une image vide sur iOS, sans erreur, et
-un poster blanc ressemble à un poster réussi tant que personne n'ouvre le PNG.
+jsdom has neither a Web Worker nor canvas, so the three pieces that carry the product —
+the worker, Chart.js, and image export — are only exercised by the Playwright suite. It
+notably checks that a rendered A4 poster is **opaque almost everywhere**: an oversized
+canvas returns a blank image on iOS with no error, and a blank poster looks just like a
+successful one until someone opens the PNG.
 
-Première utilisation : `npx playwright install chromium`.
+First run: `npx playwright install chromium`.
 
-## Vie privée
+## Privacy
 
-Rien ne quitte l'appareil : le fichier est lu **en flux**, parsé et analysé dans un Web
-Worker, et les résultats sont mis en cache dans IndexedDB. Le texte complet de la
-conversation n'existe à aucun moment en entier en mémoire — ce qui évite aussi qu'un export
-de 50 Mo fasse tuer l'onglet sur un téléphone.
+Nothing leaves the device: the file is read **as a stream**, parsed and analyzed in a Web
+Worker, and the results are cached in IndexedDB. The full text of the conversation never
+exists in memory all at once — which also keeps a 50 MB export from getting the tab killed
+on a phone.
 
-Deux nuances à connaître :
+Two nuances worth knowing:
 
-- **Le partage par lien** encode les statistiques dans le fragment d'URL. Un fragment n'est
-  jamais transmis au serveur, mais il finit dans l'historique du navigateur et dans les logs
-  de l'application où il est collé. L'anonymisation des prénoms est donc activée par défaut
-  pour les liens.
-- **L'analyse de sentiment par IA** est optionnelle et désactivée par défaut : l'activer
-  télécharge les modèles depuis un CDN (~50 Mo). Sans elle, l'ambiance est déduite localement
-  des réactions emoji et d'un lexique — aucun téléchargement.
+- **Link sharing** encodes the stats in the URL fragment. A fragment is never sent to a
+  server, but it does end up in browser history and in the logs of whatever app it's pasted
+  into. First-name anonymization is therefore on by default for links.
+- **AI sentiment analysis** is optional and off by default: enabling it downloads models
+  from a CDN (~50 MB). Without it, mood is inferred locally from emoji reactions and a
+  lexicon — no download.
 
-## Configuration du déploiement
+## Deployment configuration
 
-Tout est optionnel et **vide par défaut** : le site ne fait aucune requête sortante tant que
-`js/config.js` n'est pas renseigné. Un fork ne se met donc jamais à téléphoner tout seul.
+Everything is optional and **empty by default**: the site makes no outgoing request until
+`js/config.js` is filled in. A fork therefore never starts phoning home on its own.
 
-### Cagnotte
+### Tip jar
 
 ```js
-export const TIP_JAR_URL = 'https://ko-fi.com/ton-compte';
+export const TIP_JAR_URL = 'https://ko-fi.com/your-account';
 ```
 
-Le lien de soutien n'apparaît que si cette valeur est renseignée.
+The support link only appears once this value is set.
 
-### Mesure d'audience
+### Audience measurement
 
 ```js
 export const ANALYTICS = {
-    provider: 'plausible',              // ou 'umami'
-    host: 'https://stats.exemple.fr',   // ton instance auto-hébergée
-    site: 'exemple.fr',                 // domaine (Plausible) ou id (Umami)
+    provider: 'plausible',              // or 'umami'
+    host: 'https://stats.example.com',  // your self-hosted instance
+    site: 'example.com',                // domain (Plausible) or id (Umami)
 };
 ```
 
-⚠️ **Il faut aussi ajouter `host` à `connect-src`** dans la CSP de `index.html` *et* de
-`dashboard.html`, sinon toutes les requêtes sont bloquées et le compteur n'enregistre rien.
+⚠️ **You also need to add `host` to `connect-src`** in the CSP of `index.html` *and*
+`dashboard.html`, otherwise every request is blocked and the counter records nothing.
 
-Ce qui est envoyé, et rien d'autre : le nom de l'événement (`pageview`, `analysis`, `poster`,
+What gets sent, and nothing else: the event name (`pageview`, `analysis`, `poster`,
 `share_link`, `share_image`, `export`, `export_data`, `pin_conversation`, `dashboard`,
-`parse_error`) et quelques
-propriétés techniques (format du poster, format de l'export de données, lien anonymisé ou non). **Aucune valeur issue d'une conversation** —
-ni le nombre de messages, ni le nombre de participants. L'URL est réduite à son chemin : le
-fragment `#share=…` contient les statistiques et ne doit jamais atteindre un endpoint.
+`parse_error`) and a few technical properties (poster format, data export format, whether
+the link was anonymized). **No value derived from a conversation** — not the message count,
+not the participant count. The URL is trimmed to its path: the `#share=…` fragment holds the
+stats and must never reach an endpoint.
 
-Le compteur respecte Do Not Track, Global Privacy Control et un refus local, et la note de
-confidentialité de la page d'accueil s'adapte automatiquement à l'état réel.
+The counter respects Do Not Track, Global Privacy Control, and a local opt-out, and the home
+page's privacy notice adapts automatically to the actual state.
 
-## Lancer en local
+## Running locally
 
-Aucun outil de build nécessaire. Il suffit d'un serveur web statique :
+No build tool needed. Just a static web server:
 
 ```bash
-python -m http.server 8000    # ou : npx http-server
+python -m http.server 8000    # or: npx http-server
 ```
 
-Puis ouvre [http://localhost:8000](http://localhost:8000).
+Then open [http://localhost:8000](http://localhost:8000).
 
 ```bash
 npm test          # Vitest
 npm run lint      # ESLint
-npm run typecheck # tsc --noEmit sur les modules typés en JSDoc
+npm run typecheck # tsc --noEmit over the JSDoc-typed modules
 ```
 
-## Structure du projet
+## Project structure
 
 ```
 site/
 ├── index.html / dashboard.html
 ├── sw.js                  # service worker (stale-while-revalidate)
-├── fonts/                 # Space Grotesk auto-hébergé (OFL)
-├── icons/                 # icônes PWA, dont une variante maskable
+├── fonts/                 # self-hosted Space Grotesk (OFL)
+├── icons/                 # PWA icons, including a maskable variant
 ├── css/
 └── js/
-    ├── app.js             # orchestration : import, worker, écrans
-    ├── deck.js            # navigation entre slides, mode story
-    ├── worker.js          # parse + stats + cache, hors du thread principal
-    ├── parser.js          # parseur des exports WhatsApp
-    ├── stats.js           # calcul des statistiques
-    ├── export-image.js    # rendu canvas des images partageables
-    ├── anonymize.js       # remplacement des prénoms par des initiales
-    ├── i18n.js            # langue de l'interface, t(), traduction du HTML statique
-    ├── compare.js         # épingle une conversation pour comparer la suivante
-    ├── export-data.js     # export des stats en JSON / CSV
-    ├── format.js          # nombres, dates, heures et jours selon la langue
-    ├── demo.js            # conversation d'exemple générée
-    ├── vendor.js          # chargement paresseux des scripts CDN
-    ├── lang/              # dictionnaires : ui/ (interface), chat-locales (exports)
-    ├── slides/            # une slide par fichier
-    └── ui/                # dialogues, toasts, partage, URL
-                           #   chrome.js : thème + langue, partagés par les deux pages
-                           #   motion.js : prefers-reduced-motion, hors de portée du CSS
+    ├── app.js             # orchestration: import, worker, screens
+    ├── deck.js            # slide navigation, story mode
+    ├── worker.js          # parse + stats + cache, off the main thread
+    ├── parser.js          # WhatsApp export parser
+    ├── stats.js           # statistics computation
+    ├── export-image.js    # canvas rendering of shareable images
+    ├── anonymize.js       # replacing first names with initials
+    ├── i18n.js            # interface language, t(), static HTML translation
+    ├── compare.js         # pins a conversation to compare the next one against
+    ├── export-data.js     # exporting stats as JSON / CSV
+    ├── format.js          # numbers, dates, times and days, per language
+    ├── demo.js            # generated sample conversation
+    ├── vendor.js          # lazy loading of CDN scripts
+    ├── lang/              # dictionaries: ui/ (interface), chat-locales (exports)
+    ├── slides/            # one slide per file
+    └── ui/                # dialogs, toasts, sharing, URL
+                           #   chrome.js: theme + language, shared by both pages
+                           #   motion.js: prefers-reduced-motion, outside CSS's reach
 ```
 
-`tests/` (Vitest) et `e2e/` (Playwright) vivent à la racine du dépôt et ne sont pas déployés.
+`tests/` (Vitest) and `e2e/` (Playwright) live at the repo root and are not deployed.
 
-## Stack technique
+## Tech stack
 
-- **Vanilla JS / HTML / CSS** — pas de framework, pas d'étape de build
-- **[Chart.js](https://www.chartjs.org/)**, **[LZ-String](https://pieroxy.net/blog/pages/lz-string/index.html)**, **[JSZip](https://stuk.github.io/jszip/)** — chargés à la demande depuis un CDN, épinglés par version et vérifiés par SRI
-- **[transformers.js](https://huggingface.co/docs/transformers.js)** — uniquement si l'analyse IA est activée
-- **Space Grotesk** — auto-hébergée, aucune requête vers Google Fonts
+- **Vanilla JS / HTML / CSS** — no framework, no build step
+- **[Chart.js](https://www.chartjs.org/)**, **[LZ-String](https://pieroxy.net/blog/pages/lz-string/index.html)**, **[JSZip](https://stuk.github.io/jszip/)** — loaded on demand from a CDN, version-pinned and SRI-verified
+- **[transformers.js](https://huggingface.co/docs/transformers.js)** — only if AI analysis is enabled
+- **Space Grotesk** — self-hosted, no request to Google Fonts
 
-## Langues
+## Languages
 
-### De l'interface
+### Interface
 
-Français, anglais, espagnol, allemand, portugais, italien, néerlandais, indonésien et turc —
-les neuf que le parseur sait déjà lire. La langue est choisie au premier chargement dans l'ordre suivant :
-préférence enregistrée, puis `navigator.languages`, puis français. Le sélecteur en bas à
-droite la change à chaud — le deck est reconstruit sur la slide en cours, sans recalcul.
+French, English, Spanish, German, Portuguese, Italian, Dutch, Indonesian and Turkish — the
+same nine the parser already reads. The language is picked on first load in this order:
+saved preference, then `navigator.languages`, then French. The selector at the bottom right
+switches it live — the deck is rebuilt at the current slide, with no recomputation.
 
-Ajouter une langue tient en trois gestes : copier `js/lang/ui/fr.js`, le traduire, l'inscrire
-dans `LOCALES` (`js/i18n.js`). Les tests refusent un dictionnaire dont les clés ou les
-paramètres `{nom}` ont dérivé du français.
+Adding a language takes three steps: copy `js/lang/ui/fr.js`, translate it, register it in
+`LOCALES` (`js/i18n.js`). The tests reject a dictionary whose keys or `{name}` parameters
+have drifted from the French one.
 
-### Des exports lus
+### Parsed exports
 
-| Format | Exemple |
+| Format | Example |
 |--------|---------|
 | iOS | `[12/03/2024, 14:30:00] Alice: Bonjour` |
 | Android | `12/03/2024, 14:30 - Alice: Bonjour` |
@@ -219,17 +218,18 @@ paramètres `{nom}` ont dérivé du français.
 | Android DE | `12.03.2024, 14.30 - Anna: Hallo` |
 | Android ID | `12/03/2024, 14.30 - Sari: Selamat pagi` |
 
-Les libellés que WhatsApp écrit lui-même (« image absente », « ce message a été supprimé »,
-l'en-tête d'un sondage, la notice de chiffrement) sont reconnus en **français, anglais, espagnol, allemand, portugais, italien, néerlandais, indonésien et turc** — voir
-`js/lang/chat-locales.js`.
+The labels WhatsApp itself writes ("missing image", "this message was deleted", a poll
+header, the encryption notice) are recognized in **French, English, Spanish, German,
+Portuguese, Italian, Dutch, Indonesian and Turkish** — see `js/lang/chat-locales.js`.
 
-L'ordre jour/mois est déduit du fichier entier, pas du séparateur : un export européen avec
-année sur deux chiffres (`12/03/24`) n'est plus lu comme du mois-en-premier.
+Day/month order is inferred from the whole file, not from the separator: a European export
+with a two-digit year (`12/03/24`) is no longer read as month-first.
 
-### De la conversation analysée
+### Analyzed conversation
 
-La langue du chat est déduite des mots eux-mêmes (`detectLanguage`, `js/lang/stopwords.js`)
-et pilote les mots vides retirés du nuage de vocabulaire. Les mêmes neuf langues sont
-couvertes : avant, tout était scoré contre le français, et le top mots d'une conversation
-espagnole était `que, de, la, y`. Les mots sont découpés avec `\p{L}` plutôt qu'avec une
-plage de lettres françaises — `años` se coupait en `a` + `os`, `straße` en `stra` + `e`.
+The chat's language is inferred from the words themselves (`detectLanguage`,
+`js/lang/stopwords.js`) and drives which stopwords are removed from the word cloud. The
+same nine languages are covered: previously everything was scored against French, and the
+top words of a Spanish conversation came out as `que, de, la, y`. Words are split using
+`\p{L}` rather than a hand-written letter range — `años` used to split into `a` + `os`,
+`straße` into `stra` + `e`.
