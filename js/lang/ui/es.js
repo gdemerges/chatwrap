@@ -102,6 +102,7 @@ export const es = {
         unzippedTooBig: 'Archivo descomprimido demasiado grande (máx. {mb} MB).',
         workerInvalid: 'Respuesta del worker no válida',
         computeFailed: 'El cálculo ha fallado',
+        vendorLoad: 'No se ha podido cargar {lib} (¿sin conexión?)',
         dashboardStorage: 'No se ha podido abrir el panel (¿almacenamiento lleno?)',
         unreadableLink: 'Este enlace para compartir es ilegible',
         noFile: 'Ningún archivo cargado.',

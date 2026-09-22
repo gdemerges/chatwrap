@@ -3,7 +3,7 @@
  * only ever right if they hand back the *same* array when nothing needs doing.
  */
 import { describe, it, expect } from 'vitest';
-import { ensureChronological, lowerBound, sliceByTime, localDayKey, localMonthKey, escapeHtml } from '../js/utils.js';
+import { ensureChronological, lowerBound, sliceByTime, localDayKey, localMonthKey, escapeHtml, pickChatEntry } from '../js/utils.js';
 
 const at = (...isos) => isos.map(iso => ({ datetime: new Date(iso) }));
 const ms = (iso) => new Date(iso).getTime();
@@ -91,5 +91,23 @@ describe('escapeHtml', () => {
     it('neutralises every character that can open a tag or an attribute', () => {
         expect(escapeHtml(`<a href="x" onclick='y'>&`))
             .toBe('&lt;a href=&quot;x&quot; onclick=&#39;y&#39;&gt;&amp;');
+    });
+});
+
+describe('pickChatEntry', () => {
+    const file = (name, size = 0, dir = false) => ({ name, dir, _data: { uncompressedSize: size } });
+
+    it('prefers the iOS chat over a bigger attached text file', () => {
+        const chat = file('_chat.txt', 10);
+        expect(pickChatEntry([file('notes.txt', 999), chat, file('photo.jpg', 5000)])).toBe(chat);
+    });
+
+    it('otherwise takes the largest .txt, whatever it is called', () => {
+        const chat = file('WhatsApp Chat with Alice.txt', 800);
+        expect(pickChatEntry([file('todo.txt', 12), chat, file('video.mp4', 90000)])).toBe(chat);
+    });
+
+    it('ignores folders and returns nothing when there is no text file', () => {
+        expect(pickChatEntry([file('media.txt/', 0, true), file('a.jpg', 1)])).toBeUndefined();
     });
 });

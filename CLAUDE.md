@@ -16,13 +16,19 @@ Vitest pour les tests, ESLint pour le lint.
 - Pas de dépendances npm runtime (Chart.js, LZ-String, JSZip chargés depuis un CDN)
 - Les scripts CDN sont chargés **paresseusement** via `js/vendor.js`, jamais par une balise
   `<script>` dans le HTML : rien de tout cela n'est nécessaire pour peindre l'écran d'accueil
+- Tout code exécuté depuis un CDN porte une empreinte SRI, y compris dans le worker :
+  transformers.js et le runtime ONNX passent par `SRI` dans `js/worker/sentiment-ml.js`.
+  Changer de version, c'est recalculer les trois empreintes ; changer de modèle, c'est
+  épingler sa révision dans `js/worker/sentiment-config.js`
+- Le nom du cache du service worker reste `ww-shell-dev` dans le dépôt : le déploiement le
+  réécrit en `ww-shell-<commit>`. Ne jamais le versionner à la main
 - Tout le traitement reste côté client — aucun appel réseau avec des données utilisateur
 - Modules ES natifs : `import`/`export`, jamais `require`
 - Lancer les tests : `npm test` — les faire passer avant tout commit
   (Vitest ; les tests d'interface tournent sous jsdom via `@vitest-environment jsdom`)
-- Lancer les tests de bout en bout : `npm run test:e2e` (Playwright, Chromium).
+- Lancer les tests de bout en bout : `npm run test:e2e` (Playwright, Chromium et WebKit).
   jsdom n'a **ni Web Worker ni canvas** : le worker, Chart.js et l'export d'image
-  ne sont exercés pour de vrai que là. `npx playwright install chromium` une fois.
+  ne sont exercés pour de vrai que là. `npx playwright install chromium webkit` une fois.
 - Lancer le lint : `npm run lint`, et les types : `npm run typecheck`
 - Serveur local : `python -m http.server 8000` (aucun outil de build)
 - `index.html#demo` charge une conversation fictive — pratique pour tester sans export réel

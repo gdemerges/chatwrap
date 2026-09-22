@@ -108,6 +108,7 @@ export const tr = {
         unzippedTooBig: 'Açılmış dosya çok büyük (en fazla {mb} MB).',
         workerInvalid: 'Geçersiz worker yanıtı',
         computeFailed: 'Hesaplama başarısız oldu',
+        vendorLoad: '{lib} yüklenemedi (bağlantı yok mu?)',
         dashboardStorage: 'Panel açılamadı (depolama dolu mu?)',
         unreadableLink: 'Bu paylaşım bağlantısı okunamıyor',
         noFile: 'Yüklenmiş dosya yok.',

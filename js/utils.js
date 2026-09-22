@@ -88,3 +88,24 @@ export function sliceByTime(messages, from, to) {
     const end = lowerBound(messages, to);
     return start === 0 && end === messages.length ? messages : messages.slice(start, end);
 }
+
+/**
+ * The chat inside an exported ZIP.
+ *
+ * Taking the first `.txt` was right until someone attached a text file to the
+ * conversation: an export "with media" then carries it next to the chat, and
+ * whichever came first in the archive got analysed. iOS always names the chat
+ * `_chat.txt`; Android names it after the contact, in the phone's language, so
+ * there the largest `.txt` wins — the chat is almost always the biggest one.
+ *
+ * @template {{ name: string, dir: boolean, _data?: { uncompressedSize?: number } }} T
+ * @param {T[]} entries  JSZip file objects
+ * @returns {T | undefined}
+ */
+export function pickChatEntry(entries) {
+    const texts = entries.filter(f => !f.dir && f.name.toLowerCase().endsWith('.txt'));
+    const ios = texts.find(f => f.name.split('/').pop() === '_chat.txt');
+    if (ios) return ios;
+    const size = (f) => f._data?.uncompressedSize ?? 0;
+    return texts.reduce((best, f) => (!best || size(f) > size(best) ? f : best), undefined);
+}

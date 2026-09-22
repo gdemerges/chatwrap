@@ -7,6 +7,8 @@
  * ~250 KB before they had even picked a file.
  */
 
+import { t } from './i18n.js';
+
 const SRI = {
     chart: {
         src: 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js',
@@ -44,7 +46,7 @@ function load(key) {
         s.onload = () => resolve();
         s.onerror = () => {
             delete pending[key]; // allow a retry on the next call
-            reject(new Error(`Impossible de charger ${dep.label}`));
+            reject(Object.assign(new Error(t('error.vendorLoad', { lib: dep.label })), { code: 'vendorLoad' }));
         };
         document.head.appendChild(s);
     });

@@ -103,6 +103,7 @@ export const en = {
         unzippedTooBig: 'Unzipped file too large (max {mb} MB).',
         workerInvalid: 'Invalid worker response',
         computeFailed: 'The computation failed',
+        vendorLoad: 'Could not load {lib} (are you offline?)',
         dashboardStorage: 'Could not open the dashboard (storage full?)',
         unreadableLink: 'This share link cannot be read',
         noFile: 'No file loaded.',

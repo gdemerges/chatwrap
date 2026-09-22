@@ -109,6 +109,7 @@ export const fr = {
         unzippedTooBig: 'Fichier décompressé trop volumineux (max {mb} Mo).',
         workerInvalid: 'Réponse worker invalide',
         computeFailed: 'Le calcul a échoué',
+        vendorLoad: 'Impossible de charger {lib} (connexion coupée ?)',
         dashboardStorage: "Impossible d'ouvrir le dashboard (stockage plein ?)",
         unreadableLink: 'Ce lien de partage est illisible',
         noFile: 'Aucun fichier chargé.',

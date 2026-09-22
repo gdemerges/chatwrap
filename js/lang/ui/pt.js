@@ -103,6 +103,7 @@ export const pt = {
         unzippedTooBig: 'Ficheiro descompactado demasiado grande (máx. {mb} MB).',
         workerInvalid: 'Resposta do worker inválida',
         computeFailed: 'O cálculo falhou',
+        vendorLoad: 'Não foi possível carregar {lib} (sem ligação?)',
         dashboardStorage: 'Não foi possível abrir o painel (armazenamento cheio?)',
         unreadableLink: 'Esta ligação de partilha é ilegível',
         noFile: 'Nenhum ficheiro carregado.',

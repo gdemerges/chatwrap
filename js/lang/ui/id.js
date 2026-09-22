@@ -108,6 +108,7 @@ export const id = {
         unzippedTooBig: 'Berkas hasil ekstrak terlalu besar (maksimal {mb} MB).',
         workerInvalid: 'Respons worker tidak valid',
         computeFailed: 'Perhitungan gagal',
+        vendorLoad: 'Gagal memuat {lib} (sedang offline?)',
         dashboardStorage: 'Tidak dapat membuka dasbor (penyimpanan penuh?)',
         unreadableLink: 'Tautan berbagi ini tidak dapat dibaca',
         noFile: 'Tidak ada berkas yang dimuat.',

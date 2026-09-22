@@ -93,7 +93,7 @@ First run: `npx playwright install chromium`.
 Nothing leaves the device: the file is read **as a stream**, parsed and analyzed in a Web
 Worker, and the results are cached in IndexedDB. The full text of the conversation never
 exists in memory all at once — which also keeps a 50 MB export from getting the tab killed
-on a phone.
+on a phone. Desktop browsers accept exports up to 150 MB.
 
 Two nuances worth knowing:
 
@@ -192,7 +192,7 @@ site/
 
 - **Vanilla JS / HTML / CSS** — no framework, no build step
 - **[Chart.js](https://www.chartjs.org/)**, **[LZ-String](https://pieroxy.net/blog/pages/lz-string/index.html)**, **[JSZip](https://stuk.github.io/jszip/)** — loaded on demand from a CDN, version-pinned and SRI-verified
-- **[transformers.js](https://huggingface.co/docs/transformers.js)** — only if AI analysis is enabled
+- **[transformers.js](https://huggingface.co/docs/transformers.js)** — only if AI analysis is enabled; the library and its ONNX runtime are hash-verified like the scripts above, and the models are pinned to a Hub commit
 - **Space Grotesk** — self-hosted, no request to Google Fonts
 
 ## Languages

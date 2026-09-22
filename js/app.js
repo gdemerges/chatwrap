@@ -16,7 +16,7 @@ import { ensureJSZip, ensureLZString, preload } from './vendor.js';
 import { buildDemoBlob } from './demo.js';
 import { pinConversation, getPinned, clearPinned, isSameConversation } from './compare.js';
 import { compareYears } from './stats.js';
-import { escapeHtml } from './utils.js';
+import { escapeHtml, pickChatEntry } from './utils.js';
 import { TIP_JAR_URL } from './config.js';
 import { track, trackPageview, isEnabled as analyticsEnabled, isOptedOut, setOptOut } from './analytics.js';
 import { fmt } from './format.js';
@@ -42,7 +42,14 @@ const loadingStatus = $('#loading-status');
 const loadingFile = $('#loading-file');
 const aiToggle = $('#ai-toggle');
 
-const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+/**
+ * The worker keeps every parsed message, and that costs about six times the
+ * text: a 50 MB export holds ~300 MB of heap once parsed, ~360 MB at the peak
+ * (measured on a synthetic 725 000-message chat). That is already near what a
+ * phone tab survives, so touch devices keep the old cap; a desktop browser has
+ * room for three times as much, which covers multi-year group chats.
+ */
+const MAX_FILE_SIZE = (window.matchMedia?.('(pointer: coarse)').matches ? 50 : 150) * 1024 * 1024;
 const AI_KEY = 'ww-use-ai';
 const SESSION_KEY = 'ww-stats';
 
@@ -145,8 +152,11 @@ function callWorker(message, transfer = []) {
             w.removeEventListener('error', onError);
             abortInFlight = null;
             if (e.data.kind === 'error') {
-                // The worker names the failure; the page words it.
-                const err = new Error(e.data.code ? t(`error.${e.data.code}`) : e.data.message);
+                // The worker names the failure; the page words it. An uncoded
+                // error is a bug, not a user mistake: its raw text (English or
+                // French, from deep in the worker) goes to the console only.
+                if (!e.data.code) console.error('[worker]', e.data.message);
+                const err = new Error(t(e.data.code ? `error.${e.data.code}` : 'error.computeFailed'));
                 err.diagnostics = e.data.diagnostics;
                 reject(err);
             } else {
@@ -157,7 +167,8 @@ function callWorker(message, transfer = []) {
             w.removeEventListener('message', onMessage);
             w.removeEventListener('error', onError);
             abortInFlight = null;
-            reject(new Error(e.message || t('error.computeFailed')));
+            console.error('[worker]', e.message);
+            reject(new Error(t('error.computeFailed')));
         };
         w.addEventListener('message', onMessage);
         w.addEventListener('error', onError);
@@ -334,10 +345,10 @@ async function unzip(file) {
     loadingStatus.textContent = t('loading.unzipping');
     await ensureJSZip();
     const zip = await window.JSZip.loadAsync(file);
-    const entry = Object.values(zip.files).find(f => !f.dir && f.name.toLowerCase().endsWith('.txt'));
+    const entry = pickChatEntry(Object.values(zip.files));
     if (!entry) throw new Error(t('error.noTxtInZip'));
 
-    // The 50 MB cap applies to the *compressed* file; a small zip can inflate
+    // The size cap applies to the *compressed* file; a small zip can inflate
     // to gigabytes. Check the declared size first, then the real one.
     const declared = entry._data?.uncompressedSize;
     if (typeof declared === 'number' && declared > MAX_FILE_SIZE) {

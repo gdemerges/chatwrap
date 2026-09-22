@@ -1,6 +1,6 @@
 import { COMPLIMENT, INSULT } from '../lang/sentiment.js';
 import {
-    SENTIMENT_MODEL, IRONY_MODEL,
+    SENTIMENT_MODEL, IRONY_MODEL, SENTIMENT_REVISION, IRONY_REVISION,
     SAMPLE_PER_AUTHOR_GPU, SAMPLE_PER_AUTHOR_CPU, MAX_TOTAL_GPU, MAX_TOTAL_CPU,
     MIN_CHARS, MAX_CHARS, BATCH_GPU, BATCH_CPU, STRONG, IRONY_FLIP_WEIGHT,
     EMOJI_POLARITY, lexicalSarcasm,
@@ -8,7 +8,43 @@ import {
 import { newAggregator, buildResult } from './sentiment-aggregates.js';
 import { buildDayContexts } from './day-context.js';
 
-const TRANSFORMERS_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.2';
+const TRANSFORMERS_DIST = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.2/dist/';
+
+/**
+ * Everything executed from the CDN is checked against a pinned hash, like the
+ * scripts in `js/vendor.js`. This code runs next to the chat text, so it is
+ * the last place to trust whatever jsDelivr happens to serve.
+ *
+ * A dynamic `import()` cannot carry an `integrity` attribute, so each file is
+ * fetched with one — the browser rejects a mismatch — and imported from a
+ * blob URL. The ONNX runtime would otherwise fetch its own glue script and
+ * WebAssembly from the CDN, unchecked; handing it verified blob URLs through
+ * `wasmPaths` closes that gap too.
+ */
+const SRI = {
+    lib: {
+        file: 'transformers.min.js',
+        integrity: 'sha384-G1EJHfr5gbjkceaa8ZspGjLIAgIIb0/8KUzIEo6hAgAtJ4R2EKhcfp35K2Yziqq/',
+        type: 'text/javascript',
+    },
+    ortMjs: {
+        file: 'ort-wasm-simd-threaded.jsep.mjs',
+        integrity: 'sha384-7GJqH5vc83Yt7VHwrMXTM8bNCrt/e/8eCtok8zlB2u5dwqmhzSakzCkQWrfYGRN4',
+        type: 'text/javascript',
+    },
+    ortWasm: {
+        file: 'ort-wasm-simd-threaded.jsep.wasm',
+        integrity: 'sha384-u/bDsx39c+wt0LbHmOCydxt4fyiig3118hQgOTfOvrfkgScM4hRo2IwTtlxyoI02',
+        type: 'application/wasm',
+    },
+};
+
+async function verifiedBlobUrl({ file, integrity, type }) {
+    const res = await fetch(TRANSFORMERS_DIST + file, { integrity, mode: 'cors' });
+    if (!res.ok) throw new Error(`${file}: HTTP ${res.status}`);
+    const blob = new Blob([await res.arrayBuffer()], { type });
+    return URL.createObjectURL(blob);
+}
 
 /**
  * transformers.js is imported lazily: a static import pulled the library over
@@ -18,10 +54,18 @@ const TRANSFORMERS_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers
 let _transformers = null;
 async function getPipeline() {
     if (!_transformers) {
-        _transformers = await import(/* @vite-ignore */ TRANSFORMERS_URL);
-        _transformers.env.allowLocalModels = false;
+        _transformers = (async () => {
+            const [lib, mjs, wasm] = await Promise.all(
+                [SRI.lib, SRI.ortMjs, SRI.ortWasm].map(verifiedBlobUrl));
+            const mod = await import(/* @vite-ignore */ lib);
+            mod.env.allowLocalModels = false;
+            mod.env.backends.onnx.wasm.wasmPaths = { mjs, wasm };
+            return mod;
+        })();
+        // A network failure must not poison every later attempt.
+        _transformers.catch(() => { _transformers = null; });
     }
-    return _transformers.pipeline;
+    return (await _transformers).pipeline;
 }
 
 let _sentClassifier = null;
@@ -32,8 +76,12 @@ async function detectDevice() {
     if (_device) return _device;
     const hasWebGPU = typeof navigator !== 'undefined' && 'gpu' in navigator;
     if (hasWebGPU) {
-        try { await navigator.gpu.requestAdapter(); _device = 'webgpu'; return _device; }
-        catch { /* fall through */ }
+        // No usable GPU is reported as a `null` adapter, not as an exception —
+        // treating that as WebGPU sent blocklisted GPUs and headless browsers
+        // to a backend that could not start, and the AI analysis was dropped.
+        try {
+            if (await navigator.gpu.requestAdapter()) { _device = 'webgpu'; return _device; }
+        } catch { /* fall through */ }
     }
     _device = 'wasm';
     return _device;
@@ -43,6 +91,7 @@ async function loadSentiment(device, onProgress) {
     if (_sentClassifier) return _sentClassifier;
     const pipeline = await getPipeline();
     _sentClassifier = await pipeline('text-classification', SENTIMENT_MODEL, {
+        revision: SENTIMENT_REVISION,
         device,
         dtype: device === 'webgpu' ? 'fp32' : 'q8',
         progress_callback: (info) => {
@@ -60,6 +109,7 @@ async function loadIrony(device, onProgress) {
     try {
         const pipeline = await getPipeline();
         _ironyClassifier = await pipeline('text-classification', IRONY_MODEL, {
+            revision: IRONY_REVISION,
             device,
             dtype: device === 'webgpu' ? 'fp32' : 'q8',
             progress_callback: (info) => {

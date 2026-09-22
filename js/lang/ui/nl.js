@@ -103,6 +103,7 @@ export const nl = {
         unzippedTooBig: 'Uitgepakt bestand te groot (max. {mb} MB).',
         workerInvalid: 'Ongeldig antwoord van de worker',
         computeFailed: 'De berekening is mislukt',
+        vendorLoad: 'Kan {lib} niet laden (geen verbinding?)',
         dashboardStorage: 'Kon het dashboard niet openen (opslag vol?)',
         unreadableLink: 'Deze deellink is onleesbaar',
         noFile: 'Geen bestand geladen.',

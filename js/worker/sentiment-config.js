@@ -1,6 +1,12 @@
 export const SENTIMENT_MODEL = 'Xenova/distilbert-base-multilingual-cased-sentiments-student';
 export const IRONY_MODEL = 'Xenova/twitter-roberta-base-irony';
 
+// Hub commits the models are pinned to. Without a revision, transformers.js
+// follows `main`: a push to either repo would silently change every score.
+// Bump deliberately, after checking the labels still map in polarityFromScores.
+export const SENTIMENT_REVISION = '9d9ac661fd7b0b48535a1fc99b20ae6947629e65';
+export const IRONY_REVISION = '170664e4f255671a688efb6095771566bf318b0c';
+
 export const SAMPLE_PER_AUTHOR_GPU = 250;
 export const SAMPLE_PER_AUTHOR_CPU = 60;
 export const MAX_TOTAL_GPU = 2000;

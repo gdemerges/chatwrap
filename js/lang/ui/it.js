@@ -103,6 +103,7 @@ export const it = {
         unzippedTooBig: 'File decompresso troppo grande (max {mb} MB).',
         workerInvalid: 'Risposta del worker non valida',
         computeFailed: 'Il calcolo non è riuscito',
+        vendorLoad: 'Impossibile caricare {lib} (sei offline?)',
         dashboardStorage: 'Impossibile aprire la dashboard (archiviazione piena?)',
         unreadableLink: 'Questo link di condivisione è illeggibile',
         noFile: 'Nessun file caricato.',

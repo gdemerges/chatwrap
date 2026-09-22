@@ -15,8 +15,14 @@
  *
  * ML model weights (huggingface.co) are left alone: hundreds of megabytes,
  * already cached internally by transformers.js.
+ *
+ * The two live in separate caches. CACHE_NAME changes on every deploy — the
+ * CI rewrites it to `ww-shell-<commit>` — so a release reliably drops the old
+ * shell. CDN files never go stale, and throwing away the 20 MB ONNX runtime
+ * with each release would only make the next AI analysis slower.
  */
-const CACHE_NAME = 'ww-shell-v10';
+const CACHE_NAME = 'ww-shell-dev';
+const CDN_CACHE = 'ww-cdn-v1';
 
 const SHELL_ASSETS = [
     'index.html',
@@ -103,6 +109,7 @@ const CDN_ASSETS = [
 self.addEventListener('install', (event) => {
     event.waitUntil((async () => {
         const cache = await caches.open(CACHE_NAME);
+        const cdn = await caches.open(CDN_CACHE);
         // Each asset is cached on its own rather than through `addAll`, which
         // is all-or-nothing: one renamed file, one flaky response, and the
         // whole install rejected — leaving the visitor with no service worker
@@ -110,7 +117,10 @@ self.addEventListener('install', (event) => {
         // offline, and whatever is missing is filled in on the next online
         // visit by `staleWhileRevalidate`. What failed is named in the console
         // rather than swallowed.
-        const failures = await cacheAll(cache, [...SHELL_ASSETS, ...CDN_ASSETS]);
+        const failures = [
+            ...await cacheAll(cache, SHELL_ASSETS),
+            ...await cacheAll(cdn, CDN_ASSETS),
+        ];
         if (failures.length) console.warn('[sw] not precached:', failures);
         await self.skipWaiting();
     })());
@@ -125,7 +135,7 @@ async function cacheAll(cache, urls) {
 self.addEventListener('activate', (event) => {
     event.waitUntil((async () => {
         const keys = await caches.keys();
-        await Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)));
+        await Promise.all(keys.filter((k) => k !== CACHE_NAME && k !== CDN_CACHE).map((k) => caches.delete(k)));
         await self.clients.claim();
     })());
 });
@@ -170,7 +180,7 @@ async function staleWhileRevalidate(request) {
 }
 
 async function cacheFirst(request) {
-    const cache = await caches.open(CACHE_NAME);
+    const cache = await caches.open(CDN_CACHE);
     const cached = await cache.match(request);
     if (cached) return cached;
     const response = await fetch(request);

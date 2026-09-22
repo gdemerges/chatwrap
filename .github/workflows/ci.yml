@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
       - run: npm run lint
@@ -38,11 +38,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - run: npm ci
-      - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+      - name: Install browsers
+        # WebKit stands in for Safari on iOS, where oversized canvases come back
+        # blank without an error — the failure the export tests exist to catch.
+        run: npx playwright install --with-deps chromium webkit
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: failure()
@@ -66,6 +68,10 @@ jobs:
           mkdir dist
           cp index.html dashboard.html manifest.json favicon.svg sw.js dist/
           cp -r css js fonts icons dist/
+      - name: Version the service worker cache
+        # One cache name per release, so every deploy drops the previous shell
+        # instead of relying on someone remembering to bump it by hand.
+        run: sed -i "s/const CACHE_NAME = 'ww-shell-dev'/const CACHE_NAME = 'ww-shell-${GITHUB_SHA::12}'/" dist/sw.js && grep -q "ww-shell-${GITHUB_SHA::12}" dist/sw.js
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
