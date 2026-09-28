@@ -19,9 +19,9 @@ export function ghostingSlide(stats, gradient) {
                 <span class="slide-tag">${t('slide.ghosting.tag')}</span>
                 <h2 class="slide-title">${t('slide.ghosting.title', { n: stats.ghosting.count })}</h2>
                 <p class="slide-subtitle">${t('slide.ghosting.subtitle')}</p>
-                <h4 style="margin-top:1.5rem;opacity:0.8;">${t('slide.ghosting.longestTitle')}</h4>
+                <h4 data-css="margin-top:1.5rem;opacity:0.8;">${t('slide.ghosting.longestTitle')}</h4>
                 <ul class="plain-list">${longest}</ul>
-                <h4 style="margin-top:1.5rem;opacity:0.8;">${t('slide.ghosting.reviversTitle')}</h4>
+                <h4 data-css="margin-top:1.5rem;opacity:0.8;">${t('slide.ghosting.reviversTitle')}</h4>
                 <ul class="plain-list">${revivers}</ul>
             </div>
         `,
@@ -36,7 +36,7 @@ export function compatibilitySlide(stats, gradient) {
         html: `
             <div class="slide-inner">
                 <span class="slide-tag">${t('slide.compatibility.tag')}</span>
-                <div class="big-number">${c.score}<span style="font-size:2rem;opacity:0.7;">/100</span></div>
+                <div class="big-number">${c.score}<span data-css="font-size:2rem;opacity:0.7;">/100</span></div>
                 <div class="big-label">${t('slide.compatibility.big')}</div>
                 <div class="stat-grid">
                     <div class="stat-card"><div class="stat-value">${c.components.lengthSimilarity}</div><div class="stat-label">${t('slide.compatibility.length')}</div></div>

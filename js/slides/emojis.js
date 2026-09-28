@@ -71,7 +71,7 @@ export function emojisPerPersonSlide(stats, gradient) {
                 <div class="ranking-pos ${posClass}">${i + 1}</div>
                 <div class="ranking-bar-wrapper">
                     <div class="ranking-bar-label"><span class="name">${escapeHtml(name)}</span><span class="value">${t('slide.emojis.perMsg', { n: fmt(count), ratio })}</span></div>
-                    <div class="ranking-bar"><div class="ranking-bar-fill" style="--bar-width: ${w}%; background: ${color};"></div></div>
+                    <div class="ranking-bar"><div class="ranking-bar-fill" data-css="--bar-width: ${w}%; background: ${color};"></div></div>
                 </div>
             </div>`;
     }).join('');

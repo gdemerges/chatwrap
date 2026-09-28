@@ -7,6 +7,7 @@ import { escapeHtml } from './utils.js';
 import { fmt, fmtDate, fmtClock, fmtHour, fmtTime, dayNames, peakDayName, monthMedium } from './format.js';
 import { t, initLocale, onLocaleChange, applyStaticI18n } from './i18n.js';
 import { registerServiceWorker, initTheme, initLangPicker, syncChromeLocale } from './ui/chrome.js';
+import { watchInlineStyles } from './ui/inline-style.js';
 import { rehydrateDates, sanitizeShared } from './payload.js';
 import { ensureLZString } from './vendor.js';
 import { openShareSheet } from './ui/share.js';
@@ -24,6 +25,7 @@ const content = $('#dash-content');
 
 // ---------- Service worker ----------
 registerServiceWorker();
+watchInlineStyles();
 initTheme();
 
 /**
@@ -328,7 +330,7 @@ function activityCard(s) {
     const bars = s.hourly.map((v, h) => {
         const pct = max ? (v / max) * 100 : 0;
         return `<div class="dash-hour-bar" title="${t('dash.hourTooltip', { hour: fmtHour(h), n: v })}">
-            <div class="dash-hour-track"><div class="dash-hour-fill" style="--fill:${pct}%"></div></div>
+            <div class="dash-hour-track"><div class="dash-hour-fill" data-css="--fill:${pct}%"></div></div>
             <div class="dash-hour-label">${h}</div>
         </div>`;
     }).join('');
@@ -338,7 +340,7 @@ function activityCard(s) {
         const pct = dayMax ? (v / dayMax) * 100 : 0;
         return `<div class="dash-day-row">
             <span class="dash-day-name">${days[i].slice(0, 3)}</span>
-            <div class="dash-day-track"><div class="dash-day-fill" style="--fill:${pct}%"></div></div>
+            <div class="dash-day-track"><div class="dash-day-fill" data-css="--fill:${pct}%"></div></div>
             <span class="dash-day-count">${fmt(v)}</span>
         </div>`;
     }).join('');

@@ -41,8 +41,8 @@ export function duoBoardSlide(stats, gradient) {
                 <span class="slide-tag">${t('slide.duo.tag')}</span>
                 <h2 class="slide-title">${t('slide.duo.title')}</h2>
                 <div class="duo-board">
-                    <div class="duo-col" style="border-color:${colorA};">
-                        <h3 style="color:${colorA};">${escapeHtml(nameA)}</h3>
+                    <div class="duo-col" data-css="border-color:${colorA};">
+                        <h3 data-css="color:${colorA};">${escapeHtml(nameA)}</h3>
                         ${cell(fmt(pA.count), t('units.messages'))}
                         ${cell(`${pA.percent}%`, t('units.share'))}
                         ${cell(`${pA.avgLen}`, t('units.charsPerMsg'))}
@@ -60,8 +60,8 @@ export function duoBoardSlide(stats, gradient) {
                         <div class="duo-arrow">${winnerArrow(pA.media, pB.media)}</div>
                         ${sigA || sigB ? `<div class="duo-arrow">${t('common.none')}</div>` : ''}
                     </div>
-                    <div class="duo-col" style="border-color:${colorB};">
-                        <h3 style="color:${colorB};">${escapeHtml(nameB)}</h3>
+                    <div class="duo-col" data-css="border-color:${colorB};">
+                        <h3 data-css="color:${colorB};">${escapeHtml(nameB)}</h3>
                         ${cell(fmt(pB.count), t('units.messages'))}
                         ${cell(`${pB.percent}%`, t('units.share'))}
                         ${cell(`${pB.avgLen}`, t('units.charsPerMsg'))}
@@ -91,7 +91,7 @@ export function duoWordsSlide(stats, gradient) {
     const colorA = CHART_COLORS[0];
     const colorB = CHART_COLORS[1];
     const tag = (w, c, color) =>
-        `<span class="word-tag" style="background:${color}33;color:${color};">${escapeHtml(w)} <small>${c}</small></span>`;
+        `<span class="word-tag" data-css="background:${color}33;color:${color};">${escapeHtml(w)} <small>${c}</small></span>`;
     const cloudA = wordsA.slice(0, 10).map(([w, c]) => tag(w, c, colorA)).join('');
     const cloudB = wordsB.slice(0, 10).map(([w, c]) => tag(w, c, colorB)).join('');
 
@@ -104,12 +104,12 @@ export function duoWordsSlide(stats, gradient) {
                 <p class="slide-subtitle">${t('slide.duo.wordsSubtitle')}</p>
                 <div class="duo-words">
                     <div class="duo-words-col">
-                        <h4 style="color:${colorA};">${escapeHtml(nameA)}</h4>
-                        <div class="words-cloud">${cloudA || `<em style="opacity:0.5;">${t('slide.duo.noWords')}</em>`}</div>
+                        <h4 data-css="color:${colorA};">${escapeHtml(nameA)}</h4>
+                        <div class="words-cloud">${cloudA || `<em data-css="opacity:0.5;">${t('slide.duo.noWords')}</em>`}</div>
                     </div>
                     <div class="duo-words-col">
-                        <h4 style="color:${colorB};">${escapeHtml(nameB)}</h4>
-                        <div class="words-cloud">${cloudB || `<em style="opacity:0.5;">${t('slide.duo.noWords')}</em>`}</div>
+                        <h4 data-css="color:${colorB};">${escapeHtml(nameB)}</h4>
+                        <div class="words-cloud">${cloudB || `<em data-css="opacity:0.5;">${t('slide.duo.noWords')}</em>`}</div>
                     </div>
                 </div>
             </div>

@@ -7,12 +7,17 @@
   "scripts": {
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint js tests e2e",
+    "lint": "eslint js tests e2e scripts",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:coverage": "vitest run --coverage",
+    "bench": "node tests/perf.bench.js",
+    "i18n:missing": "node scripts/i18n-missing.js"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.63.0",
+    "@vitest/coverage-v8": "^5.0.2",
     "eslint": "^9.17.0",
     "jsdom": "^29.1.1",
     "typescript": "^5.9.3",

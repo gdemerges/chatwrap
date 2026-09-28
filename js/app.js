@@ -22,6 +22,8 @@ import { track, trackPageview, isEnabled as analyticsEnabled, isOptedOut, setOpt
 import { fmt } from './format.js';
 import { t, initLocale, onLocaleChange, applyStaticI18n } from './i18n.js';
 import { registerServiceWorker, initTheme, initLangPicker, syncChromeLocale } from './ui/chrome.js';
+import { watchInlineStyles } from './ui/inline-style.js';
+import { createWorkerClient, CANCELLED } from './worker-client.js';
 
 // Settled before anything is painted: a slide bakes its text in when it is
 // built, so the language has to be known before the first build.
@@ -76,6 +78,7 @@ const deck = new Deck({
 
 // ========== Page chrome ==========
 registerServiceWorker();
+watchInlineStyles();
 // Charts are painted on canvas and cannot follow a CSS variable, so the deck
 // has to repaint them itself after a theme flip.
 initTheme({ onThemeChange: () => deck.retint() });
@@ -95,86 +98,28 @@ function showScreen(name) {
 }
 
 // ========== Worker ==========
-let worker = null;
-/** Rejects the call in flight, so `cancelAnalysis` can unblock the caller. */
-let abortInFlight = null;
-
-function getWorker() {
-    if (!worker) worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'module' });
-    return worker;
-}
-
-/** Marks the one error the callers are expected to swallow silently. */
-const CANCELLED = 'cancelled';
+const worker = createWorkerClient({
+    spawn: () => new Worker(new URL('./worker.js', import.meta.url), { type: 'module' }),
+    onProgress: (text) => { loadingStatus.textContent = text; },
+});
 
 /**
  * Stop whatever the worker is doing and go back to the upload screen.
  *
- * There is no cooperative way out of a long parse or a 50 MB model download,
- * so the worker is killed outright; the next analysis builds a fresh one. That
- * also drops the retained parse, which is why `periodOptions` is cleared —
- * there is no file loaded any more to re-slice.
+ * The worker is killed outright, which also drops the retained parse — that is
+ * why `periodOptions` is cleared: there is no file loaded any more to re-slice.
  */
 function cancelAnalysis() {
-    if (worker) {
-        worker.terminate();
-        worker = null;
-    }
     periodOptions = null;
     sourceName = null;
     period = { year: null, range: null };
     fileInput.value = '';
-    const reject = abortInFlight;
-    abortInFlight = null;
-    reject?.(Object.assign(new Error(t('loading.cancelled')), { code: CANCELLED }));
+    worker.cancel(t('loading.cancelled'));
     showToast(t('loading.cancelled'));
     showScreen('upload');
 }
 
 $('#loading-cancel').addEventListener('click', cancelAnalysis);
-
-/**
- * One request/response round-trip. Progress messages are streamed to the
- * loading screen; the first non-progress message settles the promise.
- */
-function callWorker(message, transfer = []) {
-    return new Promise((resolve, reject) => {
-        const w = getWorker();
-        abortInFlight = reject;
-        const onMessage = (e) => {
-            if (e.data.kind === 'progress') {
-                // The worker names the step; the wording is chosen here, in the
-                // language the visitor picked.
-                loadingStatus.textContent = t(`loading.${e.data.code}`, e.data.params || {});
-                return;
-            }
-            w.removeEventListener('message', onMessage);
-            w.removeEventListener('error', onError);
-            abortInFlight = null;
-            if (e.data.kind === 'error') {
-                // The worker names the failure; the page words it. An uncoded
-                // error is a bug, not a user mistake: its raw text (English or
-                // French, from deep in the worker) goes to the console only.
-                if (!e.data.code) console.error('[worker]', e.data.message);
-                const err = new Error(t(e.data.code ? `error.${e.data.code}` : 'error.computeFailed'));
-                err.diagnostics = e.data.diagnostics;
-                reject(err);
-            } else {
-                resolve(e.data);
-            }
-        };
-        const onError = (e) => {
-            w.removeEventListener('message', onMessage);
-            w.removeEventListener('error', onError);
-            abortInFlight = null;
-            console.error('[worker]', e.message);
-            reject(new Error(t('error.computeFailed')));
-        };
-        w.addEventListener('message', onMessage);
-        w.addEventListener('error', onError);
-        w.postMessage(message, transfer);
-    });
-}
 
 // ========== File intake ==========
 fileInput.addEventListener('change', (e) => {
@@ -308,7 +253,7 @@ async function handleBlob(blob, { demo = false, name = null } = {}) {
     preload('chart');
 
     try {
-        const info = await callWorker({ kind: 'load', blob });
+        const info = await worker.call({ kind: 'load', blob });
         if (info.kind !== 'years') throw new Error(t('error.workerInvalid'));
 
         periodOptions = { years: info.years, yearCounts: info.yearCounts, bounds: info.bounds };
@@ -332,7 +277,7 @@ async function handleBlob(blob, { demo = false, name = null } = {}) {
 async function computeAndShow() {
     showScreen('loading');
     loadingStatus.textContent = t('loading.computing');
-    const result = await callWorker({ kind: 'stats', year: period.year, range: period.range, ai: useAI() });
+    const result = await worker.call({ kind: 'stats', year: period.year, range: period.range, ai: useAI() });
     if (result.kind !== 'stats') throw new Error(t('error.computeFailed'));
 
     sessionStorage.removeItem(SESSION_KEY); // drop stats from a previous analysis
@@ -537,7 +482,7 @@ function resetAll() {
     clearHash();
     sessionStorage.removeItem(SESSION_KEY);
     deck.clear();
-    getWorker().postMessage({ kind: 'reset' });
+    worker.post({ kind: 'reset' });
     session = null;
     period = { year: null, range: null };
     periodOptions = null;

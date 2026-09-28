@@ -42,6 +42,11 @@ export default [
                 HTMLElement: 'readonly',
                 fetch: 'readonly',
                 matchMedia: 'readonly',
+                MutationObserver: 'readonly',
+                KeyboardEvent: 'readonly',
+                MouseEvent: 'readonly',
+                Buffer: 'readonly',
+                EventTarget: 'readonly',
             },
         },
         rules: {

@@ -41,7 +41,7 @@ export function comparisonSlide(comparison, gradient) {
         const pct = d.pct;
         const arrow = pct == null ? '' : pct > 0 ? '▲' : pct < 0 ? '▼' : '=';
         const color = pct == null ? 'var(--text-muted)' : pct > 0 ? 'var(--accent-green)' : 'var(--accent-pink)';
-        const pctText = pct == null ? '' : `<span style="color:${color};font-weight:600;">${arrow} ${Math.abs(pct)}%</span>`;
+        const pctText = pct == null ? '' : `<span data-css="color:${color};font-weight:600;">${arrow} ${Math.abs(pct)}%</span>`;
         return `<tr><td>${label}</td><td>${fmt(d.previous)}${unit}</td><td>${fmt(d.current)}${unit}</td><td>${pctText}</td></tr>`;
     };
     return {
@@ -72,7 +72,7 @@ export function wordsTrendSlide(comparison, gradient) {
     const disappeared = comparison.disappeared || [];
     if (appeared.length === 0 && disappeared.length === 0) return null;
     const tag = (w, c, color) =>
-        `<span class="word-tag" style="background:${color}33;color:${color};">${escapeHtml(w)} <small>${c}</small></span>`;
+        `<span class="word-tag" data-css="background:${color}33;color:${color};">${escapeHtml(w)} <small>${c}</small></span>`;
     const newCloud = appeared.map(([w, c]) => tag(w, c, '#10B981')).join('');
     const oldCloud = disappeared.map(([w, c]) => tag(w, c, '#EC4899')).join('');
     return {
@@ -81,8 +81,8 @@ export function wordsTrendSlide(comparison, gradient) {
             <div class="slide-inner">
                 <span class="slide-tag">${t('slide.wordsTrend.tag')}</span>
                 <h2 class="slide-title">${t('slide.wordsTrend.title')}</h2>
-                ${appeared.length ? `<p style="color:var(--text-muted);font-size:0.85rem;margin-top:1rem;">${t('slide.wordsTrend.appeared')}</p><div class="words-cloud">${newCloud}</div>` : ''}
-                ${disappeared.length ? `<p style="color:var(--text-muted);font-size:0.85rem;margin-top:1rem;">${t('slide.wordsTrend.disappeared')}</p><div class="words-cloud">${oldCloud}</div>` : ''}
+                ${appeared.length ? `<p data-css="color:var(--text-muted);font-size:0.85rem;margin-top:1rem;">${t('slide.wordsTrend.appeared')}</p><div class="words-cloud">${newCloud}</div>` : ''}
+                ${disappeared.length ? `<p data-css="color:var(--text-muted);font-size:0.85rem;margin-top:1rem;">${t('slide.wordsTrend.disappeared')}</p><div class="words-cloud">${oldCloud}</div>` : ''}
             </div>
         `,
     };
@@ -123,7 +123,7 @@ export function recapSlide(stats, gradient) {
                     <div class="stat-card"><div class="stat-value">${fmt(stats.totalMedia)}</div><div class="stat-label">${t('units.media')}</div></div>
                     <div class="stat-card"><div class="stat-value">${t('format.days', { n: stats.streak.max })}</div><div class="stat-label">${t('units.bestStreak')}</div></div>
                 </div>
-                <p class="slide-subtitle" style="margin-top:1.5rem;">${dominant}</p>
+                <p class="slide-subtitle" data-css="margin-top:1.5rem;">${dominant}</p>
                 <div class="recap-actions"></div>
             </div>
         `,

@@ -47,7 +47,7 @@ export function heatmapSlide(stats, gradient) {
             const hue = 280 - intensity * 100;
             const color = val === 0 ? 'rgba(255,255,255,0.03)' : `hsla(${hue}, 70%, 55%, ${alpha})`;
             const tip = t('slide.heatmap.cell', { day: days[d], hour: fmtHour(h), n: val });
-            heatCells.push(`<div class="heatmap-cell" style="background:${color}" data-tooltip="${tip}"></div>`);
+            heatCells.push(`<div class="heatmap-cell" data-css="background:${color}" data-tooltip="${tip}"></div>`);
         }
     }
     return {
@@ -71,7 +71,7 @@ export function hourlyWeekdaySlide(stats, gradient) {
                 <span class="slide-tag">${t('slide.clock.tag')}</span>
                 <h2 class="slide-title">${t('slide.clock.title')}</h2>
                 <div class="chart-wrapper"><canvas id="chart-hourly" height="200"></canvas></div>
-                <div class="chart-wrapper" style="margin-top:1rem;"><canvas id="chart-weekday" height="160"></canvas></div>
+                <div class="chart-wrapper" data-css="margin-top:1rem;"><canvas id="chart-weekday" height="160"></canvas></div>
             </div>
         `,
         chart: (_, slide) => {

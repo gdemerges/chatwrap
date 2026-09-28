@@ -22,6 +22,7 @@ Vitest pour les tests, ESLint pour le lint.
   épingler sa révision dans `js/worker/sentiment-config.js`
 - Le nom du cache du service worker reste `ww-shell-dev` dans le dépôt : le déploiement le
   réécrit en `ww-shell-<commit>`. Ne jamais le versionner à la main
+- **CSP stricte : jamais de `style="…"` dans un gabarit HTML** (ni `'unsafe-inline'` dans la CSP). Une valeur dynamique s'écrit `data-css="color:${c}"` ; `js/ui/inline-style.js` la pose via le CSSOM. Un test échoue sur tout `style=` restant, et sur toute origine du code absente de la CSP
 - Tout le traitement reste côté client — aucun appel réseau avec des données utilisateur
 - Modules ES natifs : `import`/`export`, jamais `require`
 - Lancer les tests : `npm test` — les faire passer avant tout commit
@@ -30,7 +31,8 @@ Vitest pour les tests, ESLint pour le lint.
   jsdom n'a **ni Web Worker ni canvas** : le worker, Chart.js et l'export d'image
   ne sont exercés pour de vrai que là. `npx playwright install chromium webkit` une fois.
 - Lancer le lint : `npm run lint`, et les types : `npm run typecheck`
-- Serveur local : `python -m http.server 8000` (aucun outil de build)
+- Serveur local : `node scripts/serve.js 8000` (ou `python -m http.server 8000`) — aucun outil de build
+- Couverture : `npm run test:coverage` (seuils dans `vitest.config.js`, un cliquet : on les remonte, on ne les baisse pas). Traductions : `npm run i18n:missing`. Perf : `npm run bench`
 - `index.html#demo` charge une conversation fictive — pratique pour tester sans export réel
 
 ## Fichiers clés
@@ -40,6 +42,7 @@ Vitest pour les tests, ESLint pour le lint.
 | `js/app.js` | Orchestration : import de fichier, worker, écrans |
 | `js/deck.js` | Navigation entre slides, mode lecture automatique |
 | `js/worker.js` | Web Worker : lit le fichier **en flux**, parse, calcule, met en cache |
+| `js/worker-client.js` | Côté page du protocole worker : un appel en vol, progression, annulation (testable avec un faux Worker) |
 | `js/parser.js` | Parsing des exports WhatsApp (iOS / Android, 9 langues) |
 | `js/i18n.js` | Langue de l'interface : `t()`, `setLocale`, traduction du HTML statique |
 | `js/format.js` | Nombres, dates, heures, jours — tout ce qui dépend de la langue |
@@ -54,13 +57,15 @@ Vitest pour les tests, ESLint pour le lint.
 | `js/config.js` | Cagnotte et mesure d'audience — vide par défaut |
 | `js/analytics.js` | Compteur d'usage anonyme, inerte tant que non configuré |
 | `js/ui/` | Dialogues, toasts, feuille de partage, gestion du hash |
+| `js/ui/inline-style.js` | `data-css` → style CSSOM, pour tenir sans `'unsafe-inline'` |
 | `js/ui/chrome.js` | Mobilier commun aux deux pages : service worker, thème, sélecteur de langue |
 | `js/dashboard.js` | Vue tableau de bord |
 | `js/lang/ui/` | Dictionnaires d'interface (9 langues) — `fr.js` fait référence |
 | `js/lang/chat-locales.js` | Libellés que WhatsApp écrit dans le fichier (médias, notices…) |
 | `js/lang/` | Données de langue (stopwords, sentiment) |
 | `tests/` | Tests Vitest — voir les fixtures pour les formats de chat supportés |
-| `e2e/` | Tests Playwright — worker, Chart.js et canvas dans un vrai navigateur |
+| `e2e/` | Tests Playwright — worker, Chart.js et canvas dans un vrai navigateur ; import d'un fichier réel, violations CSP, axe (accessibilité) |
+| `scripts/` | `serve.js` (serveur statique des tests e2e), `i18n-missing.js` |
 
 ## Conventions à respecter
 

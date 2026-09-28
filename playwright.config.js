@@ -32,7 +32,7 @@ export default defineConfig({
         { name: 'webkit', use: { ...devices['Desktop Safari'] } },
     ],
     webServer: {
-        command: `python3 -m http.server ${PORT} --bind 127.0.0.1`,
+        command: `node scripts/serve.js ${PORT}`,
         url: `http://127.0.0.1:${PORT}/index.html`,
         reuseExistingServer: !process.env.CI,
         stdout: 'ignore',

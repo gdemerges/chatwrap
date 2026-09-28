@@ -25,7 +25,7 @@ export function versusSlide(versus, pinnedName, currentName, gradient) {
         const pct = d.pct;
         const arrow = pct == null ? '' : pct > 0 ? '▲' : pct < 0 ? '▼' : '=';
         const color = pct == null ? 'var(--text-muted)' : pct > 0 ? 'var(--accent-green)' : 'var(--accent-pink)';
-        const pctText = pct == null ? '' : `<span style="color:${color};font-weight:600;">${arrow} ${Math.abs(pct)}%</span>`;
+        const pctText = pct == null ? '' : `<span data-css="color:${color};font-weight:600;">${arrow} ${Math.abs(pct)}%</span>`;
         return `<tr><td>${label}</td><td>${fmt(d.previous)}${unit}</td><td>${fmt(d.current)}${unit}</td><td>${pctText}</td></tr>`;
     };
 

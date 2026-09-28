@@ -12,7 +12,7 @@ export function rankingBars(items, valueFn, labelFn, max) {
                 <div class="ranking-pos ${posClass}">${i + 1}</div>
                 <div class="ranking-bar-wrapper">
                     <div class="ranking-bar-label"><span class="name">${escapeHtml(name)}</span><span class="value">${labelFn([name, data])}</span></div>
-                    <div class="ranking-bar"><div class="ranking-bar-fill" style="--bar-width: ${w}%; background: ${color};"></div></div>
+                    <div class="ranking-bar"><div class="ranking-bar-fill" data-css="--bar-width: ${w}%; background: ${color};"></div></div>
                 </div>
             </div>`;
     }).join('');

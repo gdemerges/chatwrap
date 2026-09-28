@@ -74,10 +74,14 @@ At arm's length on a wall, the difference is invisible.
 ## Tests
 
 ```bash
-npm test          # Vitest — 393 unit and integration tests, under jsdom
-npm run test:e2e  # Playwright — the real user journey in Chromium
+npm test               # Vitest — unit and integration tests, under jsdom
+npm run test:coverage  # the same, with coverage thresholds (what CI runs)
+npm run test:e2e       # Playwright — real journeys in Chromium and WebKit: file import,
+                       # CSP violations, axe accessibility, image export
 npm run lint
 npm run typecheck
+npm run i18n:missing   # what each language still lacks versus the French reference
+npm run bench          # parser and stats timing
 ```
 
 jsdom has neither a Web Worker nor canvas, so the three pieces that carry the product —
@@ -145,7 +149,7 @@ page's privacy notice adapts automatically to the actual state.
 No build tool needed. Just a static web server:
 
 ```bash
-python -m http.server 8000    # or: npx http-server
+node scripts/serve.js 8000    # or: python -m http.server 8000
 ```
 
 Then open [http://localhost:8000](http://localhost:8000).

@@ -34,7 +34,7 @@ export function pieSlide(stats, gradient) {
             <div class="slide-inner">
                 <span class="slide-tag">${t('slide.pie.tag')}</span>
                 <h2 class="slide-title">${t('slide.pie.title')}</h2>
-                <div class="chart-wrapper" style="max-width:350px;margin:1.5rem auto;">
+                <div class="chart-wrapper" data-css="max-width:350px;margin:1.5rem auto;">
                     <canvas id="chart-pie" height="350"></canvas>
                 </div>
             </div>
@@ -161,7 +161,7 @@ export function initiatorSlide(stats, gradient) {
                 <div class="ranking-pos ${posClass}">${i + 1}</div>
                 <div class="ranking-bar-wrapper">
                     <div class="ranking-bar-label"><span class="name">${escapeHtml(name)}</span><span class="value">${t('slide.initiator.daysPct', { n, pct })}</span></div>
-                    <div class="ranking-bar"><div class="ranking-bar-fill" style="--bar-width: ${w}%; background: ${color};"></div></div>
+                    <div class="ranking-bar"><div class="ranking-bar-fill" data-css="--bar-width: ${w}%; background: ${color};"></div></div>
                 </div>
             </div>`;
     }).join('');

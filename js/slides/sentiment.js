@@ -131,7 +131,7 @@ export function moodHourlySlide(stats, gradient) {
                 <span class="slide-tag">${t('slide.moodClock.tag')}</span>
                 <h2 class="slide-title">${t('slide.moodClock.title')}</h2>
                 <div class="chart-wrapper"><canvas id="chart-sent-hourly" height="200"></canvas></div>
-                <div class="fun-facts" style="margin-top:0.75rem;">
+                <div class="fun-facts" data-css="margin-top:0.75rem;">
                     ${bestHour  ? `<div class="fun-fact"><div class="fun-fact-icon">🌞</div><div class="fun-fact-text">${t('slide.moodClock.best', { hour: fmtHour(bestHour.h) })}</div></div>` : ''}
                     ${worstHour ? `<div class="fun-fact"><div class="fun-fact-icon">😴</div><div class="fun-fact-text">${t('slide.moodClock.worst', { hour: fmtHour(worstHour.h) })}</div></div>` : ''}
                 </div>

@@ -32,13 +32,13 @@ export function profilesSlide(stats, gradient) {
         ).join('');
 
         const badges = [
-            p.topEmoji ? `<span class="profile-badge" style="border-color:${color};">${escapeHtml(p.topEmoji[0])} <small>×${fmt(p.topEmoji[1])}</small></span>` : '',
-            p.signatureWord ? `<span class="profile-badge" style="border-color:${color};">« ${escapeHtml(p.signatureWord[0])} »</span>` : '',
-            p.topDomain ? `<span class="profile-badge" style="border-color:${color};">🔗 ${escapeHtml(p.topDomain[0])}</span>` : '',
+            p.topEmoji ? `<span class="profile-badge" data-css="border-color:${color};">${escapeHtml(p.topEmoji[0])} <small>×${fmt(p.topEmoji[1])}</small></span>` : '',
+            p.signatureWord ? `<span class="profile-badge" data-css="border-color:${color};">« ${escapeHtml(p.signatureWord[0])} »</span>` : '',
+            p.topDomain ? `<span class="profile-badge" data-css="border-color:${color};">🔗 ${escapeHtml(p.topDomain[0])}</span>` : '',
         ].filter(Boolean).join('');
 
         return `
-            <article class="profile-card" style="--profile-color:${color};">
+            <article class="profile-card" data-css="--profile-color:${color};">
                 <header class="profile-head">
                     <span class="profile-avatar" aria-hidden="true">${escapeHtml(initials(p.name))}</span>
                     <h3>${escapeHtml(p.name)}</h3>

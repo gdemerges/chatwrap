@@ -18,7 +18,7 @@ export function linksSlide(stats, gradient) {
                 <div class="ranking-pos ${i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal'}">${i + 1}</div>
                 <div class="ranking-bar-wrapper">
                     <div class="ranking-bar-label"><span class="name">${escapeHtml(domain)}</span><span class="value">${fmt(count)}</span></div>
-                    <div class="ranking-bar"><div class="ranking-bar-fill" style="--bar-width: ${w}%; background: ${color};"></div></div>
+                    <div class="ranking-bar"><div class="ranking-bar-fill" data-css="--bar-width: ${w}%; background: ${color};"></div></div>
                 </div>
             </div>`;
     }).join('');

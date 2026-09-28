@@ -8,7 +8,7 @@ export function topWordsSlide(stats, gradient) {
         const color = CHART_COLORS[i % CHART_COLORS.length];
         const opacity = 0.15 + (1 - i / 25) * 0.2;
         const bg = color + Math.round(opacity * 255).toString(16).padStart(2, '0');
-        return `<span class="word-tag" style="font-size:${size}rem;background:${bg};color:${color};">${escapeHtml(word)} <small style="opacity:0.6;">${count}</small></span>`;
+        return `<span class="word-tag" data-css="font-size:${size}rem;background:${bg};color:${color};">${escapeHtml(word)} <small data-css="opacity:0.6;">${count}</small></span>`;
     }).join('');
     return {
         gradient,
@@ -27,8 +27,8 @@ export function uniqueWordsSlide(stats, gradient) {
     if (uniqEntries.length === 0) return null;
     const blocks = uniqEntries.slice(0, 6).map(([author, words], i) => {
         const color = CHART_COLORS[i % CHART_COLORS.length];
-        const tags = words.slice(0, 8).map(([w, c]) => `<span class="word-tag" style="background:${color}33;color:${color};">${escapeHtml(w)} <small>${c}</small></span>`).join('');
-        return `<div class="uniq-block"><h4 style="color:${color};">${escapeHtml(author)}</h4><div class="words-cloud">${tags}</div></div>`;
+        const tags = words.slice(0, 8).map(([w, c]) => `<span class="word-tag" data-css="background:${color}33;color:${color};">${escapeHtml(w)} <small>${c}</small></span>`).join('');
+        return `<div class="uniq-block"><h4 data-css="color:${color};">${escapeHtml(author)}</h4><div class="words-cloud">${tags}</div></div>`;
     }).join('');
     return {
         gradient,

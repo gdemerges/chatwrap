@@ -25,10 +25,10 @@ export function chaptersSlide(stats, gradient) {
         const meta = INTENSITY[c.intensity] || INTENSITY.steady;
         const height = Math.max(8, (c.avgPerMonth / maxAvg) * 100);
         return `
-            <li class="chapter-item" style="--chapter-color:${meta.color};">
+            <li class="chapter-item" data-css="--chapter-color:${meta.color};">
                 <div class="chapter-spine" aria-hidden="true">
                     <span class="chapter-dot">${meta.icon}</span>
-                    <span class="chapter-bar" style="height:${height.toFixed(0)}%;"></span>
+                    <span class="chapter-bar" data-css="height:${height.toFixed(0)}%;"></span>
                 </div>
                 <div class="chapter-body">
                     <span class="chapter-index">${t('slide.chapters.index', { n: i + 1 })}</span>
