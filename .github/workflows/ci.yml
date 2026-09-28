@@ -75,7 +75,7 @@ jobs:
         # One cache name per release, so every deploy drops the previous shell
         # instead of relying on someone remembering to bump it by hand.
         run: sed -i "s/const CACHE_NAME = 'ww-shell-dev'/const CACHE_NAME = 'ww-shell-${GITHUB_SHA::12}'/" dist/sw.js && grep -q "ww-shell-${GITHUB_SHA::12}" dist/sw.js
-      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: dist
       - id: deployment
