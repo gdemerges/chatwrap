@@ -50,6 +50,8 @@
     --bg-dark: #0a0a0a;
     --bg-card: #151515;
     --accent-green: #25D366;
+    --on-accent: #04140a;      /* ink on an accent-filled control */
+    --heat-empty: rgba(255, 255, 255, 0.06);
     --accent-purple: #8B5CF6;
     --accent-pink: #EC4899;
     --accent-blue: #3B82F6;
@@ -286,7 +288,7 @@ html, body {
     height: 28px;
     border-radius: 50%;
     background: var(--accent-green);
-    color: #000;
+    color: var(--on-accent);
     font-weight: 700;
     font-size: 0.85rem;
     display: flex;
@@ -315,7 +317,7 @@ html, body {
 .drop-zone:hover,
 .drop-zone.dragover {
     border-color: var(--accent-green);
-    background: rgba(37, 211, 102, 0.05);
+    background: color-mix(in srgb, var(--accent-green) 5%, transparent);
 }
 
 .drop-icon {
@@ -340,7 +342,7 @@ html, body {
     display: inline-block;
     padding: 0.6rem 1.5rem;
     background: var(--accent-green);
-    color: #000;
+    color: var(--on-accent);
     font-weight: 700;
     border-radius: 50px;
     cursor: pointer;
@@ -350,7 +352,7 @@ html, body {
 
 .file-btn:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 20px rgba(37, 211, 102, 0.4);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--accent-green) 40%, transparent);
 }
 
 .privacy-note {
@@ -1023,7 +1025,7 @@ html, body {
     left: 50%;
     transform: translateX(-50%) translateY(-20px);
     background: var(--accent-green);
-    color: #000;
+    color: var(--on-accent);
     padding: 0.6rem 1.5rem;
     border-radius: 50px;
     font-size: 0.85rem;
@@ -1066,6 +1068,13 @@ body.dragging-file::after {
     --surface-strong: rgba(15, 23, 42, 0.11);
     --surface-border: rgba(15, 23, 42, 0.14);
     --focus-ring: #0f766e;
+    /* The bright green is 1.2:1 on the pale gradients — a link in it could not
+       be read. Light mode takes the deep teal the toolbar already used, and
+       every control that names the accent follows instead of being patched
+       one by one. */
+    --accent-green: #0f766e;
+    --on-accent: #ffffff;
+    --heat-empty: rgba(15, 23, 42, 0.08);
     --scrim: rgba(15, 23, 42, 0.45);
     --panel-bg: #ffffff;
     --panel-border: rgba(15, 23, 42, 0.12);
@@ -1198,7 +1207,7 @@ body.dragging-file::after {
 
 .drop-zone:focus-visible {
     border-color: var(--accent-green);
-    background: rgba(37, 211, 102, 0.08);
+    background: color-mix(in srgb, var(--accent-green) 8%, transparent);
 }
 
 /* ============ NEW: Year comparison ============ */
@@ -1298,7 +1307,7 @@ body.dragging-file::after {
 }
 :root[data-theme="light"] .drop-zone:hover,
 :root[data-theme="light"] .drop-zone.dragover {
-    background: rgba(37, 211, 102, 0.08);
+    background: color-mix(in srgb, var(--accent-green) 8%, transparent);
 }
 :root[data-theme="light"] .how-to {
     background: rgba(255, 255, 255, 0.6);
@@ -1725,7 +1734,7 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
 }
 .toolbar-btn-primary {
     background: var(--accent-green);
-    color: #04140a;
+    color: var(--on-accent);
 }
 .toolbar-btn-primary:hover {
     background: #2ee673;
@@ -2244,9 +2253,6 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
 :root[data-theme="light"] .swipe-hint {
     color: rgba(15, 23, 42, 0.6);
 }
-:root[data-theme="light"] .heatmap-cell[style*="rgba(255,255,255,0.03)"] {
-    background: rgba(15, 23, 42, 0.05) !important;
-}
 :root[data-theme="light"] .profile-avatar { color: #ffffff; }
 :root[data-theme="light"] .dialog-panel { box-shadow: 0 24px 70px rgba(15, 23, 42, 0.18); }
 
@@ -2390,7 +2396,7 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
     border: none;
     border-radius: 999px;
     background: var(--accent-green);
-    color: #04140a;
+    color: var(--on-accent);
     font-family: inherit;
     font-size: 0.8rem;
     font-weight: 700;
@@ -2457,7 +2463,7 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
         bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 3.75rem);
     }
     .deck-toolbar { max-width: calc(100vw - 1.5rem); }
-    .slide,
+    .slide { padding-bottom: 8.75rem; }
     #wrapped-screen::after { height: 9rem; }
 }
 
@@ -2650,7 +2656,7 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
     background:
         radial-gradient(38rem 28rem at 15% 10%, rgba(139, 92, 246, 0.38), transparent 70%),
         radial-gradient(34rem 26rem at 90% 30%, rgba(236, 72, 153, 0.26), transparent 70%),
-        radial-gradient(40rem 30rem at 50% 110%, rgba(37, 211, 102, 0.16), transparent 70%);
+        radial-gradient(40rem 30rem at 50% 110%, color-mix(in srgb, var(--accent-green) 16%, transparent), transparent 70%);
 }
 :root[data-theme="light"] #upload-screen::before { opacity: 0.6; }
 
@@ -2682,8 +2688,8 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
 }
 .drop-zone:hover,
 .drop-zone.dragover {
-    background: rgba(37, 211, 102, 0.06);
-    box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.12);
+    background: color-mix(in srgb, var(--accent-green) 6%, transparent);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-green) 12%, transparent);
 }
 :root[data-theme="light"] .drop-zone {
     border-color: rgba(15, 23, 42, 0.2);
@@ -2707,9 +2713,9 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
 .file-btn {
     padding: 0.75rem 1.75rem;
     font-size: 0.95rem;
-    box-shadow: 0 10px 26px -8px rgba(37, 211, 102, 0.55);
+    box-shadow: 0 10px 26px -8px color-mix(in srgb, var(--accent-green) 55%, transparent);
 }
-.file-btn:hover { transform: translateY(-1px); box-shadow: 0 14px 30px -8px rgba(37, 211, 102, 0.7); }
+.file-btn:hover { transform: translateY(-1px); box-shadow: 0 14px 30px -8px color-mix(in srgb, var(--accent-green) 70%, transparent); }
 
 .how-to,
 .switch-row { border-radius: var(--radius-card); }
@@ -2815,3 +2821,29 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
         background: radial-gradient(closest-side, rgba(255, 255, 255, 0.45), transparent);
     }
 }
+
+/* ---- Toolbar icons ----
+   One stroke family, drawn in currentColor. The emoji they replace rendered
+   differently on every OS and mixed a red pin and a multicolour chart with
+   monochrome arrows. */
+.tb-icon { width: 18px; height: 18px; flex: 0 0 auto; }
+#story-toggle .icon-pause,
+#story-toggle[aria-pressed="true"] .icon-play { display: none; }
+#story-toggle[aria-pressed="true"] .icon-pause { display: block; }
+@media (max-width: 720px) {
+    .tb-icon { width: 20px; height: 20px; }
+}
+
+/* ---- Heatmap: always fits, never scrolls ----
+   It used to demand 500–600px and scroll sideways inside the slide — which a
+   keyboard could not do, since ←/→ belong to the deck. Twenty-four columns that
+   are allowed to shrink fit a phone as small squares; every other hour label
+   gives way so the rest stay legible. */
+.heatmap-container { overflow: visible; }
+.heatmap-grid {
+    min-width: 0;
+    grid-template-columns: max-content repeat(24, minmax(0, 1fr));
+}
+.heatmap-cell { min-height: 0; }
+.heatmap-label.hour-label { font-size: 0.55rem; }
+.heatmap-label.hour-label:nth-child(odd) { visibility: hidden; }

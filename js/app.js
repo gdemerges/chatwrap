@@ -398,8 +398,8 @@ $('#story-toggle').addEventListener('click', () => {
 function syncStoryButton(playing = deck.storyPlaying) {
     const btn = $('#story-toggle');
     if (!btn) return;
+    // The play/pause icon follows `aria-pressed` in CSS.
     btn.setAttribute('aria-pressed', String(playing));
-    btn.querySelector('span[aria-hidden]').textContent = playing ? '❚❚' : '▶';
     btn.querySelector('.toolbar-label').textContent = t(playing ? 'toolbar.storyPause' : 'toolbar.story');
 }
 

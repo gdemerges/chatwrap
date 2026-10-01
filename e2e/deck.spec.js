@@ -75,6 +75,38 @@ test('arrow keys move through the deck and only one slide is ever active', async
     expect(inertCount).toBe(await page.locator('#slides-container .slide').count() - 1);
 });
 
+/**
+ * The slide is the full screen at every size the layout branches on.
+ *
+ * A stray `.slide,` left behind by a CSS edit once glued itself onto the next
+ * rule and capped every slide on a phone at 9rem tall: the content scrolled
+ * inside a sliver, and no unit test could see it because jsdom has no layout.
+ */
+for (const [name, viewport] of [
+    ['phone', { width: 375, height: 667 }],
+    ['portrait window', { width: 693, height: 1150 }],
+    ['wide screen', { width: 1440, height: 900 }],
+]) {
+    test(`on a ${name} the active slide fills the viewport`, async ({ page }) => {
+        await page.setViewportSize(viewport);
+        await bootDemo(page);
+        const box = await page.locator('#slides-container .slide.active').boundingBox();
+        expect(Math.round(box.width)).toBe(viewport.width);
+        expect(Math.round(box.height)).toBe(viewport.height);
+    });
+}
+
+test('on a wide screen a slide is laid out as head and body', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await bootDemo(page);
+    const inner = page.locator('#slide-0 .slide-inner');
+    await expect(inner).toHaveClass(/is-split/);
+    const head = await inner.locator('.slide-head').boundingBox();
+    const body = await inner.locator('.slide-body').boundingBox();
+    // Side by side, not stacked.
+    expect(body.x).toBeGreaterThan(head.x + head.width);
+});
+
 test('Chart.js paints actual pixels on a real canvas', async ({ page }) => {
     await bootDemo(page);
 

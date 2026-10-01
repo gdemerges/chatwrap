@@ -45,7 +45,10 @@ export function heatmapSlide(stats, gradient) {
             const intensity = maxHeat > 0 ? val / maxHeat : 0;
             const alpha = 0.1 + intensity * 0.9;
             const hue = 280 - intensity * 100;
-            const color = val === 0 ? 'rgba(255,255,255,0.03)' : `hsla(${hue}, 70%, 55%, ${alpha})`;
+            // An empty hour is a theme token: a literal white tint vanished on the
+            // light gradients, and the CSS that patched it matched the attribute
+            // text, which the CSSOM rewrites.
+            const color = val === 0 ? 'var(--heat-empty)' : `hsla(${hue}, 70%, 55%, ${alpha})`;
             const tip = t('slide.heatmap.cell', { day: days[d], hour: fmtHour(h), n: val });
             heatCells.push(`<div class="heatmap-cell" data-css="background:${color}" data-tooltip="${tip}"></div>`);
         }
