@@ -468,6 +468,7 @@ export const de = {
         backAria: 'Zurück zu den Folien',
         title: 'Dashboard',
         filter: 'Nach Teilnehmenden filtern',
+        filtered: 'gefiltert',
         exportCsv: 'Als CSV exportieren',
         exportJson: 'Als JSON exportieren',
         empty: 'Keine Daten zum Anzeigen.',

@@ -473,6 +473,7 @@ export const tr = {
         backAria: 'Slaytlara dön',
         title: 'Panel',
         filter: 'Katılımcıya göre süz',
+        filtered: 'süzüldü',
         exportCsv: 'CSV olarak dışa aktar',
         exportJson: 'JSON olarak dışa aktar',
         empty: 'Gösterilecek bir şey yok.',

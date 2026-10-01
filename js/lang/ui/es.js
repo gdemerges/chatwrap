@@ -467,6 +467,7 @@ export const es = {
         backAria: 'Volver a las diapositivas',
         title: 'Panel',
         filter: 'Filtrar por participante',
+        filtered: 'filtrado',
         exportCsv: 'Exportar en CSV',
         exportJson: 'Exportar en JSON',
         empty: 'No hay datos que mostrar.',

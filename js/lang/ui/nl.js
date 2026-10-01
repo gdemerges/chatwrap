@@ -468,6 +468,7 @@ export const nl = {
         backAria: 'Terug naar de slides',
         title: 'Dashboard',
         filter: 'Filteren op deelnemer',
+        filtered: 'gefilterd',
         exportCsv: 'Exporteren als CSV',
         exportJson: 'Exporteren als JSON',
         empty: 'Geen gegevens om te tonen.',

@@ -473,6 +473,7 @@ export const id = {
         backAria: 'Kembali ke slide',
         title: 'Dasbor',
         filter: 'Saring per peserta',
+        filtered: 'disaring',
         exportCsv: 'Ekspor sebagai CSV',
         exportJson: 'Ekspor sebagai JSON',
         empty: 'Tidak ada yang bisa ditampilkan.',

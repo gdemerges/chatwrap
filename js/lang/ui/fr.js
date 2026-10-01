@@ -475,6 +475,7 @@ export const fr = {
         backAria: 'Retour aux slides',
         title: 'Dashboard',
         filter: 'Filtrer par participant',
+        filtered: 'filtré',
         exportCsv: 'Exporter en CSV',
         exportJson: 'Exporter en JSON',
         empty: 'Aucune donnée à afficher.',

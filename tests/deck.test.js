@@ -14,7 +14,7 @@ const ensureChart = vi.fn(async () => {});
 vi.mock('../js/vendor.js', () => ({ ensureChart: (...a) => ensureChart(...a), preload: () => {} }));
 vi.mock('../js/slides/_charts.js', () => ({ destroyAllCharts: () => {}, retintCharts: () => {} }));
 
-const { Deck, bindNavigation } = await import('../js/deck.js');
+const { Deck, bindNavigation, splitSlide } = await import('../js/deck.js');
 const { setLocale } = await import('../js/i18n.js');
 
 /** A deck of `n` slides, mounted into a fresh document. */
@@ -440,5 +440,50 @@ describe('bindNavigation', () => {
         expect(deck.index).toBe(0);
         swipe(100, 40, 0, 400);       // mostly vertical
         expect(deck.index).toBe(0);
+    });
+});
+
+describe('splitSlide — head and body, for the two-column layout', () => {
+    const slide = (inner) => {
+        const el = document.createElement('div');
+        el.innerHTML = `<div class="slide-inner">${inner}</div>`;
+        splitSlide(el);
+        return el.querySelector('.slide-inner');
+    };
+
+    it('puts the opening run in the head and the rest in the body', () => {
+        const inner = slide(`
+            <span class="slide-tag">Tag</span>
+            <h2 class="slide-title">Title</h2>
+            <p class="slide-subtitle">Sub</p>
+            <div class="ranking-list"></div>
+            <p class="slide-subtitle">A later note stays with the evidence</p>`);
+        expect(inner.classList.contains('is-split')).toBe(true);
+        expect([...inner.children].map((c) => c.className)).toEqual(['slide-head', 'slide-body']);
+        expect(inner.querySelectorAll('.slide-head > *')).toHaveLength(3);
+        expect([...inner.querySelector('.slide-body').children].map((c) => c.className))
+            .toEqual(['ranking-list', 'slide-subtitle']);
+    });
+
+    it('treats the hero figure as part of the head', () => {
+        const inner = slide('<span class="slide-tag">T</span><div class="big-number">180</div><div class="big-label">msgs</div><div class="stat-grid"></div>');
+        expect(inner.querySelector('.slide-head .big-number')).not.toBeNull();
+        expect(inner.querySelector('.slide-body .stat-grid')).not.toBeNull();
+    });
+
+    it('leaves a slide alone when there is nothing to put on one side', () => {
+        const headOnly = slide('<span class="slide-tag">T</span><h2 class="slide-title">Only words</h2>');
+        expect(headOnly.classList.contains('is-split')).toBe(false);
+        expect(headOnly.querySelector('.slide-head')).toBeNull();
+        const bodyOnly = slide('<div class="chart-wrapper"></div>');
+        expect(bodyOnly.classList.contains('is-split')).toBe(false);
+    });
+
+    it('moves the nodes rather than copying them, so a chart keeps its canvas', () => {
+        const el = document.createElement('div');
+        el.innerHTML = '<div class="slide-inner"><h2 class="slide-title">T</h2><div class="chart-wrapper"><canvas></canvas></div></div>';
+        const canvas = el.querySelector('canvas');
+        splitSlide(el);
+        expect(el.querySelector('.slide-body canvas')).toBe(canvas);
     });
 });

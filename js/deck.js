@@ -29,6 +29,38 @@ function setActive(el, active) {
     else el.setAttribute('inert', '');
 }
 
+/** What opens a slide: the words and the figure, as opposed to the evidence. */
+const HEAD_SELECTOR = '.slide-tag, .slide-title, .slide-subtitle, .big-number, .big-label';
+
+/**
+ * Split a slide into its head and its body.
+ *
+ * On a wide screen a single centred column left most of the window empty; the
+ * deck lays out as two columns instead — the headline and figure on one side,
+ * the ranking, chart or grid on the other. That needs the two halves to be
+ * elements, and every slide opens the same way (tag, title, subtitle, or a big
+ * number), so the split is made here once rather than in each slide's
+ * template: the leading run of head elements goes into `.slide-head`, the rest
+ * into `.slide-body`. A slide that is all head, or all body, is left alone.
+ *
+ * @param {HTMLElement} el
+ */
+export function splitSlide(el) {
+    const inner = el.querySelector(':scope > .slide-inner');
+    if (!inner) return;
+    const children = [...inner.children];
+    const cut = children.findIndex((c) => !c.matches(HEAD_SELECTOR));
+    if (cut <= 0) return;
+    const head = document.createElement('div');
+    head.className = 'slide-head';
+    head.append(...children.slice(0, cut));
+    const body = document.createElement('div');
+    body.className = 'slide-body';
+    body.append(...children.slice(cut));
+    inner.append(head, body);
+    inner.classList.add('is-split');
+}
+
 export class Deck {
     /**
      * @param {{ container: HTMLElement, counter: HTMLElement,
@@ -160,6 +192,7 @@ export class Deck {
         if (!el || !slide || this.filled.has(index)) return;
         this.filled.add(index);
         el.innerHTML = slide.html;
+        splitSlide(el);
         if (slide.chart) el._chartInit = slide.chart;
         this.refs.onSlideReady?.(index, el);
     }

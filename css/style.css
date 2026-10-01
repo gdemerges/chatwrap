@@ -478,7 +478,6 @@ html, body {
 
 .slide-title {
     font-family: var(--font-display);
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-size: var(--text-title);
     font-weight: 900;
     line-height: 1.15;
@@ -496,7 +495,6 @@ html, body {
 /* Big stat number */
 .big-number {
     font-family: var(--font-display);
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-size: var(--text-hero);
     font-weight: 900;
     line-height: 1;
@@ -531,7 +529,6 @@ html, body {
 
 .stat-card .stat-value {
     font-family: var(--font-display);
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     font-size: var(--text-stat);
     font-weight: 900;
     line-height: 1.2;
@@ -1530,20 +1527,25 @@ body.story-playing .deck-source {
    any slide added later inherits the right rhythm.
    ============================================================ */
 
-/* Hero — a single figure carries the slide. Left-aligned and oversized. */
-.slide-inner:has(> .big-number) {
-    text-align: left;
+/* Hero — a single figure carries the slide, oversized. It used to be
+   left-aligned and anchored to the bottom edge: on anything taller than a phone
+   that left half the screen empty above it, and the emoji or stat grid under
+   it — centred — no longer lined up with the text. Centred like every other
+   slide now. */
+.slide-inner:has(.big-number) {
+    text-align: center;
 }
-.slide-inner:has(> .big-number) .big-number {
+.slide-inner:has(.big-number) .big-number {
     font-size: clamp(3.5rem, 16vw, 7rem);
     line-height: 0.95;
     letter-spacing: -0.04em;
 }
-.slide-inner:has(> .big-number) .big-label {
+.slide-inner:has(.big-number) .big-label {
     font-size: 1.15rem;
     max-width: 22ch;
+    margin-inline: auto;
 }
-.slide-inner:has(> .big-number) .slide-subtitle {
+.slide-inner:has(.big-number) .slide-subtitle {
     margin-left: 0;
     margin-right: 0;
 }
@@ -2303,13 +2305,6 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
 /* The counter sits below the bar rather than under it. */
 .slide-counter { top: 2.4rem; }
 
-/* Hero slides read better anchored low, with the figure carrying the weight —
-   the way a Wrapped card is composed. The rule targets the slide, which is the
-   flex container; `.slide-inner` is just the measure. */
-.slide:has(.slide-inner > .big-number) {
-    justify-content: safe flex-end;
-    padding-bottom: 6rem;
-}
 
 /* `content-visibility: auto` is a win for the 20-odd slides parked off-screen,
    but the visible one must never be skipped. */
@@ -2440,4 +2435,383 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
     background: var(--surface);
     color: var(--text-primary);
     border-color: var(--accent-green);
+}
+
+/* ============================================================
+   DECK CHROME — keeping the fixed pieces out of each other's way
+   ============================================================ */
+
+/* The counter moved below the progress bar (2.4rem), onto the spot the source
+   label used to have to itself: the label steps down a row, and a slide that
+   carries it gets the matching room at the top. */
+.deck-source { top: 4.4rem; }
+#wrapped-screen:has(#deck-source:not([hidden])) .slide { padding-top: 6.25rem; }
+#wrapped-screen:has(#deck-source:not([hidden]))::before { height: 6.5rem; }
+
+/* On a phone the toolbar needs the whole width, and the language picker plus
+   theme toggle used to sit on top of its last buttons (Pin, Share, New). On the
+   deck they climb one row, above the toolbar; the slides make room for it. */
+@media (max-width: 720px) {
+    body:has(#wrapped-screen.active) .lang-picker,
+    body:has(#wrapped-screen.active) .theme-toggle {
+        bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 3.75rem);
+    }
+    .deck-toolbar { max-width: calc(100vw - 1.5rem); }
+    .slide,
+    #wrapped-screen::after { height: 9rem; }
+}
+
+/* Four columns of figures with units ("25 caractères") overran a 375px screen. */
+@media (max-width: 520px) {
+    .compare-table { font-size: 0.8rem; }
+    .compare-table th,
+    .compare-table td { padding: 0.5rem 0.3rem; }
+    .compare-table th { font-size: 0.65rem; letter-spacing: 0; }
+}
+
+/* ============================================================
+   DESIGN REFRESH
+   ------------------------------------------------------------
+   One layer, last in the cascade, so the redesign reads as a
+   whole instead of being scattered across the rules it amends.
+   ============================================================ */
+
+:root,
+:root[data-theme="dark"] {
+    --text-title: clamp(1.6rem, 1.15rem + 2.2vw, 2.35rem);
+    --text-stat:  clamp(1.5rem, 1.15rem + 1.6vw, 2rem);
+    --text-logo:  clamp(2.6rem, 1.9rem + 3vw, 3.6rem);
+    --radius-card: 18px;
+    --card-fill: linear-gradient(180deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.04));
+    --card-edge: rgba(255, 255, 255, 0.13);
+    --card-lift: 0 1px 0 rgba(255, 255, 255, 0.08) inset, 0 10px 30px -12px rgba(0, 0, 0, 0.45);
+}
+:root[data-theme="light"] {
+    --card-fill: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(255, 255, 255, 0.52));
+    --card-edge: rgba(15, 23, 42, 0.09);
+    --card-lift: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 10px 30px -14px rgba(15, 23, 42, 0.22);
+}
+
+/* ---- Typography: the display face finally does its job ---- */
+
+.slide-title {
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.08;
+    text-wrap: balance;
+}
+.slide-subtitle { text-wrap: pretty; }
+
+.slide-tag {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    padding: 0.35rem 0.85rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: var(--text-primary);
+}
+:root[data-theme="light"] .slide-tag {
+    background: rgba(255, 255, 255, 0.55);
+    border-color: rgba(15, 23, 42, 0.1);
+}
+
+/* The hero figure was white fading into 78% white — a gradient you could not
+   see, which only made the number look washed out. Solid, heavier, tighter. */
+.big-number {
+    font-weight: 700;
+    background: none;
+    -webkit-text-fill-color: currentColor;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+}
+.slide-inner:has(.big-number) .big-number {
+    font-size: clamp(4rem, 18vw, 8rem);
+    letter-spacing: -0.045em;
+}
+.slide-inner:has(.big-number) .big-label {
+    font-family: var(--font-display);
+    font-size: clamp(1.1rem, 1rem + 0.6vw, 1.35rem);
+    font-weight: 500;
+    color: var(--text-primary);
+    opacity: 0.85;
+}
+
+/* ---- Components ---- */
+
+.stat-card,
+.fun-fact,
+.emoji-item,
+.chapter-item,
+.profile-card {
+    background: var(--card-fill);
+    border: 1px solid var(--card-edge);
+    box-shadow: var(--card-lift);
+}
+:root[data-theme="light"] .stat-card,
+:root[data-theme="light"] .fun-fact {
+    background: var(--card-fill);
+    border-color: var(--card-edge);
+}
+.stat-card { border-radius: var(--radius-card); padding: 1.1rem 0.9rem; }
+.stat-card .stat-value {
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+}
+.stat-card .stat-label {
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 0.66rem;
+    font-weight: 600;
+    margin-top: 0.3rem;
+}
+.profile-card { border-left: 3px solid var(--profile-color, var(--accent-purple)); border-radius: var(--radius-card); }
+.fun-fact { border-radius: var(--radius-card); align-items: center; }
+.fun-fact-icon {
+    display: grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 1.25rem;
+}
+:root[data-theme="light"] .fun-fact-icon { background: rgba(15, 23, 42, 0.05); }
+.emoji-item { border-radius: 16px; min-width: 72px; padding: 0.7rem 0.85rem; }
+.emoji-item .emoji { font-size: 2.1rem; }
+
+/* Rankings: a 6px hairline read as decoration; at 10px the bar *is* the data. */
+.ranking-item { padding: 0.8rem 0; gap: 0.9rem; border-bottom-color: rgba(255, 255, 255, 0.08); }
+.ranking-pos {
+    width: 32px;
+    height: 32px;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+.ranking-pos.gold { box-shadow: 0 0 18px rgba(234, 179, 8, 0.45); }
+.ranking-bar-label { margin-bottom: 0.4rem; align-items: baseline; }
+.ranking-bar-label .name { font-size: 1rem; }
+.ranking-bar-label .value { font-variant-numeric: tabular-nums; font-size: 0.85rem; }
+.ranking-bar { height: 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); }
+.ranking-bar-fill { border-radius: 999px; }
+:root[data-theme="light"] .ranking-item { border-bottom-color: rgba(15, 23, 42, 0.08); }
+:root[data-theme="light"] .ranking-bar { background: rgba(15, 23, 42, 0.08); border: none; }
+
+.filter-btn.active { box-shadow: 0 4px 14px -4px rgba(139, 92, 246, 0.7); }
+
+/* A soft light falling from the top-left corner, over every slide: the flat
+   gradients read as a screen; this makes them read as a surface. */
+.slides-container::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    background:
+        radial-gradient(120% 55% at 0% 0%, rgba(255, 255, 255, 0.09), transparent 60%),
+        radial-gradient(90% 50% at 100% 100%, rgba(0, 0, 0, 0.18), transparent 70%);
+}
+:root[data-theme="light"] .slides-container::after {
+    background: radial-gradient(120% 55% at 0% 0%, rgba(255, 255, 255, 0.35), transparent 60%);
+}
+
+/* From 601px the side arrows are shown, pinned to the window edges: the slide
+   keeps a gutter wide enough that they never sit on its content. (The story
+   card below resets this — there the arrows live outside the card.) */
+@media (min-width: 601px) {
+    .slide { padding-left: 4.75rem; padding-right: 4.75rem; }
+}
+
+/* An odd card out (five media types, three stats) sat alone in the left
+   column; it takes the middle instead. */
+.stat-grid > :last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: calc(50% - 0.375rem);
+}
+
+/* ============================================================
+   LANDING
+   ============================================================ */
+
+/* Centred, the landing clipped its own top — logo included — as soon as it was
+   taller than the window, and the clipped part could not be scrolled back to.
+   `safe` falls back to the start edge in exactly that case. */
+#upload-screen { isolation: isolate; align-items: safe center; }
+#upload-screen::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(38rem 28rem at 15% 10%, rgba(139, 92, 246, 0.38), transparent 70%),
+        radial-gradient(34rem 26rem at 90% 30%, rgba(236, 72, 153, 0.26), transparent 70%),
+        radial-gradient(40rem 30rem at 50% 110%, rgba(37, 211, 102, 0.16), transparent 70%);
+}
+:root[data-theme="light"] #upload-screen::before { opacity: 0.6; }
+
+.logo-icon svg { width: 72px; height: 72px; }
+.logo-title { font-weight: 700; letter-spacing: -0.045em; }
+.upload-subtitle {
+    font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.25rem);
+    max-width: 28ch;
+    margin-inline: auto;
+    text-wrap: balance;
+}
+
+.demo-peek { margin-bottom: 2.25rem; }
+.peek-card {
+    flex-basis: 7.25rem;
+    border-radius: 16px;
+    box-shadow: 0 18px 40px -14px rgba(0, 0, 0, 0.6), 0 1px 0 rgba(255, 255, 255, 0.12) inset;
+}
+.peek-num { font-weight: 700; letter-spacing: -0.03em; }
+:root[data-theme="light"] .peek-card { box-shadow: 0 18px 40px -16px rgba(15, 23, 42, 0.35); }
+
+.drop-zone {
+    border: 1.5px dashed rgba(255, 255, 255, 0.22);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.035);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    padding: 2.25rem 1.5rem 2rem;
+}
+.drop-zone:hover,
+.drop-zone.dragover {
+    background: rgba(37, 211, 102, 0.06);
+    box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.12);
+}
+:root[data-theme="light"] .drop-zone {
+    border-color: rgba(15, 23, 42, 0.2);
+    background: rgba(255, 255, 255, 0.5);
+}
+.drop-icon {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    margin: 0 auto 0.75rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 1.6rem;
+    line-height: 1;
+    color: var(--text-primary);
+}
+:root[data-theme="light"] .drop-icon { background: rgba(15, 23, 42, 0.06); }
+.drop-zone p:first-of-type { font-weight: 600; color: var(--text-primary); }
+
+.file-btn {
+    padding: 0.75rem 1.75rem;
+    font-size: 0.95rem;
+    box-shadow: 0 10px 26px -8px rgba(37, 211, 102, 0.55);
+}
+.file-btn:hover { transform: translateY(-1px); box-shadow: 0 14px 30px -8px rgba(37, 211, 102, 0.7); }
+
+.how-to,
+.switch-row { border-radius: var(--radius-card); }
+
+@media (prefers-reduced-motion: reduce) {
+    .nav-arrow:hover { transform: translateY(-50%); }
+}
+
+/* ============================================================
+   WIDE LAYOUT — the deck on a large landscape screen
+   ------------------------------------------------------------
+   A single 700px column left most of a desktop window empty.
+   The deck keeps the full width and goes editorial instead:
+   `splitSlide` (js/deck.js) separates each slide into a head —
+   tag, title, the big figure — and a body — the ranking, chart
+   or grid. Side by side, the head is set large on the left and
+   the evidence takes the right. Phones keep the single column.
+   ============================================================ */
+
+@media (min-width: 1024px) and (min-height: 560px) and (orientation: landscape) {
+    .slide { padding: 6rem clamp(6rem, 8vw, 9rem) 6.5rem; }
+
+    .slide-inner.is-split {
+        max-width: 1320px;
+        display: grid;
+        grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+        column-gap: clamp(3rem, 6vw, 7rem);
+        align-items: center;
+        text-align: left;
+    }
+
+    /* ---- Head: the headline, set like a magazine cover ----
+       `.slide-inner.is-split` rather than `.is-split`: the hero and chart
+       archetypes above size the same elements through `:has()`, which counts
+       as a class, and would otherwise win. */
+    .slide-inner.is-split .slide-head { position: sticky; top: 0; }
+    .slide-inner.is-split .slide-tag { margin-bottom: 1.5rem; }
+    .slide-inner.is-split .slide-title {
+        font-size: clamp(2.4rem, 1rem + 2.6vw, 3.75rem);
+        letter-spacing: -0.035em;
+        line-height: 1.02;
+        margin-bottom: 1.25rem;
+    }
+    .slide-inner.is-split .slide-title::after { left: 0; transform: none; width: 72px; }
+    .slide-inner.is-split .slide-subtitle {
+        font-size: 1.1rem;
+        max-width: 38ch;
+        margin: 0;
+    }
+    .slide-inner.is-split .big-number {
+        font-size: clamp(6rem, 2rem + 9vw, 11.5rem);
+        letter-spacing: -0.05em;
+        margin-bottom: 0.5rem;
+    }
+    .slide-inner.is-split .big-label {
+        font-size: clamp(1.25rem, 1rem + 0.6vw, 1.6rem);
+        max-width: none;
+        margin: 0 0 1rem;
+    }
+
+    /* ---- Body: the evidence, aligned to its column ---- */
+    .slide-body { min-width: 0; }
+    .slide-body > :first-child { margin-top: 0; }
+    .slide-body > :last-child { margin-bottom: 0; }
+    .slide-body .emoji-grid,
+    .slide-body .words-cloud,
+    .slide-body .filter-bar,
+    .slide-body .recap-actions { justify-content: flex-start; }
+    .slide-body .compare-table { max-width: none; margin: 0; font-size: 1rem; }
+    .slide-body .stat-grid { margin: 0; gap: 1rem; }
+    .slide-body .stat-card { padding: 1.5rem 1rem; }
+    .slide-body .stat-card .stat-value { font-size: clamp(1.8rem, 1rem + 1.4vw, 2.6rem); }
+    .slide-body .ranking-list { margin: 0; }
+    .slide-body .ranking-item { padding: 1rem 0; }
+    .slide-body .ranking-bar-label .name { font-size: 1.1rem; }
+    .slide-body .ranking-bar-label .value { font-size: 0.95rem; }
+    .slide-body .ranking-bar { height: 12px; }
+    .slide-body .emoji-item { min-width: 88px; padding: 0.9rem 1rem; }
+    .slide-body .emoji-item .emoji { font-size: 2.6rem; }
+    .slide-body .word-tag { font-size: 1.05em; }
+    .slide-body .fun-fact { padding: 1.1rem 1.25rem; }
+    .slide-body .fun-fact-text { font-size: 1rem; }
+    .slide-body .profile-grid { margin-top: 0; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .slide-body .network-wrap { max-width: 520px; margin: 0 auto; }
+    .slide-body .duo-board { max-width: none; margin-top: 0; }
+    .slide-body .day-group { margin-top: 1.25rem; }
+
+    /* A slide that is only words keeps the centred, single-column read. */
+    .slide-inner:not(.is-split) { max-width: 820px; }
+    .slide-inner:not(.is-split) .slide-title { font-size: clamp(2.4rem, 1rem + 2.6vw, 3.75rem); }
+
+    /* A soft halo behind the head, so the headline sits in its own light
+       rather than straight on the flat gradient. Purely decorative. */
+    .slide-inner.is-split .slide-head::before {
+        content: '';
+        position: absolute;
+        inset: -30% -20% -30% -35%;
+        z-index: -1;
+        pointer-events: none;
+        background: radial-gradient(closest-side, rgba(255, 255, 255, 0.07), transparent);
+    }
+    :root[data-theme="light"] .slide-inner.is-split .slide-head::before {
+        background: radial-gradient(closest-side, rgba(255, 255, 255, 0.45), transparent);
+    }
 }

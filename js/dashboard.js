@@ -198,10 +198,10 @@ function chaptersCard(s) {
     return `
     <section class="dash-card col-12">
         <h2>${t('dash.chapters')} <span class="dash-meta">${t('dash.chaptersMeta')}</span></h2>
-        <table class="dash-table">
+        <div class="dash-table-wrap"><table class="dash-table">
             <thead><tr><th>#</th><th>${t('dash.phase')}</th><th>${t('dash.period')}</th><th>${t('dash.messages')}</th><th>${t('dash.perMonth')}</th></tr></thead>
             <tbody>${rows}</tbody>
-        </table>
+        </table></div>
     </section>`;
 }
 
@@ -219,10 +219,10 @@ function profilesCard(s) {
     return `
     <section class="dash-card col-12">
         <h2>${t('dash.profiles')}</h2>
-        <table class="dash-table">
+        <div class="dash-table-wrap"><table class="dash-table">
             <thead><tr><th>${t('dash.person')}</th><th>${t('dash.messages')}</th><th>${t('dash.hour')}</th><th>${t('dash.emoji')}</th><th>${t('dash.word')}</th><th>${t('dash.site')}</th><th>${t('dash.initiations')}</th></tr></thead>
             <tbody>${rows}</tbody>
-        </table>
+        </table></div>
     </section>`;
 }
 
@@ -237,12 +237,12 @@ function interactionsCard(s) {
     return `
     <section class="dash-card col-6">
         <h2>${t('dash.whoTalksTo')} <span class="dash-meta">${t('dash.whoTalksToMeta')}</span></h2>
-        <table class="dash-table"><tbody>${pairs}</tbody></table>
+        <div class="dash-table-wrap"><table class="dash-table"><tbody>${pairs}</tbody></table></div>
         <h4 class="dash-subheading">${t('dash.closest')}</h4>
-        <table class="dash-table">
+        <div class="dash-table-wrap"><table class="dash-table">
             <thead><tr><th>${t('dash.person')}</th><th>${t('dash.answersMostly')}</th><th>${t('dash.times')}</th></tr></thead>
             <tbody>${closest}</tbody>
-        </table>
+        </table></div>
     </section>`;
 }
 
@@ -252,7 +252,7 @@ function domainsCard(s) {
     return `
     <section class="dash-card col-6">
         <h2>${t('dash.domains')} <span class="dash-meta">${t('dash.domainsMeta', { n: fmt(s.totalLinks) })}</span></h2>
-        <table class="dash-table"><thead><tr><th>${t('dash.domain')}</th><th>${t('dash.links')}</th></tr></thead><tbody>${rows}</tbody></table>
+        <div class="dash-table-wrap"><table class="dash-table"><thead><tr><th>${t('dash.domain')}</th><th>${t('dash.links')}</th></tr></thead><tbody>${rows}</tbody></table></div>
     </section>`;
 }
 
@@ -279,7 +279,7 @@ function comparisonCard(c) {
     return `
     <section class="dash-card col-12">
         <h2>${t('dash.comparison')}</h2>
-        <table class="dash-table">
+        <div class="dash-table-wrap"><table class="dash-table">
             <thead><tr><th>${t('dash.metric')}</th><th>${t('dash.previous')}</th><th>${t('dash.currentYear')}</th><th>${t('dash.change')}</th></tr></thead>
             <tbody>
                 ${row(t('dash.messages'), c.messages)}
@@ -288,7 +288,7 @@ function comparisonCard(c) {
                 ${row(t('slide.comparison.media'), c.media)}
                 <tr><td>${t('dash.bestStreak')}</td><td>${t('format.days', { n: c.streak.previous })}</td><td>${t('format.days', { n: c.streak.current })}</td><td>${t('common.none')}</td></tr>
             </tbody>
-        </table>
+        </table></div>
     </section>`;
 }
 
@@ -315,13 +315,13 @@ function rankingCard(s) {
     return `
     <section class="dash-card col-6">
         <h2>${t('dash.ranking')}</h2>
-        <table class="dash-table">
+        <div class="dash-table-wrap"><table class="dash-table">
             <thead><tr><th>#</th><th>${t('dash.name')}</th><th>${t('dash.messages')}</th><th>%</th><th>${t('dash.avg')}</th><th>${t('slide.comparison.emojis')}</th></tr></thead>
             <tbody>${s.ranking.map(([name, d], i) => {
                 const rank = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
                 return `<tr data-person="${escapeHtml(name)}"><td class="dash-rank ${rank}">${i + 1}</td><td>${escapeHtml(name)}</td><td>${fmt(d.count)}</td><td>${d.percent}%</td><td>${d.avgLen}</td><td>${fmt(emojiMap[name] || 0)}</td></tr>`;
             }).join('')}</tbody>
-        </table>
+        </table></div>
     </section>`;
 }
 
@@ -369,7 +369,7 @@ function reactionsCard(s) {
     <section class="dash-card col-6">
         <h2>${t('dash.reactions')} <span class="dash-meta">${t('dash.reactionsMeta', { n: fmt(s.reactions.total) })}</span></h2>
         <div class="dash-chips dash-chips--spaced">${emojis}</div>
-        <table class="dash-table"><thead><tr><th>${t('dash.author')}</th><th>${t('dash.reactions')}</th></tr></thead><tbody>${authors}</tbody></table>
+        <div class="dash-table-wrap"><table class="dash-table"><thead><tr><th>${t('dash.author')}</th><th>${t('dash.reactions')}</th></tr></thead><tbody>${authors}</tbody></table></div>
     </section>`;
 }
 
@@ -405,9 +405,9 @@ function ghostingCard(s) {
     <section class="dash-card col-6">
         <h2>${t('dash.ghosting')} <span class="dash-meta">${t('dash.ghostingMeta', { n: fmt(s.ghosting.count) })}</span></h2>
         <h4 class="dash-subheading dash-subheading--first">${t('dash.longestSilences')}</h4>
-        <table class="dash-table"><tbody>${longest}</tbody></table>
+        <div class="dash-table-wrap"><table class="dash-table"><tbody>${longest}</tbody></table></div>
         <h4 class="dash-subheading">${t('dash.whoBreaks')}</h4>
-        <table class="dash-table"><tbody>${revivers}</tbody></table>
+        <div class="dash-table-wrap"><table class="dash-table"><tbody>${revivers}</tbody></table></div>
     </section>`;
 }
 
@@ -416,7 +416,7 @@ function initiatorCard(s) {
     return `
     <section class="dash-card col-6">
         <h2>${t('dash.initiator')}</h2>
-        <table class="dash-table"><tbody>${rows}</tbody></table>
+        <div class="dash-table-wrap"><table class="dash-table"><tbody>${rows}</tbody></table></div>
     </section>`;
 }
 
@@ -482,22 +482,22 @@ function sentimentCard(s) {
     <section class="dash-card col-12">
         <h2>${t('dash.sentiment')} ${mlBadge}</h2>
         <div class="dash-facts dash-facts--spaced">${highlights.join('')}</div>
-        <table class="dash-table">
+        <div class="dash-table-wrap"><table class="dash-table">
             <thead><tr><th>${t('dash.person')}</th><th>${t('dash.positive')}</th><th>${t('dash.negative')}</th><th>${t('dash.compliments')}</th><th>${t('dash.barbs')}</th><th>${t('dash.ratio')}</th><th>σ</th><th>${t('dash.irony')}</th></tr></thead>
             <tbody>${rows}</tbody>
-        </table>
+        </table></div>
         ${reactionRows ? `
         <h3 class="dash-section-heading">${t('dash.emojiReactions')}</h3>
-        <table class="dash-table">
+        <div class="dash-table-wrap"><table class="dash-table">
             <thead><tr><th>${t('dash.person')}</th><th>${t('dash.sent')}</th><th>${t('dash.received')}</th></tr></thead>
             <tbody>${reactionRows}</tbody>
-        </table>` : ''}
+        </table></div>` : ''}
         ${afterRows ? `
         <h3 class="dash-section-heading">${t('dash.influence')}</h3>
-        <table class="dash-table">
+        <div class="dash-table-wrap"><table class="dash-table">
             <thead><tr><th>${t('dash.afterMessages')}</th><th>${t('dash.replyMood')}</th><th></th></tr></thead>
             <tbody>${afterRows}</tbody>
-        </table>` : ''}
+        </table></div>` : ''}
     </section>`;
 }
 
@@ -508,7 +508,7 @@ function responseCard(s) {
     return `
     <section class="dash-card col-6">
         <h2>${t('dash.responseTime')}</h2>
-        <table class="dash-table"><tbody>${rows}</tbody></table>
+        <div class="dash-table-wrap"><table class="dash-table"><tbody>${rows}</tbody></table></div>
     </section>`;
 }
 
@@ -572,6 +572,9 @@ function populatePersonFilter(stats) {
 
 function applyPersonFilter(name) {
     document.body.classList.toggle('is-filtered', !!name);
+    // The card badge is drawn by CSS `content`, which cannot call t(): the
+    // label goes through a custom property instead (CSSOM, so CSP-safe).
+    document.body.style.setProperty('--filtered-label', JSON.stringify(t('dash.filtered')));
     content.querySelectorAll('tr[data-person]').forEach(row => {
         const matches = !name ||
             row.dataset.person === name ||

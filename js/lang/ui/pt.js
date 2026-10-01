@@ -468,6 +468,7 @@ export const pt = {
         backAria: 'Voltar aos slides',
         title: 'Painel',
         filter: 'Filtrar por participante',
+        filtered: 'filtrado',
         exportCsv: 'Exportar em CSV',
         exportJson: 'Exportar em JSON',
         empty: 'Não há dados para mostrar.',
