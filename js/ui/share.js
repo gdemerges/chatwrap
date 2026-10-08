@@ -62,10 +62,10 @@ export function openShareSheet({ stats, comparison, card, recapCard }) {
                         <button class="share-action-go" data-action="poster" aria-label="${t('share.posterGoAria')}">${t('share.posterGo')}</button>
                     </span>
                 </div>` : ''}
-                <button class="share-action" data-action="link">
+                ${stats ? `<button class="share-action" data-action="link">
                     <span class="share-action-icon" aria-hidden="true">🔗</span>
                     <span><strong>${t('share.link')}</strong><small>${t('share.linkHint')}</small></span>
-                </button>
+                </button>` : ''}
                 ${stats ? `<div class="share-action share-action-compound">
                     <span class="share-action-icon" aria-hidden="true">📄</span>
                     <span class="share-action-body">

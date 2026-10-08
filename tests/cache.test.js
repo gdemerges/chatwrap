@@ -58,7 +58,7 @@ describe('createHasher', () => {
  * one object store, get / put / clear, transactions that complete
  * asynchronously. Knobs make open, transactions and writes fail on demand.
  */
-function fakeIndexedDB({ failOpen = false, failTx = false, failWrite = false } = {}) {
+function fakeIndexedDB({ failOpen = false, failTx = false, failWrite = false, failDelete = false } = {}) {
     const dbs = new Map(); // name -> { version, stores: Map<storeName, Map<key, value>> }
 
     const makeDb = (rec) => ({
@@ -83,6 +83,10 @@ function fakeIndexedDB({ failOpen = false, failTx = false, failWrite = false } =
                         data.set(value.key, value);
                     },
                     clear() { data.clear(); },
+                    delete(key) {
+                        if (failDelete) throw new Error('delete refused');
+                        data.delete(key);
+                    },
                 }),
             };
             setTimeout(() => tx.oncomplete?.(), 0);
@@ -221,6 +225,60 @@ describe('cache entries', () => {
         await setCached('k', { stats: 'old', comparison: null, year: 1 });
         await setCached('k', { stats: 'new', comparison: null, year: 1 });
         expect((await getCached('k')).stats).toBe('new');
+    });
+});
+
+describe('expired or malformed entries', () => {
+    const payload = () => ({ stats: { total: 42 }, comparison: null, year: 2024 });
+    const rawStore = (idb) => idb.dbs.get('wa-wrapped').stores.get('stats');
+
+    beforeEach(() => {
+        vi.spyOn(console, 'warn').mockImplementation(() => {});
+    });
+    afterEach(() => {
+        vi.unstubAllGlobals();
+        vi.restoreAllMocks();
+    });
+
+    it('deletes an entry past the TTL when it is read, not just ignores it', async () => {
+        const idb = fakeIndexedDB();
+        vi.stubGlobal('indexedDB', idb);
+        const dateNow = vi.spyOn(Date, 'now').mockReturnValue(1_000_000_000_000);
+        await setCached('stale', payload());
+        dateNow.mockReturnValue(1_000_000_000_000 + 15 * DAY);
+
+        expect(await getCached('stale')).toBeNull();
+        expect(rawStore(idb).has('stale')).toBe(false);
+    });
+
+    it('treats an entry without a numeric savedAt as absent and deletes it', async () => {
+        const idb = fakeIndexedDB();
+        idb.dbs.set('wa-wrapped', {
+            version: 4,
+            stores: new Map([['stats', new Map([['legacy', { key: 'legacy', stats: 'x' }]])]]),
+        });
+        vi.stubGlobal('indexedDB', idb);
+
+        expect(await getCached('legacy')).toBeNull();
+        expect(rawStore(idb).has('legacy')).toBe(false);
+    });
+
+    it('keeps a fresh entry in place', async () => {
+        const idb = fakeIndexedDB();
+        vi.stubGlobal('indexedDB', idb);
+        await setCached('fresh', payload());
+        expect((await getCached('fresh')).stats).toEqual({ total: 42 });
+        expect(rawStore(idb).has('fresh')).toBe(true);
+    });
+
+    it('still returns null when the eviction itself fails', async () => {
+        vi.stubGlobal('indexedDB', fakeIndexedDB({ failDelete: true }));
+        const dateNow = vi.spyOn(Date, 'now').mockReturnValue(1_000_000_000_000);
+        await setCached('stale', payload());
+        dateNow.mockReturnValue(1_000_000_000_000 + 15 * DAY);
+
+        await expect(getCached('stale')).resolves.toBeNull();
+        expect(console.warn).toHaveBeenCalledWith('[cache] evict failed:', expect.any(Error));
     });
 });
 

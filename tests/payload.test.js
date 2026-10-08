@@ -165,6 +165,34 @@ describe('rehydrateDates robustness', () => {
     });
 });
 
+describe('missing or invalid dates', () => {
+    it('writes a missing or unparseable date as null instead of throwing', () => {
+        const stats = {
+            startDate: undefined,
+            endDate: 'pas une date',
+            total: 1,
+            firstMessage: { datetime: new Date('invalid') },
+            ghosting: { longest: [{ who: 'Alice', hours: 3, when: null }] },
+        };
+        const s = serializeStats(stats);
+        expect(s.startDate).toBeNull();
+        expect(s.endDate).toBeNull();
+        expect(s.firstMessage.datetime).toBeNull();
+        expect(s.ghosting.longest[0].when).toBeNull();
+    });
+
+    it('keeps null dates null on rehydrate instead of reviving them as 1970', () => {
+        const restored = rehydrateDates({
+            startDate: null,
+            endDate: null,
+            ghosting: { longest: [{ who: 'Alice', when: null }] },
+        });
+        expect(restored.startDate).toBeNull();
+        expect(restored.endDate).toBeNull();
+        expect(restored.ghosting.longest[0].when).toBeNull();
+    });
+});
+
 describe('buildShareURL', () => {
     // Identity-like codec: keeps the length honest so the size budget is real.
     const codec = { compressToEncodedURIComponent: (s) => encodeURIComponent(s) };
@@ -240,5 +268,11 @@ describe('buildShareURL', () => {
         const { url } = buildShareURL(compute(messages), null);
         expect(url).not.toContain(encodeURIComponent('aide hier'));
         expect(url).not.toContain(encodeURIComponent('regardez ce lien'));
+    });
+
+    it('builds the link when a date is invalid, instead of throwing', () => {
+        const { url } = buildShareURL({ ...base(), endDate: new Date('invalid') }, null);
+        expect(url).toContain('#share=');
+        expect(decodeHash(url).s.endDate).toBeNull();
     });
 });

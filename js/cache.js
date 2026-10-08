@@ -103,8 +103,14 @@ export async function getCached(key) {
             req.onsuccess = () => {
                 const v = req.result;
                 if (!v) return resolve(null);
+                // NaN > TTL is false, so an entry with no usable savedAt would
+                // pass the age check and be served forever: it is judged stale.
                 const ageMs = Date.now() - v.savedAt;
-                if (ageMs > TTL_DAYS * 86400_000) return resolve(null);
+                if (!Number.isFinite(v.savedAt) || ageMs > TTL_DAYS * 86400_000) {
+                    // Evict now, or the dead entry is re-read and re-skipped on
+                    // every load and never frees its space.
+                    return evict(key).then(() => resolve(null));
+                }
                 resolve(v);
             };
             req.onerror = () => reject(req.error);
@@ -112,6 +118,24 @@ export async function getCached(key) {
     } catch (err) {
         console.warn('[cache] read failed:', err);
         return null;
+    }
+}
+
+/**
+ * Best-effort removal of an entry the reader is about to ignore. Never throws:
+ * a failed delete must not turn a cache miss into an error.
+ */
+async function evict(key) {
+    try {
+        const db = await openDB();
+        await new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE, 'readwrite');
+            tx.objectStore(STORE).delete(key);
+            tx.oncomplete = () => resolve(undefined);
+            tx.onerror = () => reject(tx.error);
+        });
+    } catch (err) {
+        console.warn('[cache] evict failed:', err);
     }
 }
 

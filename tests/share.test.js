@@ -100,13 +100,13 @@ describe('openShareSheet — rendering', () => {
         expect($('[role="dialog"]').getAttribute('aria-label')).toBe(t('share.title'));
     });
 
-    it('hides the image, recap and poster/data rows when their input is missing', () => {
+    it('hides the image, recap, link and poster/data rows when their input is missing', () => {
         open({ stats: null, card: null, recapCard: null });
         expect($('[data-action="slide"]')).toBeNull();
         expect($('[data-action="recap"]')).toBeNull();
         expect($('[data-action="poster"]')).toBeNull();
         expect($('[data-action="data"]')).toBeNull();
-        expect($('[data-action="link"]')).not.toBeNull();
+        expect($('[data-action="link"]')).toBeNull();
     });
 
     it('defaults the anonymise switch to on, and to off once the user unticked it', () => {
@@ -159,20 +159,10 @@ describe('openShareSheet — dialog lifecycle', () => {
         expect($('[role="dialog"]')).not.toBeNull(); // removal is deferred by the dialog
     });
 
-    // Known gap, pinned as-is: the link row is rendered even without stats
-    // (share.js line 65), but serializeStats cannot read null. The error is
-    // caught and shown, the sheet stays open and the button is re-enabled.
-    // Both app.js and dashboard.js always pass stats today, so this is latent.
-    it('clicking the link without stats shows an error and keeps the sheet open', async () => {
-        vi.spyOn(console, 'error').mockImplementation(() => {});
+    it('has no link action to click without stats, so nothing can fail on null', () => {
         open({ stats: null, card: null, recapCard: null });
-        const btn = $('[data-action="link"]');
-        clickAction('link');
-        await flush();
+        expect(document.querySelector('[data-action="link"]')).toBeNull();
         expect(clipboardWrite).not.toHaveBeenCalled();
-        expect($('#share-toast').classList.contains('error')).toBe(true);
-        expect($('[role="dialog"]')).not.toBeNull();
-        expect(btn.disabled).toBe(false);
     });
 
     it('resolves undefined when dismissed with the close button, calling no export', async () => {

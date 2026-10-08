@@ -3,20 +3,32 @@
  * Never include raw message bodies — only metadata.
  */
 
+/**
+ * ISO string for a date, or null when it is missing or unparseable. Without
+ * this guard, one bad date makes toISOString() throw and the whole share link
+ * fails. null is kept as null on the way back: `new Date(null)` would revive
+ * it as 1970.
+ */
+function isoOrNull(value) {
+    if (value == null) return null;
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d.toISOString();
+}
+
 export function serializeStats(stats) {
     const s = JSON.parse(JSON.stringify(stats));
-    s.startDate = new Date(stats.startDate).toISOString();
-    s.endDate = new Date(stats.endDate).toISOString();
+    s.startDate = isoOrNull(stats.startDate);
+    s.endDate = isoOrNull(stats.endDate);
     if (s.firstMessage?.datetime) {
-        s.firstMessage.datetime = new Date(stats.firstMessage.datetime).toISOString();
+        s.firstMessage.datetime = isoOrNull(stats.firstMessage.datetime);
         delete s.firstMessage.message;
     }
     if (s.longestMessage?.datetime) {
-        s.longestMessage.datetime = new Date(stats.longestMessage.datetime).toISOString();
+        s.longestMessage.datetime = isoOrNull(stats.longestMessage.datetime);
         delete s.longestMessage.message;
     }
     if (s.ghosting?.longest) {
-        s.ghosting.longest = s.ghosting.longest.map(g => ({ ...g, when: new Date(g.when).toISOString() }));
+        s.ghosting.longest = s.ghosting.longest.map(g => ({ ...g, when: isoOrNull(g.when) }));
     }
     return s;
 }
@@ -33,7 +45,7 @@ export function rehydrateDates(stats) {
     if (stats.ghosting?.longest) {
         stats.ghosting.longest = stats.ghosting.longest.map(g => ({
             ...g,
-            when: g.when instanceof Date ? g.when : new Date(g.when),
+            when: g.when == null || g.when instanceof Date ? g.when : new Date(g.when),
         }));
     }
     return stats;
