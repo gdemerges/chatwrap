@@ -143,11 +143,15 @@ export function openShareSheet({ stats, comparison, card, recapCard }) {
                                 `chatwrap-poster-${format}.png`,
                                 { preset: format },
                             );
+                            if (result === 'cancelled') { btn.disabled = false; return; }
                             track('poster', { format });
                             showToast(t(result === 'shared' ? 'share.posterShared' : 'share.posterSaved'));
                         } else {
                             const chosen = action === 'recap' ? recapCard : card;
                             const result = await shareCard(chosen, filenameFor(chosen));
+                            // Dismissing the system share sheet is not a share:
+                            // no toast, no count, and this sheet stays open.
+                            if (result === 'cancelled') { btn.disabled = false; return; }
                             track('share_image', { kind: action });
                             showToast(t(result === 'shared' ? 'share.imageShared' : 'share.imageSaved'));
                         }

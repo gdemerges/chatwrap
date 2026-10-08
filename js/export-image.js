@@ -148,7 +148,10 @@ export async function renderCardBlob(card, options = {}) {
 /**
  * Hand the image to the OS share sheet when there is one (that's the path that
  * actually ends in a story), otherwise fall back to a download.
- * @returns {Promise<'shared' | 'downloaded'>}
+ *
+ * A dismissed share sheet is `'cancelled'`, not `'shared'`: nothing was
+ * shared, so there is nothing to confirm and nothing to count.
+ * @returns {Promise<'shared' | 'downloaded' | 'cancelled'>}
  */
 export async function shareCard(card, filename = 'chatwrap.png', options = {}) {
     const blob = await renderCardBlob(card, options);
@@ -159,7 +162,7 @@ export async function shareCard(card, filename = 'chatwrap.png', options = {}) {
             await navigator.share({ files: [file], title: t('image.shareTitle') });
             return 'shared';
         } catch (err) {
-            if (err && err.name === 'AbortError') return 'shared'; // user cancelled
+            if (err && err.name === 'AbortError') return 'cancelled';
             // Anything else: fall through to the download path.
         }
     }
