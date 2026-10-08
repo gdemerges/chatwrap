@@ -59,6 +59,7 @@ export const tr = {
         demo: 'Elinde dosya yok mu? <strong>Bir örnek gör</strong>',
         demoNotice: 'Örnek sohbet — uydurma veriler',
         demoName: 'Örnek sohbet',
+        sharedMissing: "Paylaşılan dosya alınamadı. WhatsApp'tan tekrar dene ya da buradan seç.",
         peekAria: 'Örnek bir özet gör',
         aiTitle: 'Yapay zekâ ile duygu analizi',
         aiHint: 'Daha isabetli, ama yaklaşık 50 MB model indirir. Onsuz, hava emojilerden ve kelimelerden çıkarılır.',

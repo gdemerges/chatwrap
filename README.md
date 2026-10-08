@@ -22,6 +22,7 @@ with nothing ever sent anywhere.
 - **Sentiment analysis**: by emojis and vocabulary by default, or via local AI as an option
 - **Multilingual interface**: French, English, Spanish, German, Portuguese, Italian, Dutch, Indonesian and Turkish — detected from the browser, switchable at any time
 - **100% client-side**: no data is ever sent to a server
+- **Open an export directly**: share it from WhatsApp to the installed app on Android, or open it with Chatwrap on desktop
 - **Multi-format**: iOS and Android exports, in French, English, Spanish, German, Portuguese, Italian, Dutch, Indonesian and Turkish
 
 ## Usage
@@ -36,6 +37,13 @@ In WhatsApp:
 ### 2. Load the file
 
 Drag the `.txt` or `.zip` file into the upload area, then pick the period to analyze.
+
+You can also skip the file picker:
+
+- **Android**: install Chatwrap to the home screen, then in WhatsApp choose **Export chat**
+  and pick **Chatwrap** in the share sheet. The file opens straight in the analysis.
+- **Desktop (Chromium-based browsers)**: once Chatwrap is installed as an app, right-click
+  the `.txt` or `.zip` export and choose **Open with Chatwrap**.
 
 Don't have a file handy? The **"See an example"** button (or the `index.html#demo` URL)
 generates a fictional conversation to explore the site with.
@@ -98,6 +106,10 @@ Nothing leaves the device: the file is read **as a stream**, parsed and analyzed
 Worker, and the results are cached in IndexedDB. The full text of the conversation never
 exists in memory all at once — which also keeps a 50 MB export from getting the tab killed
 on a phone. Desktop browsers accept exports up to 150 MB.
+
+A shared export takes a short detour through the service worker, still on the device: the
+share is received by the worker, stored in a local cache that only the app can read, and
+deleted as soon as the app opens it. The share request never goes to the network.
 
 Two nuances worth knowing:
 
@@ -171,6 +183,7 @@ site/
 ├── css/
 └── js/
     ├── app.js             # orchestration: import, worker, screens
+    ├── import.js          # file checks and zip extraction, no DOM
     ├── deck.js            # slide navigation, story mode
     ├── worker.js          # parse + stats + cache, off the main thread
     ├── parser.js          # WhatsApp export parser

@@ -40,6 +40,7 @@ Vitest pour les tests, ESLint pour le lint.
 | Fichier | Rôle |
 |---|---|
 | `js/app.js` | Orchestration : import de fichier, worker, écrans |
+| `js/import.js` | Validation du fichier (taille, extension), dézippage de l'export, reprise d'un fichier partagé (`takeSharedFile`) et de `launchQueue`, sans DOM ni langue |
 | `js/deck.js` | Navigation entre slides, mode lecture automatique |
 | `js/worker.js` | Web Worker : lit le fichier **en flux**, parse, calcule, met en cache |
 | `js/worker-client.js` | Côté page du protocole worker : un appel en vol, progression, annulation (testable avec un faux Worker) |

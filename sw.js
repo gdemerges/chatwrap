@@ -20,9 +20,23 @@
  * CI rewrites it to `ww-shell-<commit>` — so a release reliably drops the old
  * shell. CDN files never go stale, and throwing away the 20 MB ONNX runtime
  * with each release would only make the next AI analysis slower.
+ *
+ * A third path is the share target. When the installed PWA is picked from the
+ * Android share sheet (or the file is opened with it on desktop), the export
+ * arrives as a POST to `share-target`. The worker takes that POST itself: the
+ * file is parked in its own cache, `ww-share-inbox`, and the browser is sent
+ * on to `index.html#shared`, where app.js reads it back once and deletes it.
+ * The POST never reaches the network, so the chat never leaves the device —
+ * and the server could not answer it anyway, the site being static. The
+ * inbox cache is kept across releases by `activate`, so a file shared just
+ * before an update still arrives.
  */
 const CACHE_NAME = 'ww-shell-dev';
 const CDN_CACHE = 'ww-cdn-v1';
+// Duplicated from js/import.js (`SHARE_CACHE`, `SHARE_KEY`), which this file
+// cannot import. tests/sw.test.js fails if the two drift apart.
+const SHARE_CACHE = 'ww-share-inbox';
+const SHARE_KEY = 'share-inbox/latest';
 
 const SHELL_ASSETS = [
     'index.html',
@@ -36,6 +50,7 @@ const SHELL_ASSETS = [
     'css/style.css',
     'css/dashboard.css',
     'js/app.js',
+    'js/import.js',
     'js/dashboard.js',
     'js/deck.js',
     'js/worker-client.js',
@@ -137,13 +152,23 @@ async function cacheAll(cache, urls) {
 self.addEventListener('activate', (event) => {
     event.waitUntil((async () => {
         const keys = await caches.keys();
-        await Promise.all(keys.filter((k) => k !== CACHE_NAME && k !== CDN_CACHE).map((k) => caches.delete(k)));
+        const keep = new Set([CACHE_NAME, CDN_CACHE, SHARE_CACHE]);
+        await Promise.all(keys.filter((k) => !keep.has(k)).map((k) => caches.delete(k)));
         await self.clients.claim();
     })());
 });
 
 self.addEventListener('fetch', (event) => {
     const { request } = event;
+
+    // Must come before the GET check: the share sheet's POST is the only
+    // request this worker answers that is not a GET.
+    if (request.method === 'POST') {
+        if (new URL(request.url).pathname.endsWith('/share-target')) {
+            event.respondWith(receiveShare(request));
+        }
+        return;
+    }
     if (request.method !== 'GET') return;
 
     const url = new URL(request.url);
@@ -188,4 +213,33 @@ async function cacheFirst(request) {
     const response = await fetch(request);
     if (response.ok) cache.put(request, response.clone());
     return response;
+}
+
+/**
+ * Park a shared export in the inbox, then send the browser to the app.
+ *
+ * Only the first `chat` file is kept; a second one in the same share is
+ * ignored rather than queued, because the app reads a single slot. A failure
+ * still redirects, to `#shared`, so the page can say what went wrong instead
+ * of showing a blank upload screen.
+ */
+async function receiveShare(request) {
+    const target = (hash) => Response.redirect(new URL(`index.html${hash}`, self.registration.scope).href, 303);
+    try {
+        const form = await request.formData();
+        const file = form.getAll('chat').find((f) => typeof f !== 'string');
+        if (!file) return target('');
+
+        const inbox = await caches.open(SHARE_CACHE);
+        await inbox.put(SHARE_KEY, new Response(file, {
+            headers: {
+                'Content-Type': file.type || 'application/octet-stream',
+                'X-Filename': encodeURIComponent(file.name || ''),
+            },
+        }));
+        return target('#shared');
+    } catch (err) {
+        console.warn('[sw] share not received:', err);
+        return target('#shared');
+    }
 }

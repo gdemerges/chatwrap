@@ -54,6 +54,7 @@ export const de = {
         demo: 'Keine Datei zur Hand? <strong>Beispiel ansehen</strong>',
         demoNotice: 'Beispielchat — erfundene Daten',
         demoName: 'Beispielchat',
+        sharedMissing: 'Die geteilte Datei konnte nicht abgerufen werden. Versuch es erneut über WhatsApp oder wähl sie hier aus.',
         peekAria: 'Einen Beispiel-Rückblick ansehen',
         aiTitle: 'Stimmungsanalyse per KI',
         aiHint: 'Genauer, lädt aber ~50 MB Modell herunter. Ohne sie wird die Stimmung aus Emojis und Wortschatz abgeleitet.',

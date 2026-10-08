@@ -53,6 +53,7 @@ export const es = {
         demo: '¿No tienes un archivo a mano? <strong>Ver un ejemplo</strong>',
         demoNotice: 'Conversación de ejemplo — datos ficticios',
         demoName: 'Conversación de ejemplo',
+        sharedMissing: 'No se pudo recuperar el archivo compartido. Inténtalo de nuevo desde WhatsApp o elígelo aquí.',
         peekAria: 'Ver un ejemplo de retrospectiva',
         aiTitle: 'Análisis de sentimiento con IA',
         aiHint: 'Más fino, pero descarga ~50 MB de modelo. Sin él, el ambiente se deduce de los emojis y del vocabulario.',

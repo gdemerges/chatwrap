@@ -54,6 +54,7 @@ export const en = {
         demo: 'No file to hand? <strong>See an example</strong>',
         demoNotice: 'Sample conversation — made-up data',
         demoName: 'Sample conversation',
+        sharedMissing: 'The shared file could not be retrieved. Try again from WhatsApp or choose it here.',
         peekAria: 'See a sample wrap-up',
         aiTitle: 'AI sentiment analysis',
         aiHint: 'Sharper, but downloads ~50 MB of model. Without it, the mood is inferred from emojis and vocabulary.',

@@ -60,6 +60,7 @@ export const fr = {
         demo: 'Pas de fichier sous la main ? <strong>Voir un exemple</strong>',
         demoNotice: "Conversation d'exemple — données fictives",
         demoName: 'Conversation d\'exemple',
+        sharedMissing: "Le fichier partagé n'a pas pu être récupéré. Réessaie depuis WhatsApp ou choisis-le ici.",
         peekAria: 'Voir un exemple de rétrospective',
         aiTitle: 'Analyse de sentiment par IA',
         aiHint: "Plus fine, mais télécharge ~50 Mo de modèle. Sans elle, l'ambiance est déduite des emojis et du vocabulaire.",

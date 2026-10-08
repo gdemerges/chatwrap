@@ -56,3 +56,46 @@ test('a file that is not a chat lands on the error screen, with a way out', asyn
     await page.locator('#error-retry').click();
     await expect(page.locator('#drop-zone')).toBeVisible();
 });
+
+/* global caches, FormData */
+test.describe('an export shared into the installed app', () => {
+    test.skip(({ browserName }) => browserName !== 'chromium', 'Web Share Target is exercised in Chromium only');
+
+    test('a POST to share-target is parked by the worker, and the shared page opens as a deck', async ({ page }) => {
+        const errors = [];
+        page.on('pageerror', (e) => errors.push(String(e)));
+        await page.goto('/index.html');
+        // Only a page the worker controls sends its requests through it.
+        await page.evaluate(() => navigator.serviceWorker.ready);
+        await page.waitForFunction(() => navigator.serviceWorker.controller !== null);
+
+        // The share sheet is browser-initiated, so it is not subject to the
+        // page's `form-action 'none'`; a form submitted from the page would be.
+        // A fetch exercises the same worker path: the worker parks the file and
+        // answers the redirect, which fetch follows to index.html.
+        const parked = await page.evaluate(async (text) => {
+            const body = new FormData();
+            body.append('chat', new File([text], 'Discussion avec Alice.txt', { type: 'text/plain' }));
+            const res = await fetch('share-target', { method: 'POST', body });
+            const hit = await (await caches.open('ww-share-inbox')).match('share-inbox/latest');
+            return { status: res.status, parked: Boolean(hit) };
+        }, chat());
+        expect(parked).toEqual({ status: 200, parked: true });
+
+        // The browser lands on index.html#shared after the 303, in a fresh
+        // document. Going straight there from index.html would be a fragment
+        // change, which does not reboot the page, so leave it first.
+        await page.goto('about:blank');
+        await page.goto('/index.html#shared');
+
+        await expect(page.locator('#wrapped-screen')).toHaveClass(/active/);
+        await expect(page.locator('#slides-container')).toContainText('Alice');
+        // Read once: the file is not left behind in the inbox.
+        const stillParked = await page.evaluate(async () => {
+            const hit = await (await caches.open('ww-share-inbox')).match('share-inbox/latest');
+            return Boolean(hit);
+        });
+        expect(stillParked).toBe(false);
+        expect(errors).toEqual([]);
+    });
+});

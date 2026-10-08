@@ -54,6 +54,7 @@ export const nl = {
         demo: 'Geen bestand bij de hand? <strong>Bekijk een voorbeeld</strong>',
         demoNotice: 'Voorbeeldgesprek — verzonnen gegevens',
         demoName: 'Voorbeeldgesprek',
+        sharedMissing: 'Het gedeelde bestand kon niet worden opgehaald. Probeer het opnieuw vanuit WhatsApp of kies het hier.',
         peekAria: 'Bekijk een voorbeeldterugblik',
         aiTitle: 'Sentimentanalyse met AI',
         aiHint: 'Nauwkeuriger, maar downloadt ~50 MB aan model. Zonder AI wordt de sfeer afgeleid uit de emoji en de woordenschat.',

@@ -59,6 +59,7 @@ export const id = {
         demo: 'Tidak punya berkas? <strong>Lihat contoh</strong>',
         demoNotice: 'Percakapan contoh — data rekaan',
         demoName: 'Percakapan contoh',
+        sharedMissing: 'File yang dibagikan tidak dapat diambil. Coba lagi dari WhatsApp atau pilih di sini.',
         peekAria: 'Lihat contoh rangkuman',
         aiTitle: 'Analisis sentimen dengan AI',
         aiHint: 'Lebih akurat, tetapi mengunduh model sekitar 50 MB. Tanpa itu, suasana disimpulkan dari emoji dan kosakata.',

@@ -12,11 +12,12 @@ import { pickPeriod } from './ui/period.js';
 import { openShareSheet } from './ui/share.js';
 import { showToast, showError, announce } from './ui/toast.js';
 import { readHash, clearHash } from './ui/hash.js';
-import { ensureJSZip, ensureLZString, preload } from './vendor.js';
+import { ensureLZString, preload } from './vendor.js';
 import { buildDemoBlob } from './demo.js';
 import { pinConversation, getPinned, clearPinned, isSameConversation } from './compare.js';
 import { compareYears } from './stats.js';
-import { escapeHtml, pickChatEntry } from './utils.js';
+import { escapeHtml } from './utils.js';
+import { maxFileSize, validateFile, isZip, unzip, takeSharedFile, normalizeName, onLaunchFiles } from './import.js';
 import { TIP_JAR_URL } from './config.js';
 import { track, trackPageview, isEnabled as analyticsEnabled, isOptedOut, setOptOut } from './analytics.js';
 import { fmt } from './format.js';
@@ -44,14 +45,7 @@ const loadingStatus = $('#loading-status');
 const loadingFile = $('#loading-file');
 const aiToggle = $('#ai-toggle');
 
-/**
- * The worker keeps every parsed message, and that costs about six times the
- * text: a 50 MB export holds ~300 MB of heap once parsed, ~360 MB at the peak
- * (measured on a synthetic 725 000-message chat). That is already near what a
- * phone tab survives, so touch devices keep the old cap; a desktop browser has
- * room for three times as much, which covers multi-year group chats.
- */
-const MAX_FILE_SIZE = (window.matchMedia?.('(pointer: coarse)').matches ? 50 : 150) * 1024 * 1024;
+const MAX_FILE_SIZE = maxFileSize();
 const AI_KEY = 'ww-use-ai';
 const SESSION_KEY = 'ww-stats';
 
@@ -190,19 +184,16 @@ function runDemo() {
 }
 
 async function handleFile(file) {
-    if (file.size > MAX_FILE_SIZE) {
-        showFatal(t('error.tooBig', { mb: Math.round(MAX_FILE_SIZE / 1024 / 1024) }));
-        return;
-    }
-    if (!/\.(txt|zip)$/i.test(file.name)) {
-        showFatal(t('error.badExt'));
+    const invalid = validateFile(file, MAX_FILE_SIZE);
+    if (invalid) {
+        showFatal(t(invalid.key, invalid.params));
         return;
     }
 
     showScreen('loading');
     setSourceName(file.name);
     try {
-        const blob = file.name.toLowerCase().endsWith('.zip') ? await unzip(file) : file;
+        const blob = isZip(file.name) ? await unzipChat(file) : file;
         await handleBlob(blob, { name: file.name });
     } catch (err) {
         if (err.code === CANCELLED) return;
@@ -286,26 +277,22 @@ async function computeAndShow() {
     track('analysis', { ai: useAI(), period: period.range ? 'range' : (period.year == null ? 'all' : 'year') });
 }
 
-async function unzip(file) {
+/**
+ * js/import.js reports failures as a code and params; the sentence is looked up
+ * here, so the error screen reads exactly as it did before the split. Other
+ * errors (a failed CDN load, say) pass through untouched.
+ */
+async function unzipChat(file) {
     loadingStatus.textContent = t('loading.unzipping');
-    await ensureJSZip();
-    const zip = await window.JSZip.loadAsync(file);
-    const entry = pickChatEntry(Object.values(zip.files));
-    if (!entry) throw new Error(t('error.noTxtInZip'));
-
-    // The size cap applies to the *compressed* file; a small zip can inflate
-    // to gigabytes. Check the declared size first, then the real one.
-    const declared = entry._data?.uncompressedSize;
-    if (typeof declared === 'number' && declared > MAX_FILE_SIZE) {
-        throw new Error(t('error.unzippedTooBig', { mb: Math.round(MAX_FILE_SIZE / 1024 / 1024) }));
+    try {
+        return await unzip(file, {
+            maxSize: MAX_FILE_SIZE,
+            onProgress: (pct) => { loadingStatus.textContent = t('loading.unzippingPct', { pct }); },
+        });
+    } catch (err) {
+        if (err.code !== 'noTxtInZip' && err.code !== 'unzippedTooBig') throw err;
+        throw new Error(t(`error.${err.code}`, err.params));
     }
-    const blob = await entry.async('blob', (meta) => {
-        loadingStatus.textContent = t('loading.unzippingPct', { pct: Math.round(meta.percent) });
-    });
-    if (blob.size > MAX_FILE_SIZE) {
-        throw new Error(t('error.unzippedTooBig', { mb: Math.round(MAX_FILE_SIZE / 1024 / 1024) }));
-    }
-    return blob;
 }
 
 // ========== Presentation ==========
@@ -550,6 +537,15 @@ async function restore() {
         runDemo();
         return true;
     }
+    // The share target parks the file in the service worker's inbox and
+    // redirects here (see sw.js). Read once: the slot is emptied as it is read.
+    if (window.location.hash === '#shared') {
+        clearHash();
+        const file = await takeSharedFile();
+        if (file) handleFile(normalizeName(file));
+        else showToast(t('upload.sharedMissing'), { error: true });
+        return true;
+    }
     const { share } = readHash();
     if (share) {
         try {
@@ -585,6 +581,8 @@ renderPrivacyNote();
 renderTipJar();
 trackPageview();
 restore();
+// Opened from a file (desktop "Open with"): same path as a file picked here.
+onLaunchFiles(window, (file) => handleFile(normalizeName(file)));
 
 /**
  * Repaint everything the language touches.

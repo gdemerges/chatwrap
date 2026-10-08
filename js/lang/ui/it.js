@@ -54,6 +54,7 @@ export const it = {
         demo: 'Non hai un file sottomano? <strong>Guarda un esempio</strong>',
         demoNotice: 'Chat di esempio — dati inventati',
         demoName: 'Chat di esempio',
+        sharedMissing: 'Impossibile recuperare il file condiviso. Riprova da WhatsApp o sceglilo qui.',
         peekAria: 'Guarda un esempio di retrospettiva',
         aiTitle: 'Analisi del sentiment con IA',
         aiHint: 'Più precisa, ma scarica ~50 MB di modello. Senza, l\'atmosfera viene dedotta dalle emoji e dal lessico.',
