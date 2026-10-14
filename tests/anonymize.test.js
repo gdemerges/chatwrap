@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { parse } from '../js/parser.js';
 import { compute } from '../js/stats.js';
-import { anonymizeStats, buildAliasMap } from '../js/anonymize.js';
+import { anonymizeStats, anonymizeComparison, buildAliasMap } from '../js/anonymize.js';
 
 const CHAT = [
     '[01/03/2024 10:00:00] Alice Martin: bonjour https://youtube.com/a',
@@ -68,6 +68,42 @@ describe('anonymizeStats', () => {
 
         const strict = anonymizeStats(withDays, { words: true });
         expect(strict.sentiment.bestDays[0].context.keywords).toEqual([]);
+    });
+
+    it('aliases a first name or surname used as a word, accents or not', () => {
+        const named = {
+            ...stats,
+            ranking: [['Léana Comerro', {}], ['Bob', {}]],
+            topWords: [['leana', 9], ['comerro', 2], ['bonjour', 5]],
+            profiles: [{ name: 'Bob', signatureWord: ['léana', 3] }],
+        };
+        const out = anonymizeStats(named);
+        expect(out.topWords).toEqual([['A.', 9], ['A.', 2], ['bonjour', 5]]);
+        expect(out.profiles[0].signatureWord).toEqual(['A.', 3]);
+        const dump = JSON.stringify(out).toLowerCase();
+        expect(dump).not.toMatch(/l[ée]ana|comerro/);
+    });
+
+    it('leaves the real chat with no name in any word list', () => {
+        // « salut Alice » makes "alice" a word of the chat.
+        expect(JSON.stringify(anon).toLowerCase()).not.toMatch(/alice|martin/);
+    });
+
+    it('anonymizes the comparison that travels with a share', () => {
+        const comparison = { appeared: [['alice', 4], ['plage', 2]], disappeared: [['bob', 1]] };
+        expect(anonymizeComparison(comparison, stats)).toEqual({
+            appeared: [['A.', 4], ['plage', 2]],
+            disappeared: [['B.', 1]],
+        });
+        expect(anonymizeComparison(comparison, stats, { words: true }).appeared).toEqual([]);
+        expect(anonymizeComparison(null, stats)).toBeNull();
+    });
+
+    it('ignores a forged __proto__ key instead of adopting it as prototype', () => {
+        const forged = JSON.parse('{"ranking":[["Bob",{}]],"__proto__":{"polluted":true}}');
+        const out = anonymizeStats(forged);
+        expect(Object.getPrototypeOf(out)).toBe(Object.prototype);
+        expect(out.polluted).toBeUndefined();
     });
 
     it('keeps non-name data intact', () => {

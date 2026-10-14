@@ -85,6 +85,13 @@ describe('sanitizeShared on malformed shared payloads', () => {
         expect(clean.streak.max).toBe('svg onload=x7');
     });
 
+    it('drops a forged __proto__ key rather than adopting it as prototype', () => {
+        const clean = sanitizeShared(JSON.parse('{"s":{"__proto__":{"polluted":"yes"},"totalMessages":3}}'));
+        expect(Object.getPrototypeOf(clean.s)).toBe(Object.prototype);
+        expect(clean.s.polluted).toBeUndefined();
+        expect(clean.s.totalMessages).toBe(3);
+    });
+
     it('handles arrays nested in arrays and empty containers', () => {
         expect(sanitizeShared([['<a>'], [], {}])).toEqual([['a'], [], {}]);
     });

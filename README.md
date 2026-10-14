@@ -109,13 +109,16 @@ on a phone. Desktop browsers accept exports up to 150 MB.
 
 A shared export takes a short detour through the service worker, still on the device: the
 share is received by the worker, stored in a local cache that only the app can read, and
-deleted as soon as the app opens it. The share request never goes to the network.
+deleted as soon as the app opens it — or, if the app never got to open it, the next time
+the app starts. The share request never goes to the network.
 
 Two nuances worth knowing:
 
 - **Link sharing** encodes the stats in the URL fragment. A fragment is never sent to a
   server, but it does end up in browser history and in the logs of whatever app it's pasted
-  into. First-name anonymization is therefore on by default for links.
+  into. First-name anonymization is therefore on by default for links. It covers names
+  used as words too: « léana » or a surname in the word cloud becomes the person's initial,
+  in the year-over-year comparison as well as in the stats.
 - **AI sentiment analysis** is optional and off by default: enabling it downloads models
   from a CDN (~50 MB). Without it, mood is inferred locally from emoji reactions and a
   lexicon — no download.

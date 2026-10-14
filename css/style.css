@@ -2853,3 +2853,7 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
 .heatmap-cell { min-height: 0; }
 .heatmap-label.hour-label { font-size: 0.55rem; }
 .heatmap-label.hour-label:nth-child(odd) { visibility: hidden; }
+
+/* Framed by another site: nothing is shown, so nothing can be clicked through
+   the frame (see refuseFraming in js/ui/chrome.js). */
+.is-framed body { display: none !important; }

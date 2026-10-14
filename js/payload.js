@@ -64,7 +64,12 @@ export function sanitizeShared(value) {
     if (Array.isArray(value)) return value.map(sanitizeShared);
     if (value && typeof value === 'object') {
         const out = {};
-        for (const [k, v] of Object.entries(value)) out[sanitizeShared(k)] = sanitizeShared(v);
+        for (const [k, v] of Object.entries(value)) {
+            // JSON.parse makes `__proto__` an own key; assigned back, it would
+            // swap the rebuilt object's prototype for one the link supplies.
+            if (k === '__proto__') continue;
+            out[sanitizeShared(k)] = sanitizeShared(v);
+        }
         return out;
     }
     return value;

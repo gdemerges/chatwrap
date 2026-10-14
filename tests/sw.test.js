@@ -168,6 +168,28 @@ describe('service worker share target', () => {
         warn.mockRestore();
     });
 
+    it('caches only the CDN among cross-origin GETs', async () => {
+        const storage = fakeCaches();
+        const { listeners } = loadWorker({ storage });
+
+        const other = await dispatch(listeners, new Request('https://stats.example.org/api/event'));
+        expect(other.event.respondWith).not.toHaveBeenCalled();
+        const model = await dispatch(listeners, new Request('https://huggingface.co/x/model.onnx'));
+        expect(model.event.respondWith).not.toHaveBeenCalled();
+
+        storage.stores.set('ww-cdn-v1', new Map([[
+            'https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js', new Response('lz'),
+        ]]));
+        const fakeMatch = storage.open;
+        storage.open = vi.fn(async (name) => {
+            const c = await fakeMatch(name);
+            return { ...c, match: async (req) => storage.stores.get(name).get(req.url ?? req)?.clone() };
+        });
+        const cdn = await dispatch(listeners, new Request('https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js'));
+        expect(cdn.event.respondWith).toHaveBeenCalledTimes(1);
+        expect(await cdn.response.text()).toBe('lz');
+    });
+
     it('leaves other POSTs to the browser', async () => {
         const storage = fakeCaches();
         const { listeners, fetchSpy } = loadWorker({ storage });

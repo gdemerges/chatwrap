@@ -6,7 +6,7 @@
 import { escapeHtml } from './utils.js';
 import { fmt, fmtDecimal, fmtDate, fmtClock, fmtHour, fmtTime, dayNames, peakDayName, monthMedium } from './format.js';
 import { t, initLocale, onLocaleChange, applyStaticI18n } from './i18n.js';
-import { registerServiceWorker, initTheme, initLangPicker, syncChromeLocale } from './ui/chrome.js';
+import { refuseFraming, registerServiceWorker, initTheme, initLangPicker, syncChromeLocale } from './ui/chrome.js';
 import { watchInlineStyles } from './ui/inline-style.js';
 import { rehydrateDates, sanitizeShared } from './payload.js';
 import { ensureLZString } from './vendor.js';
@@ -24,6 +24,7 @@ const $ = (sel) => document.querySelector(sel);
 const content = $('#dash-content');
 
 // ---------- Service worker ----------
+refuseFraming();
 registerServiceWorker();
 watchInlineStyles();
 initTheme();

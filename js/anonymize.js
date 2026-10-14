@@ -14,6 +14,9 @@
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
+/** "Léana" → "leana": what a word and a name are compared on. */
+const fold = (s) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+
 /**
  * @param {string[]} names Ranked names — the alias order follows the ranking,
  *   so "A." is always the most active participant.
@@ -30,6 +33,31 @@ export function buildAliasMap(names) {
 }
 
 /**
+ * Every alias, reachable from a name *or* from one of its parts.
+ *
+ * Exact names were not enough: a group calls its members by their first name,
+ * so « léana » and « gwendal » sat at the top of the word cloud of an
+ * « anonymous » link — next to a surname. Words are compared accent- and
+ * case-folded, and a word that is part of a name becomes that person's alias.
+ * A common word that happens to be a first name (« rose ») goes too: the
+ * cost of a missing word is lower than the cost of a name.
+ *
+ * @param {string[]} names
+ */
+function aliasLookup(names) {
+    const exact = buildAliasMap(names);
+    const parts = new Map();
+    for (const [name, alias] of exact) {
+        for (const part of fold(name).split(/[^\p{L}]+/u)) {
+            if (part.length >= 3 && !parts.has(part)) parts.set(part, alias);
+        }
+    }
+    return {
+        get: (/** @type {string} */ s) => exact.get(s) ?? parts.get(fold(s)),
+    };
+}
+
+/**
  * @param {any} stats
  * @param {{ words?: boolean }} [options] `words: true` also drops the
  *   vocabulary clouds — a signature word can identify someone as surely as
@@ -41,8 +69,7 @@ export function anonymizeStats(stats, options = {}) {
     const names = (stats.ranking || []).map(([name]) => name);
     if (names.length === 0) return stats;
 
-    const alias = buildAliasMap(names);
-    const out = remap(stats, alias);
+    const out = remap(stats, aliasLookup(names));
 
     if (options.words) {
         out.topWords = [];
@@ -58,6 +85,25 @@ export function anonymizeStats(stats, options = {}) {
     return out;
 }
 
+/**
+ * The comparison that travels with a share: its appeared / disappeared words
+ * are vocabulary like any other, and used to go out untouched.
+ *
+ * @param {any} comparison
+ * @param {any} stats the stats whose ranking names the people
+ * @param {{ words?: boolean }} [options]
+ */
+export function anonymizeComparison(comparison, stats, options = {}) {
+    if (!comparison) return comparison;
+    const names = (stats?.ranking || []).map(([name]) => name);
+    const out = names.length ? remap(comparison, aliasLookup(names)) : remap(comparison, new Map());
+    if (options.words) {
+        out.appeared = [];
+        out.disappeared = [];
+    }
+    return out;
+}
+
 /** Deep copy with every known name — key or value — swapped for its alias. */
 function remap(value, alias) {
     if (typeof value === 'string') return alias.get(value) ?? value;
@@ -66,6 +112,9 @@ function remap(value, alias) {
     if (value && typeof value === 'object') {
         const out = {};
         for (const [k, v] of Object.entries(value)) {
+            // An attribute-less copy must not hand a forged `__proto__` key
+            // the power to replace the copy's prototype.
+            if (k === '__proto__') continue;
             out[alias.get(k) ?? k] = remap(v, alias);
         }
         return out;

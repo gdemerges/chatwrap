@@ -117,6 +117,7 @@ const SHELL_ASSETS = [
     'js/worker/day-context.js',
 ];
 
+const CDN_ORIGIN = 'https://cdn.jsdelivr.net';
 const CDN_ASSETS = [
     'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js',
     'https://cdn.jsdelivr.net/npm/lz-string@1.5.0/libs/lz-string.min.js',
@@ -172,10 +173,14 @@ self.addEventListener('fetch', (event) => {
     if (request.method !== 'GET') return;
 
     const url = new URL(request.url);
-    if (url.hostname === 'huggingface.co') return;
-
-    const sameOrigin = url.origin === self.location.origin;
-    event.respondWith(sameOrigin ? staleWhileRevalidate(request) : cacheFirst(request));
+    if (url.origin === self.location.origin) {
+        event.respondWith(staleWhileRevalidate(request));
+        return;
+    }
+    // Cache-first is right for the version-pinned CDN files and for nothing
+    // else: any other cross-origin GET (ML weights, a measurement endpoint)
+    // would have been kept forever. Those go to the network untouched.
+    if (url.origin === CDN_ORIGIN) event.respondWith(cacheFirst(request));
 });
 
 async function staleWhileRevalidate(request) {

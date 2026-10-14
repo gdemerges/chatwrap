@@ -57,6 +57,17 @@ describe('origins used by the code are declared', () => {
         for (const o of origins) expect(allowed.has(o), `${o} in ${file}`).toBe(true);
     });
 
+    it('script-src names each CDN file, not the whole CDN', () => {
+        // Allowing all of jsDelivr would let any HTML injection load any npm
+        // package: the policy lists the exact pinned files vendor.js loads.
+        const srcs = read('js/vendor.js').match(/https:\/\/[^'"\s]+\.js/g);
+        expect(srcs.length).toBeGreaterThan(0);
+        for (const page of PAGES) {
+            for (const v of policy(page)['script-src']) expect(v, page).not.toMatch(/^https:\/\/[^/]+\/?$/);
+        }
+        expect([...index['script-src']].filter(v => v.startsWith('https://')).sort()).toEqual([...srcs].sort());
+    });
+
     it('the dashboard does not open more than the app page does', () => {
         const dash = policy('dashboard.html');
         for (const [directive, values] of Object.entries(dash)) {

@@ -74,17 +74,72 @@ export async function unzip(file, { maxSize, onProgress } = { maxSize: Infinity 
     const declared = entry._data?.uncompressedSize;
     if (typeof declared === 'number' && declared > maxSize) throw tooBig();
 
-    const blob = await entry.async('blob', (meta) => {
-        onProgress?.(Math.round(meta.percent));
+    return inflateCapped(entry, maxSize, tooBig, onProgress);
+}
+
+/**
+ * Inflate an entry chunk by chunk, and stop as soon as it outgrows the cap.
+ *
+ * The declared size is only what the zip *says*: a forged header can claim
+ * 10 bytes and inflate to gigabytes. `entry.async('blob')` would have held the
+ * whole thing in memory before its size could be checked — the tab died
+ * first. Counting the chunks as they come stops the inflation at the cap.
+ *
+ * @param {any} entry a JSZip entry
+ * @param {number} maxSize
+ * @param {() => Error} tooBig
+ * @param {(pct: number) => void} [onProgress]
+ * @returns {Promise<Blob>}
+ */
+function inflateCapped(entry, maxSize, tooBig, onProgress) {
+    return new Promise((resolve, reject) => {
+        /** @type {Uint8Array[]} */
+        const chunks = [];
+        let size = 0;
+        let done = false;
+        const stream = entry.internalStream('uint8array');
+        stream
+            .on('data', (/** @type {Uint8Array} */ chunk, /** @type {{ percent: number }} */ meta) => {
+                if (done) return;
+                size += chunk.length;
+                if (size > maxSize) {
+                    done = true;
+                    stream.pause();
+                    chunks.length = 0;
+                    reject(tooBig());
+                    return;
+                }
+                chunks.push(chunk);
+                onProgress?.(Math.round(meta.percent));
+            })
+            .on('error', (/** @type {Error} */ err) => { if (!done) { done = true; reject(err); } })
+            .on('end', () => { if (!done) { done = true; resolve(new Blob(chunks)); } })
+            .resume();
     });
-    if (blob.size > maxSize) throw tooBig();
-    return blob;
 }
 
 // Duplicated in sw.js, which is not a module and cannot import this file.
 // tests/sw.test.js fails if the two copies drift apart.
 export const SHARE_CACHE = 'ww-share-inbox';
 export const SHARE_KEY = 'share-inbox/latest';
+
+/**
+ * Empty the share inbox without reading it.
+ *
+ * The share target redirects straight to `#shared`, so a file still parked
+ * when the app opens any other way is one whose page never loaded (closed
+ * tab, crash). It is somebody's chat, sitting on the disk: it goes.
+ *
+ * @param {CacheStorage | undefined} [cacheStorage=globalThis.caches]
+ * @returns {Promise<void>}
+ */
+export async function discardSharedFile(cacheStorage = globalThis.caches) {
+    try {
+        if (!cacheStorage || !(await cacheStorage.has(SHARE_CACHE))) return;
+        const cache = await cacheStorage.open(SHARE_CACHE);
+        await cache.delete(SHARE_KEY);
+    } catch { /* nothing parked, or no Cache API: nothing to do */ }
+}
 
 /**
  * Take the file the service worker parked for a share, and empty the slot.

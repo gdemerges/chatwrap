@@ -17,12 +17,12 @@ import { buildDemoBlob } from './demo.js';
 import { pinConversation, getPinned, clearPinned, isSameConversation } from './compare.js';
 import { compareYears } from './stats.js';
 import { escapeHtml } from './utils.js';
-import { maxFileSize, validateFile, isZip, unzip, takeSharedFile, normalizeName, onLaunchFiles } from './import.js';
+import { maxFileSize, validateFile, isZip, unzip, takeSharedFile, discardSharedFile, normalizeName, onLaunchFiles } from './import.js';
 import { TIP_JAR_URL } from './config.js';
 import { track, trackPageview, isEnabled as analyticsEnabled, isOptedOut, setOptOut } from './analytics.js';
 import { fmt } from './format.js';
 import { t, initLocale, onLocaleChange, applyStaticI18n } from './i18n.js';
-import { registerServiceWorker, initTheme, initLangPicker, syncChromeLocale } from './ui/chrome.js';
+import { refuseFraming, registerServiceWorker, initTheme, initLangPicker, syncChromeLocale } from './ui/chrome.js';
 import { watchInlineStyles } from './ui/inline-style.js';
 import { createWorkerClient, CANCELLED } from './worker-client.js';
 
@@ -71,6 +71,7 @@ const deck = new Deck({
 });
 
 // ========== Page chrome ==========
+refuseFraming();
 registerServiceWorker();
 watchInlineStyles();
 // Charts are painted on canvas and cannot follow a CSS variable, so the deck
@@ -531,6 +532,7 @@ function showFatal(message, diagnostics = null) {
 
 // ========== Restore from URL / session ==========
 async function restore() {
+    if (window.location.hash !== '#shared') discardSharedFile();
     // #demo is the manifest shortcut target, and a stable entry point for
     // linking someone straight to a working example.
     if (window.location.hash === '#demo') {

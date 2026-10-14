@@ -10,7 +10,7 @@
  * round-trip.
  */
 import { serializeStats } from './payload.js';
-import { anonymizeStats } from './anonymize.js';
+import { anonymizeStats, anonymizeComparison } from './anonymize.js';
 import { downloadBlob } from './export-image.js';
 
 /**
@@ -130,11 +130,12 @@ export function statsToJSON(stats, comparison) {
  */
 export function exportData({ stats, comparison, format, anonymize }) {
     const source = anonymize ? anonymizeStats(stats) : stats;
+    const compared = anonymize ? anonymizeComparison(comparison, stats) : comparison;
     const serialized = serializeStats(source);
 
     const [body, type] = format === 'csv'
         ? [statsToCSV(serialized), 'text/csv;charset=utf-8']
-        : [statsToJSON(serialized, comparison), 'application/json'];
+        : [statsToJSON(serialized, compared), 'application/json'];
 
     const filename = `chatwrap-data.${format}`;
     // A BOM so Excel reads the accents and the emoji as UTF-8 rather than as

@@ -10,7 +10,7 @@
  */
 import { openDialog } from './dialog.js';
 import { buildShareURL } from '../payload.js';
-import { anonymizeStats } from '../anonymize.js';
+import { anonymizeStats, anonymizeComparison } from '../anonymize.js';
 import { shareCard, buildPosterCard } from '../export-image.js';
 import { exportData } from '../export-data.js';
 import { resolvePreset } from '../export-presets.js';
@@ -173,7 +173,8 @@ async function copyLink(stats, comparison, anonymize) {
     track('share_link', { anonymized: anonymize });
     await ensureLZString();
     const payload = anonymize ? anonymizeStats(stats) : stats;
-    const { url, truncated } = buildShareURL(payload, comparison, { dropDaily: true });
+    const compared = anonymize ? anonymizeComparison(comparison, stats) : comparison;
+    const { url, truncated } = buildShareURL(payload, compared, { dropDaily: true });
     const { copyToClipboard } = await import('./toast.js');
     await copyToClipboard(
         url,

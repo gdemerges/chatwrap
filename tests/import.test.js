@@ -5,22 +5,52 @@ vi.mock('../js/vendor.js', () => ({ ensureJSZip: vi.fn(() => Promise.resolve()) 
 
 import {
     maxFileSize, validateFile, isZip, unzip,
-    takeSharedFile, normalizeName, onLaunchFiles, SHARE_CACHE, SHARE_KEY,
+    takeSharedFile, discardSharedFile, normalizeName, onLaunchFiles, SHARE_CACHE, SHARE_KEY,
 } from '../js/import.js';
 
 const MB = 1024 * 1024;
 
-/** A fake JSZip entry: `size` is what the zip declares, `real` what inflates. */
+/**
+ * A fake JSZip entry: `size` is what the zip declares, `real` what inflates.
+ * `internalStream` hands out `real` bytes in 64 KB chunks — or one chunk per
+ * `percent` step — and stops as soon as it is paused, like JSZip's own.
+ */
 function entry(name, { size = 10, real = size, percent = [] } = {}) {
-    return {
+    const e = {
         name,
         dir: false,
         _data: { uncompressedSize: size },
-        async: vi.fn(async (_type, onUpdate) => {
-            for (const p of percent) onUpdate({ percent: p });
-            return new Blob(['x'.repeat(real)]);
+        emitted: 0,
+        internalStream: vi.fn(() => {
+            const handlers = {};
+            let paused = false;
+            const stream = {
+                on(type, fn) { handlers[type] = fn; return stream; },
+                pause() { paused = true; return stream; },
+                resume() {
+                    Promise.resolve().then(() => {
+                        const steps = percent.length ? percent : [100];
+                        const per = Math.max(1, Math.ceil(real / steps.length));
+                        const chunkSize = percent.length ? per : 64 * 1024;
+                        let left = real;
+                        let i = 0;
+                        while (left > 0 && !paused) {
+                            const n = Math.min(chunkSize, left);
+                            left -= n;
+                            e.emitted += n;
+                            const pct = percent.length ? steps[Math.min(i, steps.length - 1)] : ((real - left) / real) * 100;
+                            handlers.data(new Uint8Array(n), { percent: pct });
+                            i++;
+                        }
+                        if (!paused) handlers.end();
+                    });
+                    return stream;
+                },
+            };
+            return stream;
         }),
     };
+    return e;
 }
 
 function fakeZip(entries) {
@@ -108,10 +138,13 @@ describe('unzip', () => {
 
     it('fails with unzippedTooBig when the real size is over the cap', async () => {
         // Declared size looks harmless; the inflated blob is what counts.
-        window.JSZip.loadAsync.mockResolvedValue(fakeZip([entry('_chat.txt', { size: 10, real: 2 * MB })]));
+        const bomb = entry('_chat.txt', { size: 10, real: 64 * MB });
+        window.JSZip.loadAsync.mockResolvedValue(fakeZip([bomb]));
         const err = await unzip(new Blob(), { maxSize: MB }).catch((e) => e);
         expect(err.code).toBe('unzippedTooBig');
         expect(err.params).toEqual({ mb: 1 });
+        // Inflation stopped at the cap instead of running to 64 MB first.
+        expect(bomb.emitted).toBeLessThanOrEqual(MB + 64 * 1024);
     });
 
     it('relays rounded progress through onProgress', async () => {
@@ -147,7 +180,7 @@ function fakeCacheStorage(entries = {}) {
         match: vi.fn(async (key) => store.get(key)?.clone()),
         delete: vi.fn(async (key) => store.delete(key)),
     };
-    return { store, cache, open: vi.fn(async () => cache) };
+    return { store, cache, open: vi.fn(async () => cache), has: vi.fn(async (name) => name === SHARE_CACHE) };
 }
 
 /** What sw.js parks for a share: the file body plus its two headers. */
@@ -201,6 +234,23 @@ describe('takeSharedFile', () => {
         const bare = new Response('x', { headers: { 'Content-Type': 'text/plain', 'X-Filename': '%E0%A4%A' } });
         const storage = fakeCacheStorage({ [SHARE_KEY]: bare });
         expect((await takeSharedFile(storage)).name).toBe('');
+    });
+});
+
+describe('discardSharedFile', () => {
+    it('empties an inbox the app never got to read', async () => {
+        const storage = fakeCacheStorage({ [SHARE_KEY]: parked('chat privé', { name: 'a.txt' }) });
+        await discardSharedFile(storage);
+        expect(storage.store.has(SHARE_KEY)).toBe(false);
+    });
+
+    it('does not create the inbox when there is none, and never throws', async () => {
+        const storage = fakeCacheStorage();
+        storage.has.mockResolvedValue(false);
+        await discardSharedFile(storage);
+        expect(storage.open).not.toHaveBeenCalled();
+        await expect(discardSharedFile(null)).resolves.toBeUndefined();
+        await expect(discardSharedFile({ has: async () => { throw new Error('x'); } })).resolves.toBeUndefined();
     });
 });
 

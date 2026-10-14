@@ -18,6 +18,25 @@ import { escapeHtml } from '../utils.js';
 
 const $ = (sel) => document.querySelector(sel);
 
+/**
+ * Refuse to be shown inside another site's frame.
+ *
+ * `frame-ancestors` is the real defence, but it is ignored in a `<meta>` CSP
+ * and GitHub Pages cannot send it as a header — so any page could frame the
+ * app and steer clicks onto Share or Pin. Framed, the page hides itself.
+ * A frame sandboxed without scripts never gets here, but then the app does
+ * not run at all, and there is nothing left to click.
+ *
+ * @param {Window} [win=window]
+ * @returns {boolean} true when the page is framed (and now hidden)
+ */
+export function refuseFraming(win = window) {
+    let framed;
+    try { framed = win.self !== win.top; } catch { framed = true; }
+    if (framed) win.document.documentElement.classList.add('is-framed');
+    return framed;
+}
+
 /** Register the service worker, if this browser has one. */
 export function registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
