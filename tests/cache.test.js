@@ -254,7 +254,7 @@ describe('expired or malformed entries', () => {
     it('treats an entry without a numeric savedAt as absent and deletes it', async () => {
         const idb = fakeIndexedDB();
         idb.dbs.set('wa-wrapped', {
-            version: 4,
+            version: 5,
             stores: new Map([['stats', new Map([['legacy', { key: 'legacy', stats: 'x' }]])]]),
         });
         vi.stubGlobal('indexedDB', idb);
@@ -291,13 +291,13 @@ describe('cache schema upgrade', () => {
     it('drops the store of an older schema version so stale stats are recomputed', async () => {
         vi.spyOn(console, 'warn').mockImplementation(() => {});
         const idb = fakeIndexedDB();
-        // Simulate a v3 database that still holds an entry.
-        const v3Stores = new Map([['stats', new Map([['old', { key: 'old', stats: 'stale', savedAt: Date.now() }]])]]);
-        idb.dbs.set('wa-wrapped', { version: 3, stores: v3Stores });
+        // Simulate a v4 database that still holds an entry.
+        const v4Stores = new Map([['stats', new Map([['old', { key: 'old', stats: 'stale', savedAt: Date.now() }]])]]);
+        idb.dbs.set('wa-wrapped', { version: 4, stores: v4Stores });
         vi.stubGlobal('indexedDB', idb);
 
         expect(await getCached('old')).toBeNull();
-        expect(idb.dbs.get('wa-wrapped').version).toBe(4);
+        expect(idb.dbs.get('wa-wrapped').version).toBe(5);
     });
 
     it('keeps entries written at the current version across reopen', async () => {

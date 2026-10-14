@@ -208,6 +208,21 @@ describe('parser — languages beyond FR/EN', () => {
 });
 
 describe('parser — real-world quirks', () => {
+    it('drops the notices iOS signs with the group name or a member', () => {
+        const messages = parse([
+            '[14/09/2025 12:08:15] Les Féénoménales 🧚‍♂️: ‎Les messages et les appels sont chiffrés de bout en bout.',
+            '[14/09/2025 12:08:15] Les Féénoménales 🧚‍♂️: ‎Léana vous a ajouté·e',
+            '[14/09/2025 12:09:00] Léana: Coucou !',
+            '[14/09/2025 12:10:00] Laura: ‎Laura a changé l’icône de ce groupe',
+            '[14/09/2025 12:11:00] Laura: ‎image absente',
+            '[14/09/2025 12:12:00] Léana: Laura a ajouté une photo',
+        ].join('\n'));
+        expect(messages.map(m => m.author)).toEqual(['Léana', 'Laura', 'Léana']);
+        expect(messages[1].isMedia).toBe(true);
+        // Without the mark, the same words are something a person typed.
+        expect(messages[2].message).toBe('Laura a ajouté une photo');
+    });
+
     it('strips bidi marks from authors and bodies, and keeps polls whole', () => {
         const messages = parse(fixture('ios_quirks.txt'));
         // The encryption notice has no author and must not survive.

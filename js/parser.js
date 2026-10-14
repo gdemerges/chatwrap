@@ -173,7 +173,21 @@ function matchesAny(haystackLower, needles) {
 }
 
 function isSystemText(text) {
-    return matchesAny(text.toLowerCase(), SYSTEM_KEYWORDS);
+    // iOS writes « l’icône » with a typographic apostrophe; the keywords use '.
+    return matchesAny(text.toLowerCase().replace(/[’‘]/g, "'"), SYSTEM_KEYWORDS);
+}
+
+/**
+ * A notice WhatsApp filed under an author.
+ *
+ * iOS dates and signs its group events like messages — and signs them with
+ * the *group's* name when nobody in particular did it (the encryption notice,
+ * « X vous a ajouté·e »), which made the group show up as a participant.
+ * Such a body starts with U+200E. Media placeholders do too, so the mark alone
+ * is not enough: the text must also read as a notice.
+ */
+function isAuthoredNotice(body) {
+    return /^[\u200e\u200f]/.test(body) && isSystemText(body);
 }
 
 /** Keep the date/time scaffolding, drop the human content. */
@@ -258,6 +272,7 @@ export function createStreamParser() {
                 timeStr,
                 author: normalizeAuthor(author),
                 message: stripInvisible(body),
+                isNotice: isAuthoredNotice(body),
             };
             return;
         }
@@ -365,7 +380,7 @@ function annotate(r, datetime) {
         // the word cloud and stretch the author's average message length.
         message: isDeleted ? '' : message,
         msgLen: isDeleted ? 0 : message.length,
-        isSystem: SYSTEM_AUTHORS.includes(r.author),
+        isSystem: r.isNotice || SYSTEM_AUTHORS.includes(r.author),
         isMedia: !isDeleted && matchesAny(lower, MEDIA_PATTERNS),
         isEdited: matchesAny(lower, EDITED_PATTERNS),
         isDeleted,

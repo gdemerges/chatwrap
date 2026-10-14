@@ -11,7 +11,9 @@ const STORE = 'stats';
 // v4: notable days now carry the context that explains them; entries computed
 // before that hold a sentiment payload without it and would silently serve a
 // dateless verdict forever.
-const DB_VERSION = 4;
+// v5: iOS notices signed with the group's name (or a member's) are dropped;
+// cached stats still count the group as a participant.
+const DB_VERSION = 5;
 const TTL_DAYS = 14;
 
 /** Opens (and migrates) the database. */
