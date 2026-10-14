@@ -1,5 +1,5 @@
 import { escapeHtml } from '../utils.js';
-import { fmt, fmtTime, fmtDate } from '../format.js';
+import { fmt, fmtDecimal, fmtTime, fmtDate } from '../format.js';
 import { t } from '../i18n.js';
 
 export function ghostingSlide(stats, gradient) {
@@ -7,7 +7,7 @@ export function ghostingSlide(stats, gradient) {
     const longest = stats.ghosting.longest.slice(0, 3).map(g => `<li>${t('slide.ghosting.longest', {
         silenced: escapeHtml(g.silenced),
         revived: escapeHtml(g.revived),
-        days: (g.minutes / 1440).toFixed(1),
+        days: fmtDecimal(g.minutes / 1440),
     })}</li>`).join('');
     const revivers = stats.ghosting.revivers.slice(0, 3).map(([name, c]) =>
         `<li>${t('slide.ghosting.reviver', { name: escapeHtml(name), n: c })}</li>`

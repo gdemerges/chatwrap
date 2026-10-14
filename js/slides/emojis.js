@@ -1,5 +1,5 @@
 import { escapeHtml } from '../utils.js';
-import { fmt } from '../format.js';
+import { fmt, fmtDecimal } from '../format.js';
 import { t } from '../i18n.js';
 import { CHART_COLORS } from './_constants.js';
 import { barsFrom } from './_card.js';
@@ -35,7 +35,7 @@ export function reactionsSlide(stats, gradient) {
         `<div class="emoji-item"><span class="emoji">${escapeHtml(e)}</span><span class="emoji-count">${fmt(n)}</span></div>`
     ).join('');
     const reacters = stats.reactions.perAuthor.slice(0, 5).map(([name, n]) =>
-        `<li>${t('slide.reactions.perAuthor', { name: `<strong>${escapeHtml(name)}</strong>`, n: fmt(n) })}</li>`
+        `<li>${t('slide.reactions.perAuthor', { name: `<strong>${escapeHtml(name)}</strong>`, n: fmt(n), count: n })}</li>`
     ).join('');
     return {
         gradient,
@@ -62,7 +62,7 @@ export function emojisPerPersonSlide(stats, gradient) {
     const maxE = stats.emojis.perPerson[0][1] || 1;
     const rows = stats.emojis.perPerson.map(([name, count], i) => {
         const msgCount = stats.perPerson[name]?.count || 1;
-        const ratio = (count / msgCount).toFixed(2);
+        const ratio = fmtDecimal(count / msgCount, 2);
         const w = ((count / maxE) * 100).toFixed(1);
         const color = CHART_COLORS[i % CHART_COLORS.length];
         const posClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';

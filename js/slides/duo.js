@@ -1,5 +1,5 @@
 import { escapeHtml } from '../utils.js';
-import { fmt, fmtTime } from '../format.js';
+import { fmt, fmtDecimal, fmtTime } from '../format.js';
 import { t } from '../i18n.js';
 import { CHART_COLORS } from './_constants.js';
 
@@ -44,7 +44,7 @@ export function duoBoardSlide(stats, gradient) {
                     <div class="duo-col" data-css="border-color:${colorA};">
                         <h3 data-css="color:${colorA};">${escapeHtml(nameA)}</h3>
                         ${cell(fmt(pA.count), t('units.messages'))}
-                        ${cell(`${pA.percent}%`, t('units.share'))}
+                        ${cell(`${fmtDecimal(pA.percent)}%`, t('units.share'))}
                         ${cell(`${pA.avgLen}`, t('units.charsPerMsg'))}
                         ${cell(rtA != null ? fmtTime(rtA) : t('common.none'), t('slide.duo.responseTime'))}
                         ${cell(fmt(pA.emojis), t('units.emojis'))}
@@ -63,7 +63,7 @@ export function duoBoardSlide(stats, gradient) {
                     <div class="duo-col" data-css="border-color:${colorB};">
                         <h3 data-css="color:${colorB};">${escapeHtml(nameB)}</h3>
                         ${cell(fmt(pB.count), t('units.messages'))}
-                        ${cell(`${pB.percent}%`, t('units.share'))}
+                        ${cell(`${fmtDecimal(pB.percent)}%`, t('units.share'))}
                         ${cell(`${pB.avgLen}`, t('units.charsPerMsg'))}
                         ${cell(rtB != null ? fmtTime(rtB) : t('common.none'), t('slide.duo.responseTime'))}
                         ${cell(fmt(pB.emojis), t('units.emojis'))}

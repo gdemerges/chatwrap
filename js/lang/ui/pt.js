@@ -334,7 +334,7 @@ export const pt = {
         reactions: {
             tag: 'Reações',
             big: 'reações enviadas',
-            perAuthor: '{name} — {n} reações',
+            perAuthor: { one: '{name} — {n} reação', other: '{name} — {n} reações' },
         },
         media: {
             tag: 'Multimédia',

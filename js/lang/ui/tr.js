@@ -339,7 +339,7 @@ export const tr = {
         reactions: {
             tag: 'Tepkiler',
             big: 'tepki gönderildi',
-            perAuthor: '{name} — {n} tepki',
+            perAuthor: { one: '{name} — {n} tepki', other: '{name} — {n} tepki' },
         },
         media: {
             tag: 'Medya',

@@ -333,7 +333,7 @@ export const es = {
         reactions: {
             tag: 'Reacciones',
             big: 'reacciones enviadas',
-            perAuthor: '{name} — {n} reacciones',
+            perAuthor: { one: '{name} — {n} reacción', other: '{name} — {n} reacciones' },
         },
         media: {
             tag: 'Archivos',

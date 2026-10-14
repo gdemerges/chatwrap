@@ -1745,7 +1745,9 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
     color: var(--text-primary);
 }
 
-@media (max-width: 720px) {
+/* 820px, not 720px: the labelled toolbar is ~750px in French and German, and
+   between the two it overflowed and clipped its last button mid-word. */
+@media (max-width: 820px) {
     /* Labels are the first thing to go; the icons stay tappable. */
     .toolbar-btn .toolbar-label { display: none; }
     .toolbar-btn { padding: 0.55rem 0.7rem; font-size: 0.95rem; }
@@ -2454,16 +2456,20 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
 #wrapped-screen:has(#deck-source:not([hidden])) .slide { padding-top: 6.25rem; }
 #wrapped-screen:has(#deck-source:not([hidden]))::before { height: 6.5rem; }
 
-/* On a phone the toolbar needs the whole width, and the language picker plus
-   theme toggle used to sit on top of its last buttons (Pin, Share, New). On the
-   deck they climb one row, above the toolbar; the slides make room for it. */
-@media (max-width: 720px) {
+/* The language picker plus theme toggle used to sit on top of the toolbar's
+   last buttons (Pin, Share, New). Not only on a phone: with its labels, the
+   toolbar is ~750px wide in French or German and the corner ~185px, so the two
+   met on anything narrower than ~1130px — tablets and small laptops included.
+   On the deck they climb one row, above the toolbar; the slides make room for
+   it. `#wrapped-screen .slide` outweighs the wide layout's `.slide` padding,
+   which starts at 1024px and comes later in the file. */
+@media (max-width: 1180px) {
     body:has(#wrapped-screen.active) .lang-picker,
     body:has(#wrapped-screen.active) .theme-toggle {
         bottom: calc(max(0.75rem, env(safe-area-inset-bottom)) + 3.75rem);
     }
     .deck-toolbar { max-width: calc(100vw - 1.5rem); }
-    .slide { padding-bottom: 8.75rem; }
+    #wrapped-screen .slide { padding-bottom: 8.75rem; }
     #wrapped-screen::after { height: 9rem; }
 }
 

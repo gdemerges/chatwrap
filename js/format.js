@@ -14,6 +14,19 @@ export function fmt(n) {
     return Number(n).toLocaleString(intlLocale());
 }
 
+/**
+ * "3,0" / "3.0" — a figure with a fixed number of decimals.
+ *
+ * `stats.js` hands over `toFixed` strings ("46.1"), which carry a dot whatever
+ * the language. Anything that isn't a number (a forged share link) is shown
+ * as it came, rather than as "NaN".
+ */
+export function fmtDecimal(n, digits = 1) {
+    const x = Number(n);
+    if (!Number.isFinite(x)) return String(n ?? '');
+    return x.toLocaleString(intlLocale(), { minimumFractionDigits: digits, maximumFractionDigits: digits });
+}
+
 /** A duration in minutes, as "45 min" / "2h 10min". */
 export function fmtTime(minutes) {
     if (minutes < 60) return t('format.minutes', { n: Math.round(minutes) });

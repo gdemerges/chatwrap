@@ -1,5 +1,5 @@
 import { escapeHtml } from '../utils.js';
-import { fmt } from '../format.js';
+import { fmt, fmtDecimal } from '../format.js';
 import { t } from '../i18n.js';
 import { CHART_COLORS } from './_constants.js';
 import { rankingBars, monthLabels } from './_helpers.js';
@@ -15,13 +15,13 @@ export function topMessagersSlide(stats, gradient) {
             gradient,
             tag: t('slide.ranking.tag'),
             title: t('slide.ranking.title'),
-            bars: barsFrom(top10, r => r[1].count, r => `${fmt(r[1].count)} · ${r[1].percent}%`),
+            bars: barsFrom(top10, r => r[1].count, r => `${fmt(r[1].count)} · ${fmtDecimal(r[1].percent)}%`),
         },
         html: `
             <div class="slide-inner">
                 <span class="slide-tag">${t('slide.ranking.tag')}</span>
                 <h2 class="slide-title">${t('slide.ranking.title')}</h2>
-                <div class="ranking-list">${rankingBars(top10, r => r[1].count, r => `${fmt(r[1].count)} (${r[1].percent}%)`, maxCount)}</div>
+                <div class="ranking-list">${rankingBars(top10, r => r[1].count, r => `${fmt(r[1].count)} (${fmtDecimal(r[1].percent)}%)`, maxCount)}</div>
             </div>
         `,
     };
@@ -155,7 +155,7 @@ export function initiatorSlide(stats, gradient) {
         const w = ((n / maxInit) * 100).toFixed(1);
         const color = CHART_COLORS[i % CHART_COLORS.length];
         const posClass = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'normal';
-        const pct = ((n / totalInit) * 100).toFixed(1);
+        const pct = fmtDecimal((n / totalInit) * 100);
         return `
             <div class="ranking-item">
                 <div class="ranking-pos ${posClass}">${i + 1}</div>

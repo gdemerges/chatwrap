@@ -1,5 +1,5 @@
 import { escapeHtml } from '../utils.js';
-import { fmt, fmtDate, stripTags } from '../format.js';
+import { fmt, fmtDate, fmtDecimal, stripTags } from '../format.js';
 import { t } from '../i18n.js';
 
 export function overviewSlide(stats, gradient) {
@@ -14,7 +14,7 @@ export function overviewSlide(stats, gradient) {
             grid: [
                 [stats.participants, t('units.participants')],
                 [stats.totalDays, t('units.days')],
-                [stats.avgPerDay, t('units.perDay')],
+                [fmtDecimal(stats.avgPerDay), t('units.perDay')],
                 [fmt(stats.totalChars), t('units.chars')],
             ],
         },
@@ -27,7 +27,7 @@ export function overviewSlide(stats, gradient) {
                 <div class="stat-grid">
                     <div class="stat-card"><div class="stat-value">${stats.participants}</div><div class="stat-label">${t('units.participants')}</div></div>
                     <div class="stat-card"><div class="stat-value">${stats.totalDays}</div><div class="stat-label">${t('units.days')}</div></div>
-                    <div class="stat-card"><div class="stat-value">${stats.avgPerDay}</div><div class="stat-label">${t('units.perDay')}</div></div>
+                    <div class="stat-card"><div class="stat-value">${fmtDecimal(stats.avgPerDay)}</div><div class="stat-label">${t('units.perDay')}</div></div>
                     <div class="stat-card"><div class="stat-value">${fmt(stats.totalChars)}</div><div class="stat-label">${t('units.chars')}</div></div>
                 </div>
             </div>
@@ -37,12 +37,12 @@ export function overviewSlide(stats, gradient) {
 
 export function comparisonSlide(comparison, gradient) {
     if (!comparison) return null;
-    const row = (label, d, unit = '') => {
+    const row = (label, d, unit = '', num = fmt) => {
         const pct = d.pct;
         const arrow = pct == null ? '' : pct > 0 ? '▲' : pct < 0 ? '▼' : '=';
         const color = pct == null ? 'var(--text-muted)' : pct > 0 ? 'var(--accent-green)' : 'var(--accent-pink)';
         const pctText = pct == null ? '' : `<span data-css="color:${color};font-weight:600;">${arrow} ${Math.abs(pct)}%</span>`;
-        return `<tr><td>${label}</td><td>${fmt(d.previous)}${unit}</td><td>${fmt(d.current)}${unit}</td><td>${pctText}</td></tr>`;
+        return `<tr><td>${label}</td><td>${num(d.previous)}${unit}</td><td>${num(d.current)}${unit}</td><td>${pctText}</td></tr>`;
     };
     return {
         gradient,
@@ -54,7 +54,7 @@ export function comparisonSlide(comparison, gradient) {
                     <thead><tr><th></th><th>${t('slide.comparison.before')}</th><th>${t('slide.comparison.now')}</th><th>${t('slide.comparison.change')}</th></tr></thead>
                     <tbody>
                         ${row(t('slide.comparison.messages'), comparison.messages)}
-                        ${row(t('slide.comparison.perDay'), comparison.avgPerDay)}
+                        ${row(t('slide.comparison.perDay'), comparison.avgPerDay, '', fmtDecimal)}
                         ${row(t('slide.comparison.emojis'), comparison.emojis)}
                         ${row(t('slide.comparison.media'), comparison.media)}
                         ${comparison.avgMsgLen ? row(t('slide.comparison.avgLen'), comparison.avgMsgLen, ` ${t('units.chars')}`) : ''}
@@ -91,7 +91,7 @@ export function wordsTrendSlide(comparison, gradient) {
 export function recapSlide(stats, gradient) {
     const leader = stats.ranking[0];
     const dominant = leader
-        ? t('slide.recap.dominant', { name: escapeHtml(leader[0]), pct: leader[1].percent })
+        ? t('slide.recap.dominant', { name: escapeHtml(leader[0]), pct: fmtDecimal(leader[1].percent) })
         : '';
     return {
         gradient,
@@ -108,7 +108,7 @@ export function recapSlide(stats, gradient) {
                 [t('format.days', { n: stats.streak.max }), t('units.bestStreak')],
             ],
             lines: leader
-                ? [stripTags(t('slide.recap.dominant', { name: leader[0], pct: leader[1].percent }))]
+                ? [stripTags(t('slide.recap.dominant', { name: leader[0], pct: fmtDecimal(leader[1].percent) }))]
                 : [],
         },
         html: `

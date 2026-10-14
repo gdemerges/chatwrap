@@ -11,6 +11,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve, join } from 'node:path';
 import { LOCALES, FALLBACK, t, tList, setLocale, getLocale, intlLocale } from '../js/i18n.js';
+import { fmtDecimal } from '../js/format.js';
 
 /** Every leaf path of a dictionary, as dotted keys. Arrays count as leaves. */
 function paths(node, prefix = '') {
@@ -111,6 +112,32 @@ describe('t()', () => {
         setLocale('en');
         expect(tList('days')[0]).toBe('Monday');
         expect(tList('common.close')).toEqual([]);
+    });
+
+    it('picks the singular for a count of one', () => {
+        expect(t('slide.reactions.perAuthor', { name: 'Sofia', n: 1, count: 1 })).toBe('Sofia — 1 réaction');
+        expect(t('slide.reactions.perAuthor', { name: 'Léo', n: 3, count: 3 })).toBe('Léo — 3 réactions');
+    });
+
+    it('never lets French high punctuation start a line', () => {
+        const strings = referencePaths.map(p => leaf(reference, p)).filter(v => typeof v === 'string');
+        expect(strings.filter(s => / [?!:;»]|« /.test(s))).toEqual([]);
+    });
+});
+
+describe('fmtDecimal', () => {
+    beforeEach(() => { setLocale(FALLBACK); });
+
+    it('uses the decimal separator of the interface language', () => {
+        expect(fmtDecimal('3.0')).toBe('3,0');
+        expect(fmtDecimal(0.2857, 2)).toBe('0,29');
+        setLocale('en');
+        expect(fmtDecimal('46.1')).toBe('46.1');
+    });
+
+    it('shows a value that is not a number as it came', () => {
+        expect(fmtDecimal('abc')).toBe('abc');
+        expect(fmtDecimal(undefined)).toBe('');
     });
 });
 

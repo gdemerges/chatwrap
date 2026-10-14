@@ -6,7 +6,7 @@
  * be tested directly.
  */
 
-import { fmt } from './format.js';
+import { fmt, fmtDecimal } from './format.js';
 import { t } from './i18n.js';
 
 const MM_PER_INCH = 25.4;
@@ -145,13 +145,13 @@ export function buildPosterCard(stats) {
         big: { value: fmt(stats.totalMessages), label: t('slide.overview.big') },
         grid: [
             [fmt(stats.totalDays), t('units.days')],
-            [String(stats.avgPerDay), t('units.perDay')],
+            [fmtDecimal(stats.avgPerDay), t('units.perDay')],
             [fmt(stats.emojis?.total || 0), t('units.emojis')],
             [t('format.days', { n: stats.streak?.max || 0 }), t('units.bestStreak')],
         ],
         bars: top.map(([name, p], i) => ({
             label: name,
-            value: `${fmt(p.count)} · ${p.percent}%`,
+            value: `${fmt(p.count)} · ${fmtDecimal(p.percent)}%`,
             ratio: p.count / maxCount,
             color: BAR_COLORS[i % BAR_COLORS.length],
         })),

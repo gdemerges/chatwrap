@@ -7,7 +7,7 @@
  * "now".
  */
 import { t } from '../i18n.js';
-import { fmt } from '../format.js';
+import { fmt, fmtDecimal } from '../format.js';
 import { escapeHtml } from '../utils.js';
 
 /**
@@ -20,13 +20,13 @@ import { escapeHtml } from '../utils.js';
 export function versusSlide(versus, pinnedName, currentName, gradient) {
     if (!versus) return null;
 
-    const row = (label, d, unit = '') => {
+    const row = (label, d, unit = '', num = fmt) => {
         if (!d) return '';
         const pct = d.pct;
         const arrow = pct == null ? '' : pct > 0 ? '▲' : pct < 0 ? '▼' : '=';
         const color = pct == null ? 'var(--text-muted)' : pct > 0 ? 'var(--accent-green)' : 'var(--accent-pink)';
         const pctText = pct == null ? '' : `<span data-css="color:${color};font-weight:600;">${arrow} ${Math.abs(pct)}%</span>`;
-        return `<tr><td>${label}</td><td>${fmt(d.previous)}${unit}</td><td>${fmt(d.current)}${unit}</td><td>${pctText}</td></tr>`;
+        return `<tr><td>${label}</td><td>${num(d.previous)}${unit}</td><td>${num(d.current)}${unit}</td><td>${pctText}</td></tr>`;
     };
 
     return {
@@ -45,7 +45,7 @@ export function versusSlide(versus, pinnedName, currentName, gradient) {
                     </tr></thead>
                     <tbody>
                         ${row(t('slide.comparison.messages'), versus.messages)}
-                        ${row(t('slide.comparison.perDay'), versus.avgPerDay)}
+                        ${row(t('slide.comparison.perDay'), versus.avgPerDay, '', fmtDecimal)}
                         ${row(t('slide.comparison.emojis'), versus.emojis)}
                         ${row(t('slide.comparison.media'), versus.media)}
                         ${row(t('slide.comparison.avgLen'), versus.avgMsgLen, ` ${t('units.chars')}`)}

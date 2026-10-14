@@ -339,7 +339,7 @@ export const id = {
         reactions: {
             tag: 'Reaksi',
             big: 'reaksi dikirim',
-            perAuthor: '{name} — {n} reaksi',
+            perAuthor: { one: '{name} — {n} reaksi', other: '{name} — {n} reaksi' },
         },
         media: {
             tag: 'Media',

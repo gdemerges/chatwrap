@@ -4,7 +4,7 @@
  */
 
 import { escapeHtml } from './utils.js';
-import { fmt, fmtDate, fmtClock, fmtHour, fmtTime, dayNames, peakDayName, monthMedium } from './format.js';
+import { fmt, fmtDecimal, fmtDate, fmtClock, fmtHour, fmtTime, dayNames, peakDayName, monthMedium } from './format.js';
 import { t, initLocale, onLocaleChange, applyStaticI18n } from './i18n.js';
 import { registerServiceWorker, initTheme, initLangPicker, syncChromeLocale } from './ui/chrome.js';
 import { watchInlineStyles } from './ui/inline-style.js';
@@ -261,7 +261,7 @@ function heroCard(s) {
     <section class="dash-hero">
         <div class="dash-hero-period">${fmtDate(s.startDate)} — ${fmtDate(s.endDate)} · ${t('dash.heroDays', { n: s.totalDays })}</div>
         <div class="dash-hero-item"><div class="dash-hero-value">${fmt(s.totalMessages)}</div><div class="dash-hero-label">${t('units.messages')}</div></div>
-        <div class="dash-hero-item"><div class="dash-hero-value">${s.avgPerDay}</div><div class="dash-hero-label">${t('dash.perDay')}</div></div>
+        <div class="dash-hero-item"><div class="dash-hero-value">${fmtDecimal(s.avgPerDay)}</div><div class="dash-hero-label">${t('dash.perDay')}</div></div>
         <div class="dash-hero-item"><div class="dash-hero-value">${s.participants}</div><div class="dash-hero-label">${t('units.participants')}</div></div>
         <div class="dash-hero-item"><div class="dash-hero-value">${fmt(s.emojis?.total || 0)}</div><div class="dash-hero-label">${t('units.emojis')}</div></div>
         <div class="dash-hero-item"><div class="dash-hero-value">${fmt(s.totalMedia)}</div><div class="dash-hero-label">${t('units.media')}</div></div>
@@ -270,11 +270,11 @@ function heroCard(s) {
 }
 
 function comparisonCard(c) {
-    const row = (label, data, unit = '') => {
+    const row = (label, data, unit = '', num = fmt) => {
         const pct = data.pct;
         const arrow = pct == null ? '' : pct > 0 ? '▲' : pct < 0 ? '▼' : '=';
         const trendClass = pct == null ? 'dash-trend-flat' : pct > 0 ? 'dash-trend-up' : pct < 0 ? 'dash-trend-down' : 'dash-trend-flat';
-        return `<tr><td>${label}</td><td>${fmt(data.previous)}${unit}</td><td>${fmt(data.current)}${unit}</td><td class="${trendClass}">${arrow} ${pct == null ? t('common.none') : Math.abs(pct) + '%'}</td></tr>`;
+        return `<tr><td>${label}</td><td>${num(data.previous)}${unit}</td><td>${num(data.current)}${unit}</td><td class="${trendClass}">${arrow} ${pct == null ? t('common.none') : Math.abs(pct) + '%'}</td></tr>`;
     };
     return `
     <section class="dash-card col-12">
@@ -283,7 +283,7 @@ function comparisonCard(c) {
             <thead><tr><th>${t('dash.metric')}</th><th>${t('dash.previous')}</th><th>${t('dash.currentYear')}</th><th>${t('dash.change')}</th></tr></thead>
             <tbody>
                 ${row(t('dash.messages'), c.messages)}
-                ${row(t('dash.avgPerDay'), c.avgPerDay)}
+                ${row(t('dash.avgPerDay'), c.avgPerDay, '', fmtDecimal)}
                 ${row(t('slide.comparison.emojis'), c.emojis)}
                 ${row(t('slide.comparison.media'), c.media)}
                 <tr><td>${t('dash.bestStreak')}</td><td>${t('format.days', { n: c.streak.previous })}</td><td>${t('format.days', { n: c.streak.current })}</td><td>${t('common.none')}</td></tr>
@@ -319,7 +319,7 @@ function rankingCard(s) {
             <thead><tr><th>#</th><th>${t('dash.name')}</th><th>${t('dash.messages')}</th><th>%</th><th>${t('dash.avg')}</th><th>${t('slide.comparison.emojis')}</th></tr></thead>
             <tbody>${s.ranking.map(([name, d], i) => {
                 const rank = i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
-                return `<tr data-person="${escapeHtml(name)}"><td class="dash-rank ${rank}">${i + 1}</td><td>${escapeHtml(name)}</td><td>${fmt(d.count)}</td><td>${d.percent}%</td><td>${d.avgLen}</td><td>${fmt(emojiMap[name] || 0)}</td></tr>`;
+                return `<tr data-person="${escapeHtml(name)}"><td class="dash-rank ${rank}">${i + 1}</td><td>${escapeHtml(name)}</td><td>${fmt(d.count)}</td><td>${fmtDecimal(d.percent)}%</td><td>${d.avgLen}</td><td>${fmt(emojiMap[name] || 0)}</td></tr>`;
             }).join('')}</tbody>
         </table></div>
     </section>`;
@@ -427,7 +427,7 @@ function sentimentCard(s) {
         : `<span class="dash-badge dash-badge--dim">${t('dash.badgeLexicon')}</span>`;
 
     const rows = (st.perPerson || []).map(p => {
-        const ratePct = (p.rate * 100).toFixed(1);
+        const ratePct = fmtDecimal(p.rate * 100);
         const sampled = p.sampled > 0 ? `<span class="dash-meta-inline" title="${t('dash.sampledTitle', { n: p.sampled })}">(${p.sampled})</span>` : '';
         return `<tr data-person="${escapeHtml(p.author)}">
             <td>${escapeHtml(p.author)}</td>
@@ -436,7 +436,7 @@ function sentimentCard(s) {
             <td>${fmt(p.compliment)}</td>
             <td>${fmt(p.insult)}</td>
             <td>${p.rate > 0 ? '+' : ''}${ratePct}% ${sampled}</td>
-            <td>${p.stdDev > 0 ? p.stdDev.toFixed(2) : t('common.none')}</td>
+            <td>${p.stdDev > 0 ? fmtDecimal(p.stdDev, 2) : t('common.none')}</td>
             <td>${p.sarcasmHits > 0 ? p.sarcasmHits : t('common.none')}</td>
         </tr>`;
     }).join('');
@@ -450,11 +450,11 @@ function sentimentCard(s) {
     if (st.sharpest?.insult)
         highlight('🌶️', t('dash.sharpest', { name: escapeHtml(st.sharpest.author), n: st.sharpest.insult }));
     if (st.mostPositive)
-        highlight('☀️', t('dash.mostPositive', { name: escapeHtml(st.mostPositive.author), pct: (st.mostPositive.rate * 100).toFixed(1) }));
+        highlight('☀️', t('dash.mostPositive', { name: escapeHtml(st.mostPositive.author), pct: fmtDecimal(st.mostPositive.rate * 100) }));
     if (st.mostVolatile)
-        highlight('🎢', t('dash.mostVolatile', { name: escapeHtml(st.mostVolatile.author), sd: st.mostVolatile.stdDev.toFixed(2) }));
+        highlight('🎢', t('dash.mostVolatile', { name: escapeHtml(st.mostVolatile.author), sd: fmtDecimal(st.mostVolatile.stdDev, 2) }));
     if (st.mostStable && st.perPerson.length > 1)
-        highlight('🧘', t('dash.mostStable', { name: escapeHtml(st.mostStable.author), sd: st.mostStable.stdDev.toFixed(2) }));
+        highlight('🧘', t('dash.mostStable', { name: escapeHtml(st.mostStable.author), sd: fmtDecimal(st.mostStable.stdDev, 2) }));
     if (st.mostBeloved)
         highlight('💝', t('dash.mostBeloved', { name: escapeHtml(st.mostBeloved.author), pct: (st.mostBeloved.reactionsReceivedMean * 100).toFixed(0), n: st.mostBeloved.reactionsReceived }));
     if (st.mostExpressive && st.perPerson.length > 1)
@@ -474,7 +474,7 @@ function sentimentCard(s) {
     const afterRows = Object.entries(st.afterAuthor || {})
         .sort((a, b) => Math.abs(b[1].mean) - Math.abs(a[1].mean))
         .map(([author, { mean, count }]) => {
-            const pct = (mean * 100).toFixed(1);
+            const pct = fmtDecimal(mean * 100);
             return `<tr data-person="${escapeHtml(author)}"><td>${escapeHtml(author)}</td><td>${mean >= 0 ? '+' : ''}${pct}%</td><td class="dash-meta-inline">${t('dash.signals', { n: count })}</td></tr>`;
         }).join('');
 

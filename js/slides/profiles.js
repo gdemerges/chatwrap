@@ -1,5 +1,5 @@
 import { escapeHtml } from '../utils.js';
-import { fmt, fmtTime, fmtHour } from '../format.js';
+import { fmt, fmtDecimal, fmtTime, fmtHour } from '../format.js';
 import { t } from '../i18n.js';
 import { CHART_COLORS } from './_constants.js';
 
@@ -22,7 +22,7 @@ export function profilesSlide(stats, gradient) {
         const color = CHART_COLORS[i % CHART_COLORS.length];
         const traits = [
             [t('units.messages'), fmt(p.count)],
-            [t('units.share'), `${p.percent}%`],
+            [t('units.share'), `${fmtDecimal(p.percent)}%`],
             [t('units.charsPerMsg'), fmt(p.avgLen)],
             [t('slide.profiles.peakHour'), hourLabel(p.peakHour)],
             [t('slide.profiles.response'), p.avgResponseMin != null ? fmtTime(p.avgResponseMin) : t('common.none')],
@@ -33,7 +33,7 @@ export function profilesSlide(stats, gradient) {
 
         const badges = [
             p.topEmoji ? `<span class="profile-badge" data-css="border-color:${color};">${escapeHtml(p.topEmoji[0])} <small>×${fmt(p.topEmoji[1])}</small></span>` : '',
-            p.signatureWord ? `<span class="profile-badge" data-css="border-color:${color};">« ${escapeHtml(p.signatureWord[0])} »</span>` : '',
+            p.signatureWord ? `<span class="profile-badge" data-css="border-color:${color};">«\u00a0${escapeHtml(p.signatureWord[0])}\u00a0»</span>` : '',
             p.topDomain ? `<span class="profile-badge" data-css="border-color:${color};">🔗 ${escapeHtml(p.topDomain[0])}</span>` : '',
         ].filter(Boolean).join('');
 
