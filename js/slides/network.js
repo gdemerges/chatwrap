@@ -11,10 +11,8 @@ const MAX_NODES = 10;
 /**
  * Who actually talks to whom, as a chord diagram.
  *
- * The two-person `compatibilitySlide` has no group equivalent: in a chat of
- * eight, knowing the totals says nothing about who is answering whom. Drawn as
- * inline SVG — no chart library involved, and it scales cleanly for the image
- * export.
+ * The group counterpart of the two-person `compatibilitySlide`. Drawn as
+ * inline SVG — no chart library involved.
  */
 export function interactionsSlide(stats, gradient) {
     const pairs = stats.interactions?.pairs || [];

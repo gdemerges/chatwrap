@@ -1,8 +1,5 @@
 /**
  * Period picker: a year, everything, or an arbitrary date range.
- *
- * The range tab is the reason this exists — "one calendar year or the whole
- * history" is a poor fit for a conversation that matters between two dates.
  */
 import { openDialog } from './dialog.js';
 import { escapeHtml } from '../utils.js';

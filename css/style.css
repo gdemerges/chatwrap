@@ -1278,7 +1278,7 @@ body.dragging-file::after {
     border-bottom: none;
 }
 
-/* ============ LIGHT THEME: fix hardcoded whites on colored gradients ============ */
+/* ============ LIGHT THEME: overrides for white-on-gradient defaults ============ */
 
 :root[data-theme="light"] .nav-arrow {
     background: rgba(15, 23, 42, 0.08);
@@ -1536,11 +1536,8 @@ body.story-playing .deck-source {
    any slide added later inherits the right rhythm.
    ============================================================ */
 
-/* Hero — a single figure carries the slide, oversized. It used to be
-   left-aligned and anchored to the bottom edge: on anything taller than a phone
-   that left half the screen empty above it, and the emoji or stat grid under
-   it — centred — no longer lined up with the text. Centred like every other
-   slide now. */
+/* Hero — a single figure carries the slide, oversized, centred like every
+   other slide. */
 .slide-inner:has(.big-number) {
     text-align: center;
 }
@@ -1980,9 +1977,8 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
 }
 .ghost-btn strong { color: var(--accent-green); }
 
-/* `.how-to` is a <details> now: the four export steps are reference material,
-   not something to re-read on every visit, so they start collapsed and stop
-   pushing the drop zone below the fold. */
+/* `.how-to` is a <details>: the export steps start collapsed so the drop zone
+   stays above the fold. */
 .how-to { margin-top: 1.5rem; }
 .how-to summary {
     cursor: pointer;
@@ -2449,19 +2445,15 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
    DECK CHROME — keeping the fixed pieces out of each other's way
    ============================================================ */
 
-/* The counter moved below the progress bar (2.4rem), onto the spot the source
-   label used to have to itself: the label steps down a row, and a slide that
-   carries it gets the matching room at the top. */
+/* The counter sits below the progress bar (2.4rem); the source label goes one
+   row lower, and a slide that carries it gets the matching room at the top. */
 .deck-source { top: 4.4rem; }
 #wrapped-screen:has(#deck-source:not([hidden])) .slide { padding-top: 6.25rem; }
 #wrapped-screen:has(#deck-source:not([hidden]))::before { height: 6.5rem; }
 
-/* The language picker plus theme toggle used to sit on top of the toolbar's
-   last buttons (Pin, Share, New). Not only on a phone: with its labels, the
-   toolbar is ~750px wide in French or German and the corner ~185px, so the two
-   met on anything narrower than ~1130px — tablets and small laptops included.
-   On the deck they climb one row, above the toolbar; the slides make room for
-   it. `#wrapped-screen .slide` outweighs the wide layout's `.slide` padding,
+/* Below ~1180px the language picker + theme toggle would overlap the
+   toolbar's last buttons (toolbar ~750px in FR/DE, corner ~185px). On the deck
+   they climb one row, above the toolbar; the slides make room for it. `#wrapped-screen .slide` outweighs the wide layout's `.slide` padding,
    which starts at 1024px and comes later in the file. */
 @media (max-width: 1180px) {
     body:has(#wrapped-screen.active) .lang-picker,
@@ -2529,8 +2521,7 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
     border-color: rgba(15, 23, 42, 0.1);
 }
 
-/* The hero figure was white fading into 78% white — a gradient you could not
-   see, which only made the number look washed out. Solid, heavier, tighter. */
+/* The hero figure: solid colour (no gradient text), heavier, tighter. */
 .big-number {
     font-weight: 700;
     background: none;

@@ -64,9 +64,8 @@ const deck = new Deck({
         const hint = $('#swipe-hint');
         if (hint) hint.style.display = 'none';
     },
-    // Slides are filled in as they come into reach, so the recap slide's
-    // markup does not exist right after `mount` any more. Its buttons are
-    // wired the moment it does.
+    // Slides are filled lazily: the recap slide's markup does not exist right
+    // after `mount`, so its buttons are wired when it is filled.
     onSlideReady: (_i, el) => wireRecapActions(el),
 });
 
@@ -156,11 +155,9 @@ window.addEventListener('drop', (e) => {
 });
 
 /**
- * Pasting the export works too.
- *
- * On iOS and on Windows the natural gesture after "share to Files" is a paste,
- * and the drop zone answered only to a drag. Ignored while a deck is on
- * screen, so Ctrl+V into the share sheet is not intercepted.
+ * Pasting the export works too (the natural gesture on iOS and Windows).
+ * Ignored while a deck is on screen, so Ctrl+V into the share sheet is not
+ * intercepted.
  */
 window.addEventListener('paste', (e) => {
     if (!screens.upload.classList.contains('active')) return;
@@ -207,9 +204,7 @@ async function handleFile(file) {
  * Show which file is being read, and which one the deck came from.
  *
  * The name never leaves the page — it is not in the share payload and not in
- * any analytics event. It is here because after the import screen there was
- * nothing left saying *which* conversation you were looking at, which is
- * confusing the moment you analyse a second one.
+ * any analytics event.
  */
 function setSourceName(name) {
     sourceName = name || null;
@@ -228,11 +223,8 @@ function updateSourceLabel() {
         el.textContent = '';
         return;
     }
-    const scope = period.range
-        ? `${period.range.from.slice(0, 10)} → ${period.range.to.slice(0, 10)}`
-        : (period.year == null ? t('toolbar.periodAll') : String(period.year));
     el.hidden = false;
-    el.textContent = `${sourceName} · ${scope}`;
+    el.textContent = `${sourceName} · ${periodLabel()}`;
     el.title = el.textContent;
 }
 
@@ -249,10 +241,8 @@ async function handleBlob(blob, { demo = false, name = null } = {}) {
         if (info.kind !== 'years') throw new Error(t('error.workerInvalid'));
 
         periodOptions = { years: info.years, yearCounts: info.yearCounts, bounds: info.bounds };
-        // A multi-year chat used to stop here and demand a choice before it
-        // would show anything — a modal in front of a result nobody had seen
-        // yet. It opens on the most recent year instead, and says so; the
-        // period button changes it, and now has something to change *from*.
+        // A multi-year chat opens on its most recent year (with a toast saying
+        // so) rather than a blocking picker; the period button changes it.
         period = { year: info.years[0], range: null };
 
         await computeAndShow();
@@ -280,8 +270,7 @@ async function computeAndShow() {
 
 /**
  * js/import.js reports failures as a code and params; the sentence is looked up
- * here, so the error screen reads exactly as it did before the split. Other
- * errors (a failed CDN load, say) pass through untouched.
+ * here. Other errors (a failed CDN load, say) pass through untouched.
  */
 async function unzipChat(file) {
     loadingStatus.textContent = t('loading.unzipping');
@@ -364,14 +353,12 @@ function updatePeriodButton() {
         return;
     }
     btn.hidden = false;
-    label.textContent = period.range
-        ? `${period.range.from.slice(0, 10)} → ${period.range.to.slice(0, 10)}`
-        : (period.year == null ? t('toolbar.periodAll') : String(period.year));
+    label.textContent = periodLabel();
 }
 
-/** A deck restored from a link or from sessionStorage has no source file. */
-function forgetSource() {
-    setSourceName(null);
+function periodLabel() {
+    if (period.range) return `${period.range.from.slice(0, 10)} → ${period.range.to.slice(0, 10)}`;
+    return period.year == null ? t('toolbar.periodAll') : String(period.year);
 }
 
 // ========== Toolbar ==========
@@ -475,7 +462,7 @@ function resetAll() {
     period = { year: null, range: null };
     periodOptions = null;
     updatePinButton();
-    forgetSource();
+    setSourceName(null);
     fileInput.value = '';
     showScreen('upload');
 }
@@ -499,9 +486,8 @@ $('#summary-btn').addEventListener('click', () => {
 
 // ========== Errors ==========
 /**
- * A parse failure used to be a 4-second red toast. Now it gets a screen that
- * says what was actually read, so the user can tell a wrong file from an
- * unsupported format — and report the latter.
+ * Error screen. With parser diagnostics it shows what was actually read, so
+ * the user can tell a wrong file from an unsupported format.
  */
 function showFatal(message, diagnostics = null) {
     track('parse_error', { detected: Boolean(diagnostics?.detected) });
@@ -613,9 +599,8 @@ onLocaleChange(() => {
 });
 
 /**
- * The note has to stay true in both states: claiming "rien n'est envoyé à un
- * serveur" while a usage counter is running would be a lie, so the sentence
- * about the counter appears exactly when the counter does.
+ * The sentence about the usage counter appears exactly when the counter runs,
+ * so the privacy note is never false.
  */
 function renderPrivacyNote() {
     const note = $('.privacy-note');

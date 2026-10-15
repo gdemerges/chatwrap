@@ -3,8 +3,7 @@
  *
  * None of these are needed to paint the upload screen: Chart.js only matters
  * once a chart slide is reached, LZ-String only when a share link is built or
- * read, JSZip only for a .zip import. Loading them eagerly cost every visitor
- * ~250 KB before they had even picked a file.
+ * read, JSZip only for a .zip import (~250 KB saved on first paint).
  */
 
 import { t } from './i18n.js';

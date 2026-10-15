@@ -2,10 +2,9 @@
  * File intake, without the screens: size and extension checks, and unzipping
  * a WhatsApp .zip export down to its chat file.
  *
- * Lives apart from app.js because app.js runs its whole UI at module scope
- * (DOM lookups, listeners), which makes anything inside it untestable. Nothing
- * here touches the DOM or the language: errors come out as a `code` plus
- * `params`, and app.js turns them into a sentence with `t()`.
+ * Kept out of app.js (which runs its UI at module scope) so it is testable.
+ * No DOM, no language: errors come out as a `code` plus `params`, and app.js
+ * turns them into a sentence with `t()`.
  */
 
 import { ensureJSZip } from './vendor.js';
@@ -14,9 +13,8 @@ import { pickChatEntry } from './utils.js';
 /**
  * The worker keeps every parsed message, and that costs about six times the
  * text: a 50 MB export holds ~300 MB of heap once parsed, ~360 MB at the peak
- * (measured on a synthetic 725 000-message chat). That is already near what a
- * phone tab survives, so touch devices keep the old cap; a desktop browser has
- * room for three times as much, which covers multi-year group chats.
+ * (measured on a synthetic 725 000-message chat). That is near what a phone
+ * tab survives, so touch devices are capped at 50 MB; desktop gets 150 MB.
  *
  * @param {Window & typeof globalThis} [win=window]
  * @returns {number} the cap in bytes
@@ -81,9 +79,8 @@ export async function unzip(file, { maxSize, onProgress } = { maxSize: Infinity 
  * Inflate an entry chunk by chunk, and stop as soon as it outgrows the cap.
  *
  * The declared size is only what the zip *says*: a forged header can claim
- * 10 bytes and inflate to gigabytes. `entry.async('blob')` would have held the
- * whole thing in memory before its size could be checked — the tab died
- * first. Counting the chunks as they come stops the inflation at the cap.
+ * 10 bytes and inflate to gigabytes. Never `entry.async('blob')`, which holds
+ * everything before the size can be checked.
  *
  * @param {any} entry a JSZip entry
  * @param {number} maxSize
@@ -189,8 +186,7 @@ const EXT_BY_TYPE = {
  * Some share sheets hand over `chat` or `Discussion WhatsApp` with no
  * extension, and `validateFile` would refuse it. The name is only trusted for
  * the extension when it already has a supported one; otherwise the MIME type
- * decides. A file that is neither is returned untouched and fails validation
- * as before.
+ * decides. A file that is neither is returned untouched and fails validation.
  *
  * @param {File} file
  * @returns {File}

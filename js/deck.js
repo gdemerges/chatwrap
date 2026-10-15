@@ -1,9 +1,7 @@
 /**
  * The slide deck: mounting, navigation, story mode and lazy chart init.
- *
- * Pulled out of app.js, which had grown to own file loading, worker plumbing,
- * dialogs, sharing *and* the deck. Nothing here knows where the stats came
- * from — it takes built slides and shows them.
+ * Nothing here knows where the stats came from — it takes built slides and
+ * shows them.
  */
 import { ensureChart } from './vendor.js';
 import { destroyAllCharts, retintCharts } from './slides/_charts.js';
@@ -19,9 +17,8 @@ const STORY_MAX_MS = 9000;
 /**
  * Show or hide a slide from assistive tech *and* from the tab order.
  *
- * `aria-hidden` alone was not enough: the buttons on the recap slide stayed
- * focusable while the slide was off-screen, so tabbing from the toolbar landed
- * on controls nobody could see.
+ * `inert` as well as `aria-hidden`, so off-screen buttons (recap slide) are
+ * not focusable.
  */
 function setActive(el, active) {
     el.setAttribute('aria-hidden', String(!active));
@@ -35,13 +32,11 @@ const HEAD_SELECTOR = '.slide-tag, .slide-title, .slide-subtitle, .big-number, .
 /**
  * Split a slide into its head and its body.
  *
- * On a wide screen a single centred column left most of the window empty; the
- * deck lays out as two columns instead — the headline and figure on one side,
- * the ranking, chart or grid on the other. That needs the two halves to be
- * elements, and every slide opens the same way (tag, title, subtitle, or a big
- * number), so the split is made here once rather than in each slide's
- * template: the leading run of head elements goes into `.slide-head`, the rest
- * into `.slide-body`. A slide that is all head, or all body, is left alone.
+ * Wide screens lay a slide out as two columns (headline and figure | ranking,
+ * chart or grid). Every slide opens the same way, so the split is made here
+ * rather than in each template: the leading run of `HEAD_SELECTOR` elements
+ * goes into `.slide-head`, the rest into `.slide-body`. A slide that is all
+ * head, or all body, is left alone.
  *
  * @param {HTMLElement} el
  */
@@ -78,20 +73,15 @@ export class Deck {
         this.storyTimer = null;
         this.storyPlaying = false;
         this.storyPausedByHide = false;
-        // Read live rather than sampled once: the setting is a toggle in the
-        // OS, and someone who reaches for it mid-deck is asking for the
-        // movement to stop now, not on the next reload.
+        // Followed live: toggling the OS setting mid-deck takes effect now.
         this.reducedMotion = prefersReducedMotion();
         onMotionPreferenceChange((reduced) => { this.reducedMotion = reduced; });
         this.bindVisibility();
     }
 
     /**
-     * Auto-play used to keep running in a hidden tab: switch away for two
-     * minutes and you came back to the last slide, having watched none of it.
-     * The deck pauses when the tab goes away and picks up where it left off —
-     * but only if *it* was the one that paused, so a deliberate stop stays
-     * stopped.
+     * Story mode pauses while the tab is hidden and resumes on return — only
+     * if *it* was the one that paused, so a deliberate stop stays stopped.
      */
     bindVisibility() {
         if (typeof document === 'undefined' || !document.addEventListener) return;
@@ -129,9 +119,8 @@ export class Deck {
         slides.forEach((slide, i) => {
             const el = document.createElement('div');
             el.className = `slide ${slide.gradient}${i === 0 ? ' active' : ''}`;
-            // Body deliberately left empty here — see `fill`. Parsing thirty
-            // slides' worth of HTML up front was the single longest task
-            // between "analysis done" and the first slide on a phone.
+            // Body left empty here — see `fill` (parsing every slide up front
+            // is the longest task before first paint on a phone).
             el.dataset.index = String(i);
             el.id = `slide-${i}`;
             // tabpanel rather than a bare group: the progress bar above is a
@@ -147,8 +136,7 @@ export class Deck {
             frag.appendChild(el);
             this.elements.push(el);
 
-            // The progress bar doubles as the slide picker: a second row of
-            // dots said the same thing and collided with the toolbar.
+            // The progress bar doubles as the slide picker.
             const seg = document.createElement('button');
             seg.className = 'progress-seg';
             seg.type = 'button';
@@ -158,8 +146,7 @@ export class Deck {
             seg.setAttribute('aria-controls', `slide-${i}`);
             seg.setAttribute('aria-selected', String(i === 0));
             // Roving tabindex: one Tab stop for the whole bar, arrows move
-            // inside it. Thirty tab stops between the toolbar and the slide
-            // made the deck unusable with a keyboard.
+            // inside it.
             seg.tabIndex = i === 0 ? 0 : -1;
             seg.innerHTML = '<span class="progress-fill"></span>';
             seg.addEventListener('click', () => { this.stopStory(); this.goTo(i, { focus: true }); });

@@ -8,8 +8,7 @@
  *   Android  <date>, <time> - Author: body
  *
  * with a permissive <date>/<time> and the day/month order *inferred from the
- * file* instead of guessed from the separator — that guess used to mangle
- * European exports with a two-digit year (12/03/24 read as December 3rd).
+ * file* (`inferDateOrder`), never guessed from the separator.
  *
  * Everything WhatsApp writes in the user's language (media placeholders,
  * system notices, deletion tombstones, poll headers) lives in
@@ -180,10 +179,10 @@ function isSystemText(text) {
 /**
  * A notice WhatsApp filed under an author.
  *
- * iOS dates and signs its group events like messages — and signs them with
- * the *group's* name when nobody in particular did it (the encryption notice,
- * « X vous a ajouté·e »), which made the group show up as a participant.
- * Such a body starts with U+200E. Media placeholders do too, so the mark alone
+ * iOS dates and signs its group events like messages — with the *group's*
+ * name when nobody in particular did it (the encryption notice, « X vous a
+ * ajouté·e »), so the group must not count as a participant. Such a body
+ * starts with U+200E. Media placeholders do too, so the mark alone
  * is not enough: the text must also read as a notice.
  */
 function isAuthoredNotice(body) {
@@ -201,8 +200,7 @@ function redact(line) {
  *
  * Feed it the file in whatever chunks arrive; it buffers only a partial line
  * and the first `DETECT_WINDOW` lines (needed to decide the format). The full
- * text is never held, which is what keeps a 50 MB export from peaking at three
- * copies of itself — the string, the array of lines, and the records.
+ * text is never held.
  *
  * Diagnostics are accumulated as the file goes past, so a rejected file can be
  * explained without a second pass over it.
@@ -404,8 +402,8 @@ export function parse(text, options = {}) {
 
 /**
  * Inspect a file that failed to parse, so the UI can explain *why*.
- * The returned sample lines are truncated and stripped of anything after the
- * first colon — enough to recognise a format, not enough to leak a message.
+ * Sample lines are redacted (`redact`): first 40 characters, words replaced
+ * by `xxx` — enough to recognise a format, not enough to leak a message.
  * @returns {import('./types.d.ts').ParseDiagnostics}
  */
 export function diagnose(text) {

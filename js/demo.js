@@ -1,23 +1,16 @@
 import { getLocale } from './i18n.js';
 
 /**
- * A synthetic WhatsApp export, generated on demand.
- *
- * Without it the landing page shows nothing until the visitor digs an export
- * out of their phone — which is most of the reason people bounce. Generated
- * rather than shipped as a fixture so it stays a few hundred bytes of code
- * instead of a megabyte of text, and deterministic (seeded PRNG) so the demo
- * looks the same every time it is shown.
+ * A synthetic WhatsApp export, generated on demand (`#demo`, demo buttons).
+ * Generated rather than shipped as a fixture, and deterministic (seeded PRNG)
+ * so the demo looks the same every time.
  */
 
 /**
- * The sample conversation, in each language the interface speaks.
- *
- * A French demo shown to an English visitor is worse than no demo: the word
- * cloud, the signature words and the "who says what" slides are all built from
- * this text, so they would read as gibberish. The media placeholders and the
- * reaction verb are the ones WhatsApp itself writes in that language, so the
- * generated file goes through `parser.js` exactly like a real export would.
+ * The sample conversation, in French and English; other UI locales fall back
+ * to French (`SAMPLES[getLocale()] || SAMPLES.fr`). The media placeholders and
+ * the reaction verb are the ones WhatsApp writes in that language, so the
+ * generated file goes through `parser.js` exactly like a real export.
  */
 const SAMPLES = {
     fr: {

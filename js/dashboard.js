@@ -1,6 +1,6 @@
 /**
  * Dashboard page — renders a full data view from stats produced by the main app.
- * Data source (in order): sessionStorage 'ww-stats' → URL #share=<lzstring>.
+ * Data source (in order): URL #share=<lzstring> → sessionStorage 'ww-stats'.
  */
 
 import { escapeHtml } from './utils.js';
@@ -23,7 +23,7 @@ const STORAGE_KEY = 'ww-stats';
 const $ = (sel) => document.querySelector(sel);
 const content = $('#dash-content');
 
-// ---------- Service worker ----------
+// ---------- Page chrome ----------
 refuseFraming();
 registerServiceWorker();
 watchInlineStyles();
@@ -118,13 +118,8 @@ function render(stats, comparison) {
 }
 
 /**
- * Everything the stats know about one person, gathered in one card.
- *
- * The participant selector used to do nothing but hide table rows: you could
- * narrow the page down to someone, but their numbers stayed scattered across
- * nine cards and you still had to read them one by one. All of this is already
- * computed — `perPerson`, `profiles`, `interactions`, the per-person word and
- * emoji rankings — it had simply never been put side by side.
+ * Everything the stats know about one person, gathered in one card (shown
+ * when the participant filter selects someone).
  *
  * @param {any} s
  * @param {string} name
@@ -181,7 +176,7 @@ function personCard(s, name) {
     </section>`;
 }
 
-// ---------- New cards ----------
+// ---------- Cards ----------
 
 const CHAPTER_KEYS = { high: 'high', steady: 'steady', low: 'low' };
 const chapterLabel = (intensity) =>
@@ -606,15 +601,7 @@ function wireToolbar() {
     $('#dash-export-csv')?.addEventListener('click', () => runExport('csv'));
 }
 
-/**
- * Both exports go through `js/export-data.js`, which the share sheet uses too.
- *
- * The dashboard used to build its own CSV: one table, headers written in
- * French in an app that speaks nine languages, and — the reason this moved —
- * a `csvCell` that quoted commas but did nothing about a leading `=`, `+` or
- * `@`. Participant names come from the chat, so that cell was a formula
- * waiting to run the next time someone opened the file in Excel.
- */
+/** Both exports go through `js/export-data.js`, shared with the share sheet. */
 function runExport(format) {
     if (!current) return;
     exportData({

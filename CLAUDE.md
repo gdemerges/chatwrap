@@ -35,38 +35,73 @@ Vitest pour les tests, ESLint pour le lint.
 - Couverture : `npm run test:coverage` (seuils dans `vitest.config.js`, un cliquet : on les remonte, on ne les baisse pas). Traductions : `npm run i18n:missing`. Perf : `npm run bench`
 - `index.html#demo` charge une conversation fictive — pratique pour tester sans export réel
 
+## Flux de données
+
+```
+fichier (.txt/.zip, glisser, coller, partage, « Ouvrir avec », #demo)
+  → app.js → import.js (validation, dézippage)
+  → worker-client.js ⇄ worker.js : parser.js (flux) → stats.js → worker/sentiment-ml.js → cache.js (IndexedDB)
+  → app.js : slides/index.js → deck.js           (page index.html)
+  → sessionStorage 'ww-stats' ou #share=…  → dashboard.js   (page dashboard.html)
+```
+
+Protocole worker : en-tête de `js/worker.js` ; types `WorkerInbound` / `WorkerOutbound` et forme
+des stats (`Stats`, `Message`, `Slide`, `SlideCard`) dans `js/types.d.ts`.
+
 ## Fichiers clés
 
 | Fichier | Rôle |
 |---|---|
-| `js/app.js` | Orchestration : import de fichier, worker, écrans |
+| `index.html`, `dashboard.html` | Les deux pages ; CSP en `<meta>` |
+| `js/app.js` | Orchestration de `index.html` : import de fichier, worker, écrans, barre d'outils |
 | `js/import.js` | Validation du fichier (taille, extension), dézippage de l'export, reprise d'un fichier partagé (`takeSharedFile`) et de `launchQueue`, sans DOM ni langue |
-| `js/deck.js` | Navigation entre slides, mode lecture automatique |
+| `js/deck.js` | Montage paresseux des slides, navigation, mode lecture automatique |
 | `js/worker.js` | Web Worker : lit le fichier **en flux**, parse, calcule, met en cache |
 | `js/worker-client.js` | Côté page du protocole worker : un appel en vol, progression, annulation (testable avec un faux Worker) |
+| `js/worker/` | Sentiment (ML via transformers.js, agrégats, config des modèles), contexte des jours marquants |
 | `js/parser.js` | Parsing des exports WhatsApp (iOS / Android, 9 langues) |
+| `js/stats.js` | Calcul de toutes les statistiques (`compute`) et comparaison (`compareYears`) |
+| `js/utils.js` | Helpers sans DOM ni langue (échappement, clés de date, tranches triées) — importé par le worker |
+| `js/cache.js` | Cache IndexedDB des stats calculées ; `DB_VERSION` à incrémenter si la forme des stats change |
+| `js/payload.js` | Sérialisation des stats (sessionStorage, lien `#share=`), assainissement d'un lien reçu |
 | `js/i18n.js` | Langue de l'interface : `t()`, `setLocale`, traduction du HTML statique |
-| `js/format.js` | Nombres, dates, heures, jours — tout ce qui dépend de la langue |
-| `js/stats.js` | Calcul de toutes les statistiques |
-| `js/slides/` | Une slide par fichier ; `index.js` compose le deck |
+| `js/format.js` | Nombres, dates, heures, jours — tout ce qui dépend de la langue (jamais dans le worker) |
+| `js/slides/` | Une famille de slides par fichier ; `index.js` compose le deck dans l'ordre narratif |
+| `js/slides/_charts.js` | `makeChart` : registre Chart.js (destruction, recoloration, mouvement réduit) |
+| `js/slides/_constants.js` | `THEME` (dégradé par section), `CHART_COLORS` |
 | `js/export-image.js` | Rendu canvas des images partageables (story et poster) |
 | `js/export-presets.js` | Formats de sortie, calcul dpi→pixels, carte du poster |
 | `js/anonymize.js` | Remplacement des prénoms par des initiales |
 | `js/export-data.js` | Export des stats en JSON / CSV (partage **et** dashboard) |
 | `js/compare.js` | Épingle une conversation pour comparer la suivante (digest en localStorage) |
+| `js/demo.js` | Conversation fictive générée (fr / en) pour `#demo` |
 | `js/vendor.js` | Chargement paresseux des scripts CDN (SRI épinglé) |
 | `js/config.js` | Cagnotte et mesure d'audience — vide par défaut |
 | `js/analytics.js` | Compteur d'usage anonyme, inerte tant que non configuré |
-| `js/ui/` | Dialogues, toasts, feuille de partage, gestion du hash |
+| `js/ui/` | `dialog`, `toast`, `share` (feuille de partage), `period` (choix de période), `hash`, `motion` |
 | `js/ui/inline-style.js` | `data-css` → style CSSOM, pour tenir sans `'unsafe-inline'` |
-| `js/ui/chrome.js` | Mobilier commun aux deux pages : service worker, thème, sélecteur de langue |
+| `js/ui/chrome.js` | Mobilier commun aux deux pages : anti-iframe, service worker, thème, sélecteur de langue |
 | `js/dashboard.js` | Vue tableau de bord |
 | `js/lang/ui/` | Dictionnaires d'interface (9 langues) — `fr.js` fait référence |
 | `js/lang/chat-locales.js` | Libellés que WhatsApp écrit dans le fichier (médias, notices…) |
-| `js/lang/` | Données de langue (stopwords, sentiment) |
-| `tests/` | Tests Vitest — voir les fixtures pour les formats de chat supportés |
+| `js/lang/` | Données de langue (stopwords + `detectLanguage`, lexiques de sentiment) |
+| `sw.js` | Service worker : coquille hors ligne, cache CDN, cible de partage (`share-target`) |
+| `css/style.css`, `css/dashboard.css` | Styles ; thème clair via `:root[data-theme="light"]` |
+| `tests/` | Tests Vitest — `tests/fixtures/` contient des conversations fictives, une par format supporté |
 | `e2e/` | Tests Playwright — worker, Chart.js et canvas dans un vrai navigateur ; import d'un fichier réel, violations CSP, axe (accessibilité) |
 | `scripts/` | `serve.js` (serveur statique des tests e2e), `i18n-missing.js` |
+
+## Recettes
+
+- **Nouvelle statistique** : la calculer dans `js/stats.js` (données seulement), l'ajouter à
+  `Stats` dans `js/types.d.ts`, incrémenter `DB_VERSION` dans `js/cache.js`, vérifier qu'elle
+  survit à `anonymize.js` si elle porte un nom, l'exposer dans une slide et/ou `dashboard.js`.
+- **Nouvelle slide** : un builder `(stats, gradient) => Slide | null` dans `js/slides/`,
+  inscrit dans `js/slides/index.js` avec un gradient de `THEME`.
+- **Nouveau texte affiché** : clé dans `js/lang/ui/fr.js`, puis les huit autres dictionnaires
+  (`npm run i18n:missing` liste les manques).
+- **Nouvelle langue d'export WhatsApp** : `js/lang/chat-locales.js`, `js/lang/stopwords.js`,
+  une fixture dans `tests/fixtures/`.
 
 ## Conventions à respecter
 
@@ -110,4 +145,4 @@ Vitest pour les tests, ESLint pour le lint.
 
 ## Formats de chat supportés
 Détails dans `js/parser.js`. L'ordre jour/mois est **déduit du fichier** (`inferDateOrder`),
-pas devine à partir du séparateur.
+pas deviné à partir du séparateur.

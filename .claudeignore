@@ -3,10 +3,16 @@ node_modules/
 dist/
 coverage/
 .vitest/
+test-results/
+playwright-report/
+blob-report/
 package-lock.json
+
+# Binaires sans intérêt pour lire le code
+fonts/
+icons/*.png
 
 # OS
 .DS_Store
 
-# Données de test (fichiers de chat potentiellement sensibles)
-tests/fixtures/
+# tests/fixtures/ reste lisible : conversations fictives, référence des formats supportés.

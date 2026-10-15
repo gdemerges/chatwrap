@@ -1,18 +1,10 @@
 /**
  * Pin one conversation, then compare the next one to it.
  *
- * The year-over-year comparison already existed, and `compareYears` in
- * `stats.js` is pure: it takes two stats objects and says how the first
- * differs from the second. It never cared that they came from the same file —
- * that was only ever how it happened to be called. So comparing two different
- * conversations needs no new maths, just somewhere to keep the first one.
- *
- * What is kept is a **digest**, not the stats: exactly the eight fields
- * `compareYears` reads, plus a name and a date. A full stats object for a busy
- * group runs to hundreds of kilobytes — daily counts, heatmap, per-person
- * monthly series — and none of it is used here. The digest is a couple of
- * kilobytes and fits comfortably in localStorage, which is where it has to
- * live: the whole point is that it survives loading the second file.
+ * The maths is `compareYears` in `stats.js` (pure, any two stats objects).
+ * What is kept in localStorage is a **digest**, not the stats: exactly the
+ * fields `compareYears` reads, plus a name and a date — a couple of kilobytes
+ * instead of hundreds, and it survives loading the second file.
  *
  * The name is the file name the user chose, and it never leaves the device —
  * it is not in the share payload and not in any analytics event.
@@ -67,9 +59,8 @@ export function getPinned() {
         const raw = localStorage.getItem(PINNED_KEY);
         if (!raw) return null;
         const pinned = JSON.parse(raw);
-        // A digest written by an older version may be missing fields
-        // `compareYears` indexes into; treat anything unexpected as absent
-        // rather than letting it throw halfway through building the deck.
+        // A malformed digest is treated as absent rather than letting
+        // `compareYears` throw halfway through building the deck.
         if (!pinned?.digest || typeof pinned.digest.totalMessages !== 'number') return null;
         return pinned;
     } catch (err) {

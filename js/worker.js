@@ -3,16 +3,14 @@
  *
  * The worker owns the heavy data end-to-end: it reads the file, parses it,
  * keeps the parsed messages, hits the IndexedDB cache and computes the stats.
- * The main thread never holds the chat text — previously it kept the full
- * string *and* structured-cloned a second copy into the worker on every call,
- * which doubled peak memory on large exports.
+ * The main thread never holds the chat text.
  *
  * Protocol
- *   → { kind: 'load', blob }              ← { kind: 'years', years, yearCounts }
- *   → { kind: 'stats', year, range, ai }  ← { kind: 'stats', stats, comparison }
+ *   → { kind: 'load', blob }              ← { kind: 'years', years, yearCounts, bounds }
+ *   → { kind: 'stats', year, range, ai }  ← { kind: 'stats', stats, comparison, cached }
  *   → { kind: 'reset' }                   (drops the retained parse)
- *   ←  { kind: 'progress', code, params? }   (code, never a sentence)
- *   ←  { kind: 'error', message, diagnostics? }
+ *   ←  { kind: 'progress', code, params? }   (key under `loading.`, never a sentence)
+ *   ←  { kind: 'error', message, code, diagnostics? }   (page translates `code`)
  */
 
 import { createStreamParser } from './parser.js';
@@ -31,11 +29,8 @@ const post = (msg) => self.postMessage(msg);
 /** Tag an error with a stable code the UI can translate. @see js/parser.js */
 const coded = (err, code) => Object.assign(err, { code });
 /**
- * Progress crosses the worker boundary as a key, never as a sentence.
- *
- * It used to post ready-made French ("Lecture du fichier... 42%"), which the
- * page then printed verbatim — so an English visitor watched their file load
- * in French. Same rule as errors: the worker names the step, the page words it.
+ * Progress crosses the worker boundary as a key, never as a sentence: the
+ * worker names the step, the page words it.
  *
  * @param {string} code  key under `loading.` in the UI dictionaries
  * @param {Record<string, string|number>} [params]
@@ -64,12 +59,8 @@ self.onmessage = async (e) => {
 /**
  * Read, fingerprint and parse the export in one pass over the byte stream.
  *
- * Reading the file with `blob.text()` first put a full copy of a 50 MB export
- * in memory, then hashed a copy of it, then handed it to a parser that split
- * it into a second full copy as an array of lines — three live copies at the
- * peak, which is what got the tab killed on a phone. Nothing here ever holds
- * more than one chunk plus the parser's own buffers, and the progress line can
- * finally report a real percentage instead of "Lecture du fichier...".
+ * Never holds more than one chunk plus the parser's own buffers — a full
+ * `blob.text()` copy gets the tab killed on a phone for large exports.
  */
 async function handleLoad({ blob }) {
     progress('readingPct', { pct: 0 });
@@ -85,8 +76,6 @@ async function handleLoad({ blob }) {
 
     progress('parsing');
     fileHash = await hasher.digest();
-    // A parse failure already carries a diagnostic snapshot, so the UI can say
-    // *why* the file was rejected instead of just flashing "format non reconnu".
     // Sorted once, here, and never again: every selection below is a binary
     // search on this order, and `compute` recognises it and skips its own sort.
     messages = ensureChronological(parser.end());
@@ -94,7 +83,7 @@ async function handleLoad({ blob }) {
     if (messages.length === 0) {
         const err = new Error('Aucun message exploitable dans ce fichier.');
         err.code = 'noMessages';
-        err.diagnostics = parser.diagnostics();
+        err.diagnostics = parser.diagnostics(); // lets the error screen say *why*
         throw err;
     }
 
@@ -177,8 +166,8 @@ async function* readChunks(blob) {
  * Filter by explicit date range if given, else by year, else everything.
  *
  * `messages` is chronological, so both ends are a binary search rather than a
- * full scan. The year bounds are built with the local-time constructor to match
- * `getFullYear()`, which is what the year list itself was built from.
+ * full scan. Year bounds use the local-time constructor to match
+ * `getFullYear()`, which built the year list.
  */
 function selectMessages(all, year, range) {
     if (range) {

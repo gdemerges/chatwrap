@@ -9,12 +9,8 @@
  *  • The deck skips its slide transition outright rather than running it at
  *    0.01ms, because the transition is what drives its cleanup timer.
  *
- * The query is resolved on every call rather than captured once at import.
- * Holding a single `MediaQueryList` from module scope looked tidier and was
- * wrong twice over: it pinned the answer to whatever `window.matchMedia`
- * happened to be when the module graph loaded, which in a test is before the
- * test has said what it wants, and in a worker-adjacent context is before
- * `window` exists at all.
+ * The query is resolved on every call, never captured at import: at import
+ * time a test has not stubbed `matchMedia` yet, and `window` may not exist.
  */
 const QUERY = '(prefers-reduced-motion: reduce)';
 

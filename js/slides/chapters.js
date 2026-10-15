@@ -13,7 +13,7 @@ function rangeLabel(from, to) {
 
 /**
  * The conversation told as a sequence of chapters — the phases where its
- * rhythm durably changed. Gives 28 slides of raw figures a narrative spine.
+ * rhythm durably changed. Gives the deck's raw figures a narrative spine.
  */
 export function chaptersSlide(stats, gradient) {
     const chapters = stats.chapters || [];

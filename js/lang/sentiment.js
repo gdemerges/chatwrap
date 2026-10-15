@@ -1,5 +1,5 @@
 // Categorical lexicons used for compliment/insult counters.
-// Polarity scoring is handled by the ML model in worker.js.
+// Polarity scoring is handled by the ML model in js/worker/sentiment-ml.js.
 
 export const COMPLIMENT = new Set([
     'merci', 'bravo', 'felicitations', 'félicitations', 'respect', 'champion', 'championne',

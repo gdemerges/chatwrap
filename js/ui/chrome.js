@@ -1,17 +1,7 @@
 /**
- * The furniture both pages carry: service worker, theme toggle, language picker.
- *
- * `app.js` and `dashboard.js` are separate entry points with almost nothing in
- * common — one runs a worker and a deck, the other renders tables. But they
- * open the same way, and they had each grown their own copy of the same three
- * things: an identical service-worker registration, a theme toggle that
- * differed only in the name of its labelling function, and a language picker
- * that was duplicated to the byte. A fourth locale had to be added twice.
- *
- * The one real difference is what a theme flip has to repaint afterwards: the
- * deck must re-tint its charts, the dashboard has nothing to do. That is the
- * `onThemeChange` callback, and it is the only reason this module knows the
- * two callers are not identical.
+ * The furniture both pages (`app.js`, `dashboard.js`) carry: framing guard,
+ * service worker, theme toggle, language picker. The only per-page difference
+ * is `onThemeChange` (the deck re-tints its charts).
  */
 import { t, LOCALES, getLocale, setLocale } from '../i18n.js';
 import { escapeHtml } from '../utils.js';

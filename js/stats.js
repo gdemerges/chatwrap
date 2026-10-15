@@ -8,9 +8,6 @@ import { stopwordsFor, detectLanguage, WORD_CHARS_RE } from './lang/stopwords.js
 import { MEDIA_BY_TYPE } from './lang/chat-locales.js';
 
 const EMOJI_RE = /\p{Extended_Pictographic}\uFE0F?(?:\u200D\p{Extended_Pictographic}\uFE0F?)*/gu;
-// Word shape, stopwords and language detection all live in lang/stopwords.js:
-// a French-only character range used to cut every other alphabet in half.
-const WORD_RE = WORD_CHARS_RE;
 const URL_RE = /https?:\/\/\S+/g;
 const URL_TEST_RE = /https?:\/\/\S+/;
 const HTML_STRIP_RE = /<[^>]+>/g;
@@ -31,13 +28,11 @@ export function compute(messages) {
         throw coded(new Error('Aucun message à analyser'), 'noMessages');
     }
 
-    // Ensure chronological order — without copying when it already is, which
-    // is every real export.
     messages = ensureChronological(messages);
 
     const stats = initAccumulators();
 
-    // Language detection on a sample before the loop
+    // Language detection on a sample before the loop.
     const sample = messages.slice(0, 500).map(m => m.message).join(' ');
     stats.lang = detectLanguage(sample);
     const stopwords = stopwordsFor(stats.lang);
@@ -92,7 +87,7 @@ export function compute(messages) {
 
             // Word counts
             const cleaned = m.message.toLowerCase().replace(URL_RE, '').replace(HTML_STRIP_RE, '');
-            const words = cleaned.match(WORD_RE) || [];
+            const words = cleaned.match(WORD_CHARS_RE) || [];
             for (const w of words) {
                 if (w.length <= 2 || stopwords.has(w)) continue;
                 stats.wordFreq[w] = (stats.wordFreq[w] || 0) + 1;
@@ -347,8 +342,7 @@ function finalize(acc, messages) {
 
     // Peak hour/day
     const peakHour = acc.hourly.indexOf(Math.max(...acc.hourly));
-    // Stored as an index, not a name: the label is the UI's business, and a
-    // stats payload that hard-codes "Mardi" cannot be shown in English.
+    // An index, not a name: stats carry no localized text.
     const peakDayIndex = acc.weekday.indexOf(Math.max(...acc.weekday));
 
     // Night owl / early bird
@@ -604,9 +598,9 @@ function computeStreak(daily) {
 }
 
 /**
- * Compatibility score for a 2-person chat.
- * Combines hour-pattern overlap, message-length similarity, and reciprocity.
- * Returns 0–100.
+ * Compatibility score (0–100) for a 2-person chat: weighted mix of
+ * message-length similarity, volume balance, response-time reciprocity and
+ * consistency (few 24h+ silences).
  */
 function computeCompatibility(perPerson, ranking, acc) {
     const [a, b] = ranking.map(r => r[0]);
@@ -616,19 +610,19 @@ function computeCompatibility(perPerson, ranking, acc) {
     const lb = perPerson[b].avgLen || 1;
     const lenSim = 1 - Math.abs(la - lb) / Math.max(la, lb);
 
-    // 3. Volume balance (1 = 50/50)
+    // Volume balance (1 = 50/50)
     const ca = perPerson[a].count;
     const cb = perPerson[b].count;
     const balance = 1 - Math.abs(ca - cb) / (ca + cb);
 
-    // 4. Reciprocity: close response times on both sides
+    // Reciprocity: close response times on both sides
     const rtA = perPerson[a].avgResponseMin ?? 60;
     const rtB = perPerson[b].avgResponseMin ?? 60;
     const rtMax = Math.max(rtA, rtB, 1);
     const rtMin = Math.min(rtA, rtB, 1);
     const rtSim = rtMin / rtMax;
 
-    // 5. Low ghost rate bonus: fewer 24h+ silences relative to days
+    // Consistency: fewer 24h+ silences relative to days
     const days = Object.keys(acc.daily).length || 1;
     const ghostRate = acc.ghosts.length / days;
     const ghostScore = Math.max(0, 1 - ghostRate * 2);
@@ -647,8 +641,8 @@ function computeCompatibility(perPerson, ranking, acc) {
 }
 
 /**
- * Compare two stats objects (year N vs N-1).
- * Returns deltas for a handful of key metrics.
+ * Compare two stats objects (selection vs. previous period, or vs. a pinned
+ * conversation's digest). Returns deltas for a handful of key metrics.
  * @param {import('./types.d.ts').Stats | null} current
  * @param {import('./types.d.ts').Stats | null} previous
  * @returns {import('./types.d.ts').YearComparison | null}

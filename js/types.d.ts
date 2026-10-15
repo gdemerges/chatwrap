@@ -1,5 +1,5 @@
 /**
- * Shared type definitions for the WhatsApp Wrapped client.
+ * Shared type definitions for Chatwrap.
  * Imported via JSDoc:  `\@import('./types.d.ts').Message`
  */
 
@@ -251,9 +251,11 @@ export type WorkerInbound =
 
 export type WorkerOutbound =
     | { kind: 'years'; years: number[]; yearCounts: Record<string, number>; bounds: DateRange }
-    | { kind: 'progress'; text: string }
+    /** `code` is a key under `loading.` in the UI dictionaries — never a sentence. */
+    | { kind: 'progress'; code: string; params?: Record<string, string | number> }
     | { kind: 'stats'; stats: Stats; comparison: YearComparison | null; cached: boolean }
-    | { kind: 'error'; message: string; diagnostics: ParseDiagnostics | null };
+    /** `code` is a key under `error.`; null for an unexpected (uncoded) failure. */
+    | { kind: 'error'; message: string; code: string | null; diagnostics: ParseDiagnostics | null };
 
 export interface CardBar {
     label: string;
@@ -262,7 +264,7 @@ export interface CardBar {
     color?: string;
 }
 
-/** Plain-data description of a slide, for the 1080x1920 image export. */
+/** Plain-data description of a slide, for the image export (story or poster). */
 export interface SlideCard {
     gradient: string;
     tag?: string;

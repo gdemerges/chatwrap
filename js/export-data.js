@@ -1,13 +1,7 @@
 /**
  * Take the numbers away with you: the stats as JSON, or as flat CSV tables.
- *
- * Everything the deck shows is already computed and already serialisable —
- * `payload.js` does exactly that for the share link — but there was no way to
- * get at it other than reading a slide. This is that way out.
- *
- * It respects the same anonymisation switch as the share link, and, like every
- * other export, it is built and saved entirely in the page: no upload, no
- * round-trip.
+ * Used by the share sheet and the dashboard. Respects the same anonymisation
+ * switch as the share link; built and saved entirely in the page.
  */
 import { serializeStats } from './payload.js';
 import { anonymizeStats, anonymizeComparison } from './anonymize.js';

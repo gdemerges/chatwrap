@@ -6,13 +6,8 @@
 
 const DB_NAME = 'wa-wrapped';
 const STORE = 'stats';
-// v3: cache keys moved into the worker and now encode the date range and
-// the AI-sentiment toggle — old keys are meaningless, drop them.
-// v4: notable days now carry the context that explains them; entries computed
-// before that hold a sentiment payload without it and would silently serve a
-// dateless verdict forever.
-// v5: iOS notices signed with the group's name (or a member's) are dropped;
-// cached stats still count the group as a participant.
+// Bump whenever the shape or correctness of cached stats changes: an upgrade
+// drops the whole store, so stale entries are recomputed instead of served.
 const DB_VERSION = 5;
 const TTL_DAYS = 14;
 
@@ -22,8 +17,6 @@ function openDB() {
         const req = indexedDB.open(DB_NAME, DB_VERSION);
         req.onupgradeneeded = () => {
             const db = req.result;
-            // Recreate the store on any version bump so stale (pre-fix)
-            // stats are recomputed rather than served from cache.
             if (db.objectStoreNames.contains(STORE)) db.deleteObjectStore(STORE);
             db.createObjectStore(STORE, { keyPath: 'key' });
         };

@@ -1,10 +1,8 @@
 /**
  * One conversation against another.
  *
- * Same table as the year-over-year slide — the numbers come from the same
- * `compareYears` — but the two columns are two different conversations rather
- * than two years, so the headings name them instead of saying "before" and
- * "now".
+ * Same table as `comparisonSlide` (same `compareYears`), but the columns are
+ * two conversations, so the headings name them.
  */
 import { t } from '../i18n.js';
 import { fmt, fmtDecimal } from '../format.js';

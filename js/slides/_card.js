@@ -2,8 +2,8 @@
  * Helpers for the `card` descriptor a slide attaches to describe itself to the
  * image exporter (`js/export-image.js`).
  *
- * A card is plain data — no HTML, no DOM — so the exported 1080x1920 PNG is
- * laid out for a story frame rather than being a screenshot of a wide slide.
+ * A card is plain data — no HTML, no DOM — so the exported image is laid out
+ * for its format (story or poster) rather than being a screenshot of a slide.
  */
 import { CHART_COLORS } from './_constants.js';
 

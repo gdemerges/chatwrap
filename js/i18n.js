@@ -1,15 +1,9 @@
 /**
  * Interface multilingue.
  *
- * Le parseur lit des exports en neuf langues depuis toujours ; l'interface,
- * elle, était en français en dur. Quelqu'un pouvait donc charger un export
- * anglais, obtenir des statistiques parfaitement calculées, et ne rien
- * comprendre à ce qu'il lisait.
- *
- * Le dictionnaire est **chargé statiquement** : les slides appellent `t()` au
- * moment où elles se construisent, donc la langue doit être connue de façon
- * synchrone, avant le premier rendu. Deux dictionnaires pèsent quelques kilo-
- * octets — moins que le coût d'un chargement asynchrone à orchestrer.
+ * Les dictionnaires sont **chargés statiquement** : les slides appellent `t()`
+ * au moment où elles se construisent, donc la langue doit être connue de façon
+ * synchrone, avant le premier rendu.
  *
  * Ajouter une langue = ajouter un fichier dans `js/lang/ui/`, l'importer ici,
  * et l'inscrire dans `LOCALES`. Le test `tests/i18n.test.js` vérifie que tout

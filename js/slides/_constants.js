@@ -1,11 +1,8 @@
 /**
  * Slide backgrounds are themed, not cycled.
  *
- * They used to be handed out round-robin from a flat list, so the colour said
- * nothing about the content — and since every gradient sat in the same
- * navy/violet corner, 28 slides read as one long slide. Each key below maps to
- * a `--gradient-*` defined in css/style.css, chosen so that a section change is
- * visible at a glance.
+ * The colour follows the deck section, so a section change is visible at a
+ * glance. Each key below maps to a `--gradient-*` defined in css/style.css.
  */
 export const THEME = {
     intro:     'slide-gradient-1',   // deep indigo — the opening

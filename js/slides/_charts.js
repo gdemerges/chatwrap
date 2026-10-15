@@ -2,12 +2,10 @@
  * Chart.js instance registry.
  *
  * Two problems this solves:
- *  1. Leaks — slides are torn down with `innerHTML = ''` on every year switch
- *     and every new analysis, but Chart.js keeps its instances registered
- *     (holding the detached canvas and its data). They must be destroyed.
+ *  1. Leaks — slides are torn down with `innerHTML = ''` on every period
+ *     switch and every new analysis, but Chart.js keeps its instances
+ *     registered (holding the detached canvas and its data).
  *  2. Theming — Chart.js draws on canvas and cannot resolve `var(--token)`.
- *     Colors were therefore resolved once, at chart creation, and stayed
- *     frozen when the user flipped the theme.
  *
  * `makeChart` accepts `var(--token)` strings anywhere in the config, resolves
  * them at build time, and keeps the untouched config so every chart can be
@@ -56,9 +54,7 @@ export function makeChart(ctx, config) {
 /**
  * Draw the chart in its final state instead of growing into it.
  *
- * A canvas is the one surface `prefers-reduced-motion` cannot reach from CSS,
- * so every chart kept its default one-second grow-in — bars rising and lines
- * drawing themselves — for users who had asked the whole page to hold still.
+ * Applied under `prefers-reduced-motion`, which CSS cannot apply to a canvas.
  * Chart.js takes `false` for both the initial animation and the per-property
  * ones; setting only `animation` leaves the latter running.
  */
@@ -84,8 +80,8 @@ export function retintCharts() {
     for (const entry of registry) {
         const { chart, raw } = entry;
         if (!raw.options) continue;
-        // Re-applying the raw options would hand the animation flags back,
-        // so a theme flip re-armed the grow-in that `makeChart` had removed.
+        // Through `stillIfAsked` again: the raw options would re-arm the
+        // animations that `makeChart` removed.
         Object.assign(chart.options, stillIfAsked({ options: resolveTokens(raw.options) }).options);
         try { chart.update('none'); } catch { /* detached */ }
     }

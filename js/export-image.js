@@ -1,10 +1,6 @@
 /**
  * Renders a card to an image, on canvas — for a story, or for print.
  *
- * This is the piece that makes a "Wrapped" shareable at all: before it, the
- * only way to pass results on was a link carrying the conversation's stats —
- * names included — through someone else's chat logs.
- *
  * Slides describe *what* to export via an optional `card` descriptor (see
  * `js/slides/_card.js`); this module owns *how* it looks. Nothing here reads
  * the DOM, so the output is identical whatever the viewport.
@@ -85,10 +81,7 @@ export async function renderCard(card, options = {}) {
     // A poster carries more blocks than a story and has proportionally less
     // height for them. Rather than dropping content, the whole block is scaled
     // to fit — which is what makes one card descriptor work in both formats.
-    //
-    // The box stops short of the footer band: the fit used to be computed
-    // against the full height, so a dense poster ran its last row of tiles
-    // straight through the footer.
+    // The box stops short of the footer band.
     const boxTop = PAD + 40;
     const boxBottom = H - PAD - FOOTER_BAND;
     const available = boxBottom - boxTop;

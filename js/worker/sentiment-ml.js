@@ -47,9 +47,8 @@ async function verifiedBlobUrl({ file, integrity, type }) {
 }
 
 /**
- * transformers.js is imported lazily: a static import pulled the library over
- * the network as soon as the worker booted, even for users who never turn the
- * AI analysis on.
+ * transformers.js is imported lazily: never fetched unless the AI analysis is
+ * turned on.
  */
 let _transformers = null;
 async function getPipeline() {
@@ -76,9 +75,8 @@ async function detectDevice() {
     if (_device) return _device;
     const hasWebGPU = typeof navigator !== 'undefined' && 'gpu' in navigator;
     if (hasWebGPU) {
-        // No usable GPU is reported as a `null` adapter, not as an exception —
-        // treating that as WebGPU sent blocklisted GPUs and headless browsers
-        // to a backend that could not start, and the AI analysis was dropped.
+        // No usable GPU is reported as a `null` adapter, not as an exception
+        // (blocklisted GPUs, headless browsers): those must fall back to wasm.
         try {
             if (await navigator.gpu.requestAdapter()) { _device = 'webgpu'; return _device; }
         } catch { /* fall through */ }
@@ -283,7 +281,7 @@ export async function computeSentimentML(messages, lang, onProgress, options = {
         sentClassifier = await loadSentiment(device, onProgress);
     } catch (err) {
         console.error(`[sentiment] model failed on ${device}:`, err);
-        // The user sees a plain sentence; the console keeps the detail.
+        // The page shows a translated notice; the console keeps the detail.
         onProgress('sentimentFallback');
         return buildResult(allAuthors, categorical, {}, reactionStats,
             withDayContexts(agg.finalize(), messages, lang), { mlEnabled: false, device, error: String(err) });

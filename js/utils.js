@@ -1,9 +1,7 @@
 /**
- * Shared helpers with no locale and no DOM: escaping and date keys.
- *
- * The formatters used to live here too, but `stats.js` imports this module and
- * runs inside the worker — pulling the UI dictionaries in with it. Anything
- * that reads the current language is in `js/format.js` instead.
+ * Shared helpers with no locale and no DOM: escaping, date keys, sorted-array
+ * slicing. Imported by the worker, so nothing here may import the UI
+ * dictionaries — language-dependent formatting lives in `js/format.js`.
  */
 
 export function escapeHtml(str) {
@@ -16,8 +14,8 @@ export function escapeHtml(str) {
 }
 
 /**
- * Local YYYY-MM-DD key — avoids toISOString UTC shift that made late-evening
- * messages count against the wrong day in non-UTC timezones.
+ * Local YYYY-MM-DD key. Never `toISOString`: its UTC shift moves late-evening
+ * messages to the wrong day outside UTC.
  */
 export function localDayKey(date) {
     const y = date.getFullYear();
@@ -33,12 +31,8 @@ export function localMonthKey(date) {
 /**
  * Return `messages` in chronological order, without copying when it already is.
  *
- * `compute` used to open with `[...messages].sort(...)` unconditionally: a full
- * copy of the array plus an O(n log n) sort, paid twice per analysis (once for
- * the selection, once for the comparison baseline) — on an export with half a
- * million messages that is two pointless copies of a very large array. A
- * WhatsApp export is written in order, so the check below almost always walks
- * the array once and hands back the very same reference.
+ * An export is written in order, so this almost always walks the array once
+ * and returns the same reference — no copy, no sort, even on huge chats.
  *
  * @template {{ datetime: Date }} T
  * @param {T[]} messages
@@ -74,10 +68,8 @@ export function lowerBound(messages, time) {
 /**
  * The slice of a sorted array covering `[from, to)`, in epoch milliseconds.
  *
- * Selecting a year used to be `all.filter(m => m.datetime.getFullYear() === y)`,
- * which walks every message and allocates a fresh array — and it ran three
- * times per analysis (selection, previous year, previous window). Sorted input
- * makes both ends a binary search.
+ * Both ends are a binary search; returns `messages` itself when the range
+ * covers it all.
  *
  * @template {{ datetime: Date }} T
  * @param {T[]} messages
@@ -92,11 +84,9 @@ export function sliceByTime(messages, from, to) {
 /**
  * The chat inside an exported ZIP.
  *
- * Taking the first `.txt` was right until someone attached a text file to the
- * conversation: an export "with media" then carries it next to the chat, and
- * whichever came first in the archive got analysed. iOS always names the chat
- * `_chat.txt`; Android names it after the contact, in the phone's language, so
- * there the largest `.txt` wins — the chat is almost always the biggest one.
+ * An export "with media" may carry attached `.txt` files next to the chat.
+ * iOS always names the chat `_chat.txt`; Android names it after the contact,
+ * in the phone's language, so there the largest `.txt` wins.
  *
  * @template {{ name: string, dir: boolean, _data?: { uncompressedSize?: number } }} T
  * @param {T[]} entries  JSZip file objects

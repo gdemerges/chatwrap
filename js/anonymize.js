@@ -35,10 +35,9 @@ export function buildAliasMap(names) {
 /**
  * Every alias, reachable from a name *or* from one of its parts.
  *
- * Exact names were not enough: a group calls its members by their first name,
- * so « léana » and « gwendal » sat at the top of the word cloud of an
- * « anonymous » link — next to a surname. Words are compared accent- and
- * case-folded, and a word that is part of a name becomes that person's alias.
+ * A group calls its members by their first name, so words that are part of a
+ * name must go too. Words are compared accent- and case-folded, and a word
+ * that is part of a name becomes that person's alias.
  * A common word that happens to be a first name (« rose ») goes too: the
  * cost of a missing word is lower than the cost of a name.
  *
@@ -87,7 +86,7 @@ export function anonymizeStats(stats, options = {}) {
 
 /**
  * The comparison that travels with a share: its appeared / disappeared words
- * are vocabulary like any other, and used to go out untouched.
+ * are vocabulary like any other.
  *
  * @param {any} comparison
  * @param {any} stats the stats whose ranking names the people
@@ -112,8 +111,7 @@ function remap(value, alias) {
     if (value && typeof value === 'object') {
         const out = {};
         for (const [k, v] of Object.entries(value)) {
-            // An attribute-less copy must not hand a forged `__proto__` key
-            // the power to replace the copy's prototype.
+            // A forged `__proto__` key must not replace the copy's prototype.
             if (k === '__proto__') continue;
             out[alias.get(k) ?? k] = remap(v, alias);
         }

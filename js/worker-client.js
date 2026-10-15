@@ -1,12 +1,8 @@
 /**
- * The page's end of the worker conversation.
- *
- * This used to live in `app.js` as three module variables and two functions,
- * tangled with the loading screen. What it actually does is small and
- * self-contained — one request in flight, progress streamed out, a settled
- * answer or a translated error back — and it is the part of the app most worth
- * testing, so it takes its collaborators as arguments instead of reaching for
- * `Worker` and the DOM.
+ * The page's end of the worker conversation: one request in flight, progress
+ * streamed out, a settled answer or a translated error back. Takes its
+ * collaborators as arguments (no `Worker` or DOM access) so it is testable
+ * with a fake worker.
  */
 import { t } from './i18n.js';
 

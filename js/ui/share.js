@@ -15,7 +15,7 @@ import { shareCard, buildPosterCard } from '../export-image.js';
 import { exportData } from '../export-data.js';
 import { resolvePreset } from '../export-presets.js';
 import { ensureLZString } from '../vendor.js';
-import { showToast, showError } from './toast.js';
+import { showToast, showError, copyToClipboard } from './toast.js';
 import { t } from '../i18n.js';
 import { track } from '../analytics.js';
 
@@ -175,7 +175,6 @@ async function copyLink(stats, comparison, anonymize) {
     const payload = anonymize ? anonymizeStats(stats) : stats;
     const compared = anonymize ? anonymizeComparison(comparison, stats) : comparison;
     const { url, truncated } = buildShareURL(payload, compared, { dropDaily: true });
-    const { copyToClipboard } = await import('./toast.js');
     await copyToClipboard(
         url,
         t(truncated ? 'share.linkCopiedTrimmed' : 'share.linkCopied'),

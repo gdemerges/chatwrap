@@ -1,9 +1,7 @@
 /**
  * Why *this* day stood out.
  *
- * The mood slides used to name a date and a temperature — « 12 février,
- * ambiance tendue » — and stop there, which is a number without a story. This
- * module reconstructs the shape of a notable day: how much was said, by whom,
+ * Reconstructs the shape of a notable day: how much was said, by whom,
  * at what hour, after how long a silence, around which words, and whether the
  * replies dragged. Everything here is *data only* — no localised string ever
  * leaves the worker (see CLAUDE.md).
@@ -17,7 +15,6 @@ import { localDayKey } from '../utils.js';
 import { stopwordsFor, WORD_CHARS_RE } from '../lang/stopwords.js';
 
 const EMOJI_RE = /\p{Extended_Pictographic}\uFE0F?(?:\u200D\p{Extended_Pictographic}\uFE0F?)*/gu;
-const WORD_RE = WORD_CHARS_RE;
 const URL_RE = /https?:\/\/\S+/g;
 
 /** Gaps longer than this are a new conversation, not a slow reply. */
@@ -102,7 +99,7 @@ export function buildDayContexts(messages, lang, dates) {
         if (m.isMedia || m.isDeleted || !m.message) continue;
 
         const cleaned = m.message.toLowerCase().replace(URL_RE, '');
-        for (const raw of cleaned.match(WORD_RE) || []) {
+        for (const raw of cleaned.match(WORD_CHARS_RE) || []) {
             // « j'ai », « qu'elle » — the elided article carries no subject.
             // A word cloud can absorb one such token; three keywords cannot.
             const w = raw.slice(raw.lastIndexOf("'") + 1);

@@ -2,8 +2,7 @@
  * Stopwords by language, plus WhatsApp-specific noise tokens always excluded.
  *
  * Coverage follows `js/lang/chat-locales.js`: FR, EN, ES, DE, PT, IT, NL, ID,
- * TR. The parser has always read those; the word statistics used to score them
- * all against French, so a Spanish chat's top words were `que, de, la, y`.
+ * TR.
  */
 
 export const STOPWORDS_FR = new Set([
@@ -143,7 +142,7 @@ export const STOPWORDS_WHATSAPP = new Set([
     'message', 'modifie', 'modifié', 'nan', 'https', 'http', 'www',
     'medias', 'médias', 'omitted', 'omise', 'video', 'vidéo', 'audio',
     'document', 'omitted',
-    // The same notices in the other six languages the parser reads.
+    // The same notices in ES, DE, PT, IT, NL, ID, TR.
     'imagen', 'audio', 'omitido', 'omitida', 'eliminado', 'multimedia',
     'bild', 'weggelassen', 'medien', 'entfernt', 'nachricht',
     'imagem', 'omitido', 'oculto', 'mensagem', 'apagada',
@@ -172,10 +171,8 @@ export const SUPPORTED_LANGS = Object.keys(BY_LANG);
 /**
  * Letters that can make up a word, in every alphabet the parser may meet.
  *
- * A hand-written French range (`[a-zàâä…]`) silently cut every other language's
- * words in half — `años` became `a` + `os`, `straße` became `stra` + `e`. The
- * Unicode property escape covers all of them, and `\p{M}` keeps decomposed
- * accents attached to their base letter.
+ * Never a hand-written letter range (it cuts `años` into `a` + `os`). `\p{M}`
+ * keeps decomposed accents attached to their base letter.
  */
 export const WORD_CHARS_RE = /\p{L}[\p{L}\p{M}'’]*/gu;
 

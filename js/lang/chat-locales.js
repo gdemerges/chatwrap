@@ -73,12 +73,8 @@ export const SYSTEM_KEYWORDS = [
  * Placeholders left behind by a "without media" export, grouped by the media
  * type they stand for.
  *
- * Grouping them here is what lets `stats.js` bucket a Spanish or German export
- * correctly: it used to test two hard-coded FR/EN regexes, so every non-FR/EN
- * attachment counted towards the media total but landed in no bucket at all,
- * and the "Médias" slide showed a headline figure with an empty breakdown.
- *
- * The generic entries (`<médias omis>`) name no type and are listed under
+ * `stats.js` buckets media by type from this table, in every language. The
+ * generic entries (`<médias omis>`) name no type and are listed under
  * `other`: they still count as media, they just cannot be attributed.
  */
 export const MEDIA_BY_TYPE = {
@@ -133,11 +129,8 @@ export const EDITED_PATTERNS = [
 ];
 
 /**
- * Tombstones for messages deleted after the fact.
- *
- * They used to be counted as ordinary messages: a chat where someone deleted
- * two hundred messages credited them with two hundred identical ones, which
- * skewed the ranking, the word cloud and the average length alike.
+ * Tombstones for messages deleted after the fact. Counted as deletions, never
+ * as text (they would skew the word cloud and the average length).
  */
 export const DELETED_PATTERNS = [
     // FR

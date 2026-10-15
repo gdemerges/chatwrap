@@ -1,9 +1,8 @@
 /**
  * Modal dialog: focus trap, Escape, backdrop click, focus restoration.
  *
- * Escape resolves to `undefined` — *cancelled* — never to a default value. The
- * year picker used to read Escape as "all years", silently making a choice on
- * the user's behalf.
+ * Escape resolves to `undefined` — *cancelled* — never to a default value, so
+ * a picker never makes a choice on the user's behalf.
  */
 
 const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';

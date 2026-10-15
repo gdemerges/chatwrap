@@ -3,10 +3,8 @@
  *
  * Two caching strategies, because the two kinds of asset have opposite needs:
  *
- *  • Same-origin app files live at unversioned URLs (`js/app.js`), so a pure
- *    cache-first policy pinned every visitor to whatever code was cached on
- *    their first visit until CACHE_NAME was bumped by hand. They are served
- *    stale-while-revalidate instead: instant from cache, refreshed in the
+ *  • Same-origin app files live at unversioned URLs (`js/app.js`), so they are
+ *    served stale-while-revalidate: instant from cache, refreshed in the
  *    background, so the next load has the new version.
  *
  *  • CDN scripts are version-pinned in their URL (chart.js@4.4.7), so a new
@@ -179,17 +177,15 @@ self.addEventListener('fetch', (event) => {
     }
     // Cache-first is right for the version-pinned CDN files and for nothing
     // else: any other cross-origin GET (ML weights, a measurement endpoint)
-    // would have been kept forever. Those go to the network untouched.
+    // would be kept forever. Those go to the network untouched.
     if (url.origin === CDN_ORIGIN) event.respondWith(cacheFirst(request));
 });
 
 async function staleWhileRevalidate(request) {
     const cache = await caches.open(CACHE_NAME);
     // `ignoreSearch`: the shell is precached at bare paths (`css/style.css`)
-    // while the HTML asks for cache-busted ones (`css/style.css?v=3`). Without
-    // this, every such asset missed the precache on the very first offline
-    // load — the one case the precache exists for. No same-origin asset here
-    // varies by query string, so ignoring it cannot serve the wrong file.
+    // while the HTML asks for cache-busted ones (`css/style.css?v=3`). No
+    // same-origin asset varies by query string, so this is safe.
     const cached = await cache.match(request, { ignoreSearch: true });
 
     const network = fetch(request)
