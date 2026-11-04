@@ -212,20 +212,6 @@ function setSourceName(name) {
         loadingFile.textContent = sourceName || '';
         loadingFile.hidden = !sourceName;
     }
-    updateSourceLabel();
-}
-
-function updateSourceLabel() {
-    const el = $('#deck-source');
-    if (!el) return;
-    if (!sourceName) {
-        el.hidden = true;
-        el.textContent = '';
-        return;
-    }
-    el.hidden = false;
-    el.textContent = `${sourceName} · ${periodLabel()}`;
-    el.title = el.textContent;
 }
 
 async function handleBlob(blob, { demo = false, name = null } = {}) {
@@ -292,7 +278,6 @@ function present(stats, comparison) {
     session = { stats, comparison, versus, slides };
     deck.mount(slides);
     updatePeriodButton();
-    updateSourceLabel();
     updatePinButton();
     showScreen('wrapped');
     announce(t('deck.analysed', { n: fmt(stats.totalMessages) }));
@@ -584,7 +569,6 @@ onLocaleChange(() => {
     applyStaticI18n();
     syncChromeLocale();
     renderPrivacyNote();
-    updateSourceLabel();
     updatePinButton();
     const tip = document.querySelector('.tip-link');
     if (tip) tip.textContent = t('upload.tipJar');

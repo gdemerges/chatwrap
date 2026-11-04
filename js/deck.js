@@ -48,7 +48,13 @@ export function splitSlide(el) {
     if (cut <= 0) return;
     const head = document.createElement('div');
     head.className = 'slide-head';
-    head.append(...children.slice(0, cut));
+    // `.slide-head` stretches over the whole row; the sticky, centred part is
+    // its child, so a ranking taller than the screen doesn't drag the title
+    // down to the middle of the *list*.
+    const headIn = document.createElement('div');
+    headIn.className = 'slide-head-in';
+    headIn.append(...children.slice(0, cut));
+    head.append(headIn);
     const body = document.createElement('div');
     body.className = 'slide-body';
     body.append(...children.slice(cut));

@@ -1395,38 +1395,6 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-/* Which conversation, and which slice of it — the counter says where you are
-   in the deck, this says what the deck is *of*. Sits under it, same register. */
-.deck-source {
-    position: fixed;
-    top: 3.1rem;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 100;
-    max-width: min(22rem, calc(100vw - 8rem));
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    text-align: center;
-    font-size: 0.7rem;
-    letter-spacing: 0.02em;
-    color: var(--text-muted);
-    background: var(--surface);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    border: 1px solid var(--surface-border);
-    padding: 0.2rem 0.7rem;
-    border-radius: 50px;
-    pointer-events: none;
-}
-
-/* Auto-play is a full-screen read: the chrome gets out of the way. */
-body.story-playing .deck-source {
-    opacity: 0;
-    transition: opacity 200ms ease;
-}
-
-:root[data-theme="light"] .deck-source,
 :root[data-theme="light"] .slide-counter {
     background: rgba(255, 255, 255, 0.7);
     border-color: rgba(15, 23, 42, 0.1);
@@ -2445,11 +2413,6 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
    DECK CHROME — keeping the fixed pieces out of each other's way
    ============================================================ */
 
-/* The counter sits below the progress bar (2.4rem); the source label goes one
-   row lower, and a slide that carries it gets the matching room at the top. */
-.deck-source { top: 4.4rem; }
-#wrapped-screen:has(#deck-source:not([hidden])) .slide { padding-top: 6.25rem; }
-#wrapped-screen:has(#deck-source:not([hidden]))::before { height: 6.5rem; }
 
 /* Below ~1180px the language picker + theme toggle would overlap the
    toolbar's last buttons (toolbar ~750px in FR/DE, corner ~185px). On the deck
@@ -2748,7 +2711,16 @@ body.story-playing .progress-seg.current .progress-fill { width: 0; }
        `.slide-inner.is-split` rather than `.is-split`: the hero and chart
        archetypes above size the same elements through `:has()`, which counts
        as a class, and would otherwise win. */
-    .slide-inner.is-split .slide-head { position: sticky; top: 0; }
+    .slide-inner.is-split .slide-head { align-self: stretch; }
+    .slide-inner.is-split .slide-head-in {
+        position: sticky;
+        top: 6rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        height: min(100%, calc(100vh - 12.5rem));
+    }
     .slide-inner.is-split .slide-tag { margin-bottom: 1.5rem; }
     .slide-inner.is-split .slide-title {
         font-size: clamp(2.4rem, 1rem + 2.6vw, 3.75rem);

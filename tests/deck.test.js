@@ -460,7 +460,7 @@ describe('splitSlide — head and body, for the two-column layout', () => {
             <p class="slide-subtitle">A later note stays with the evidence</p>`);
         expect(inner.classList.contains('is-split')).toBe(true);
         expect([...inner.children].map((c) => c.className)).toEqual(['slide-head', 'slide-body']);
-        expect(inner.querySelectorAll('.slide-head > *')).toHaveLength(3);
+        expect(inner.querySelectorAll('.slide-head-in > *')).toHaveLength(3);
         expect([...inner.querySelector('.slide-body').children].map((c) => c.className))
             .toEqual(['ranking-list', 'slide-subtitle']);
     });
